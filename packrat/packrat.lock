@@ -1,0 +1,122 @@
+PackratFormat: 1.4
+PackratVersion: 0.4.3.27
+RVersion: 3.2.0
+Repos: CRAN=http://cran.rstudio.com,
+    CRANextra=http://www.stats.ox.ac.uk/pub/RWin
+
+Package: RColorBrewer
+Source: CRAN
+Version: 1.1-2
+Hash: c0d56cd15034f395874c870141870c25
+
+Package: Rcpp
+Source: CRAN
+Version: 0.11.6
+Hash: 193916618dce89b287517f457de8fa8b
+
+Package: codetools
+Source: CRAN
+Version: 0.2-11
+Hash: d994e0c81b15c01f77ff98dfa30b4d87
+
+Package: colorspace
+Source: CRAN
+Version: 1.2-6
+Hash: 00bb12245cd975c450cc4a960884fa15
+
+Package: dichromat
+Source: CRAN
+Version: 2.0-0
+Hash: 08eed0c80510af29bb15f840ccfe37ce
+
+Package: digest
+Source: CRAN
+Version: 0.6.8
+Hash: de202f956596a476d09304e3a2ebf1e5
+
+Package: doParallel
+Source: CRAN
+Version: 1.0.8
+Hash: e4a4e777f61e19769d00b129e2ef889f
+Requires: foreach, iterators
+
+Package: foreach
+Source: CRAN
+Version: 1.4.2
+Hash: c306afbbf5cc2608170bc7205bf58bea
+Requires: codetools, iterators
+
+Package: ggplot2
+Source: CRAN
+Version: 1.0.1
+Hash: 4aff1b269135bd2cdea378f4f2f2895e
+Requires: digest, gtable, plyr, proto, reshape2, scales
+
+Package: gtable
+Source: CRAN
+Version: 0.1.2
+Hash: 38a0f066373a60824cd3ade2362af363
+
+Package: iterators
+Source: CRAN
+Version: 1.0.7
+Hash: 5b4df529141f993389b8fb24d56fe531
+
+Package: labeling
+Source: CRAN
+Version: 0.3
+Hash: ecf589b42cd284b03a4beb9665482d3e
+
+Package: magrittr
+Source: CRAN
+Version: 1.5
+Hash: bdc4d48c3135e8f3b399536ddf160df4
+
+Package: munsell
+Source: CRAN
+Version: 0.4.2
+Hash: 72d343a6664778029f49a7ad36de1cab
+Requires: colorspace
+
+Package: packrat
+Source: github
+Version: 0.4.3-27
+Hash: d5ae942b22b15403bd3739d67ac9dcb7
+GithubRepo: packrat
+GithubUsername: rstudio
+GithubRef: master
+GithubSha1: 1a91cdb290795c24cc0fda94177588b605525674
+
+Package: plyr
+Source: CRAN
+Version: 1.8.2
+Hash: e0fa3bba0f1cce40a4b749bb2c9cb951
+Requires: Rcpp
+
+Package: proto
+Source: CRAN
+Version: 0.3-10
+Hash: 05d7ad64db29a39d1b02c4b9f1f4edb2
+
+Package: reshape2
+Source: CRAN
+Version: 1.4.1
+Hash: 5990382c4af41f623890b1aeb63ffab5
+Requires: Rcpp, plyr, stringr
+
+Package: scales
+Source: CRAN
+Version: 0.2.4
+Hash: 1d9e32bfc8fcd69f06f45fa49ded374e
+Requires: RColorBrewer, dichromat, labeling, munsell, plyr
+
+Package: stringi
+Source: CRAN
+Version: 0.4-1
+Hash: 5f5be3e0eaf1ce0228196e80c47b0ab3
+
+Package: stringr
+Source: CRAN
+Version: 1.0.0
+Hash: 2676dd5f88890910962b733b0f9540e1
+Requires: magrittr, stringi
