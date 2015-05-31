@@ -4,10 +4,10 @@ Title: Fit stochastic epidemic models via Bayesian data augmentation
 Version: 0.2
 Date: 2015-05-23
 Author: Jon Fintzi, Jon Wakefield, Vladimir Minin
-Maintainer: Who to complain to <fintzij@uw.edu>
+Maintainer: Jon Fintzi <fintzij@uw.edu>
 Description: Tractable fitting of stochastic epidemic models via Bayesian data augmentation
 License: What license is it under? GPL-3
-Imports: ,
+Imports:
     ggplot2,
     reshape2,
     doParallel,
@@ -15,5 +15,5 @@ Imports: ,
 Suggests: 
 	formatR,
 	knitr,
-    testthat
+          testthat
 VignetteBuilder: knitr
