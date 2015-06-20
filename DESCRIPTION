@@ -7,13 +7,12 @@ Author: Jon Fintzi, Jon Wakefield, Vladimir Minin
 Maintainer: Jon Fintzi <fintzij@uw.edu>
 Description: Tractable fitting of stochastic epidemic models via Bayesian data augmentation
 License: What license is it under? GPL-3
-Imports:
-    ggplot2,
-    reshape2,
-    doParallel,
-    foreach
-Suggests: 
-	formatR,
+Imports:  ggplot2,
+          reshape2,
+          doParallel,
+          foreach,
+          pryr
+Suggests: formatR,
 	knitr,
           testthat
 VignetteBuilder: knitr
