@@ -16,9 +16,15 @@ with compartments corresponding to names of elements of
 \item{params}{vector of parameter names}
 }
 \value{
-Exports list of rate functions to the global environment.
+Returns a list of functions to compute rates.
 }
 \description{
 Extracts a list of functions for computing flow rates.
+}
+\examples{
+rates <- c("beta * S * I", "mu * I")
+compartments <- c("S", "I", "R")
+params <- c("beta", "mu")
+extract_rate_fcns(rates, compartments, params)
 }
 

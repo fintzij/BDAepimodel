@@ -20,7 +20,7 @@
 #'        vector.
 #' @param init_state numeric vector of initial states of compartments the system
 #'        with named elements corresponding exactly to the names of compartments
-#'        used in the \code{rates} argument.  
+#'        used in the \code{rates} argument.   
 #' @param rates character vector of rates of flow rates between compartments
 #'        with compartments corresponding to names of elements of 
 #'        \code{init_state}.
@@ -58,32 +58,31 @@
 #' @export
 #' 
 simulate_epimodel <- function(proc_params, init_state, rates, flow, obstimes, meas_process, meas_params, tmax, return_trajectories = FALSE){
-          # extract compartment names
-          .compartments <- names(init_state)
+          # move arguments to internal objects 
+          .proc_params        <- proc_params
+          .init_state         <- init_state
+          .rates              <- rates
+          .flow               <- flow
+          .obstimes           <- obstimes
+          .meas_process       <- meas_process
+          .meas_params        <- meas_params
+          .tmax               <- tmax
+          .return_trajectoris <- return_trajectories
           
-          # extract parameter names
-          .params <- names(proc_params)
+          
+          # extract compartment and process parameter names
+          .compartments <- names(.init_state)
+          .proc_param_names <- names(.proc_params)
+          .meas_param_names <- names(.meas_params)
+          
           
           # define propensity functions
-          .rate_fcns <- extract_rate_fcns(rates = rates, compartments = .compartments, params = .params)
+          .rate_fcns <- extract_rate_fcns(rates = .rates, compartments = .compartments, params = .proc_param_names)
           
-          
-          ##################################################################################
-          ### Completed: function to extract rate functions. 
-          ### Next: function to take list of rate functions and current params and state
-          ###       in order to compute current rates
-          
-          # extract process parameters 
-          # names
-          param_names <- names(proc_params)
-          
-          # parameters, assigned to names
-          for(s in seq_along(proc_params)){
-                    assign(param_names[s], proc_params)
-          }
-          
+  
           # set up data object
-          .dat <- init_data(obstimes = obstimes, compartments = compartments)
+          .dat <- init_data(obstimes = .obstimes, compartments = .compartments)
+          
           
           # set up the population trajectory matrix - i.e. population level count matrix
           pop_mat <- init_pop_traj(compartments = compartments, init_state = init_state)

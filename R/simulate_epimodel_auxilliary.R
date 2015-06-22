@@ -4,14 +4,22 @@
 #' @param params vector of parameter names
 #' @inheritParams simulate_epimodel
 #'   
-#' @return Exports list of rate functions to the global environment. 
+#' @return Returns a list of functions to compute rates. 
 #' @export
 #' 
+#' @examples rates <- c("beta * S * I", "mu * I")
+#' compartments <- c("S", "I", "R")
+#' params <- c("beta", "mu")
+#' extract_rate_fcns(rates, compartments, params)        
+#'        
+
 extract_rate_fcns <- function(rates, compartments, params) {
           
-          # initialize list of rates
+          # convert rates to list of unevaluated expressions
+          .rates <- eval(parse(text = paste("alist(",paste(c(rates), collapse = ", "), ")", sep = "")))
+          
+          # initialize list of rate functions
           .rate_fcns <- vector("list", length = length(rates))
-          names(.rate_fcns) <- paste("rate",1:length(rates), sep = "")
           
           # populate list with functions
           for(.s in seq_along(.rate_fcns)) {
@@ -21,13 +29,12 @@ extract_rate_fcns <- function(rates, compartments, params) {
                                  params[sapply(params, grepl, rates[.s])])
                     
                     # generate a list of arguments
-                    .arg_list <- vector("list", length = length(.args_s))
-                    names(.arg_list) <- .args_s
+                    .arg_list <- eval(parse(text = paste("alist(",paste(c(.args_s,"...="), collapse = "=,"),")",sep="")))
                     
-                    .rate_fcns[[.s]] <- make_function(args = as.pairlist(.arg_list), body = quote(eval(parse(text = rates[.s]))))
+                    # capture text for the body of the function
+                    .rate_fcns[[.s]] <- make_function(.arg_list, .rates[[.s]])
           }
+
           
           return(.rate_fcns)
 }
-
-
