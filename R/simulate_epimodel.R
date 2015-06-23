@@ -84,13 +84,8 @@ simulate_epimodel <- function(proc_params, init_state, rates, flow, obstimes, me
           .rate_fcns <- extract_rate_fcns(rates = .rates, compartments = .compartments, params = .proc_param_names)
           
   
-          # set up bookkeeping objects
-          # data object
-          .dat <- init_data_obj(obstimes = .obstimes, compartments = .compartments, meas_vars = .meas_vars) 
+          # initialize list of bookkeeping matrices
+          epimod_mats <- init_bookkeeping(data_mat = TRUE, pop_mat = TRUE, subj_mat = return_trajecs, obstimes = .obstimes, meas_vars = .meas_vars, init_state = .init_state, tmax = .tmax)
           
-          # population trajectory matrix - i.e. population level count matrix
-          .pop_mat <- init_pop_traj(init_state = .init_state, tmax = .tmax)
-          
-          # if return_trajecs is TRUE, set up subject-level bookkeeping object
-          
+
 }
