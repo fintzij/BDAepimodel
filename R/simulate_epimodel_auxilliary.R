@@ -10,7 +10,7 @@
 #' @examples rates <- c("beta * S * I", "mu * I")
 #' compartments <- c("S", "I", "R")
 #' params <- c("beta", "mu")
-#' extract_rate_fcns(rates, compartments, params)        
+#' extract_rate_fcns(rates, compartments, params)      
 #'        
 
 extract_rate_fcns <- function(rates, compartments, params) {

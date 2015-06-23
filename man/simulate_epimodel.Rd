@@ -5,7 +5,7 @@
 \title{Simulates a stochastic epidemic model.}
 \usage{
 simulate_epimodel(proc_params, init_state, rates, flow, obstimes, meas_process,
-  meas_params, tmax, return_trajectories = FALSE)
+  meas_params, tmax, return_trajecs = FALSE)
 }
 \arguments{
 \item{proc_params}{named vector of process parameters with elements
@@ -13,40 +13,42 @@ corresponding exactly to names of parameters used in the \code{rates}
 vector.}
 
 \item{init_state}{numeric vector of initial states of compartments the system
-with named elements corresponding exactly to the names of compartments
-used in the \code{rates} argument.}
+with named elements corresponding exactly to the names of compartments used
+in the \code{rates} argument.}
 
 \item{rates}{character vector of rates of flow rates between compartments
-with compartments corresponding to names of elements of
-\code{init_state}.}
+with compartments corresponding to names of elements of \code{init_state}.}
 
 \item{flow}{numeric matrix with reactions as columns and where each row in a
 column indicates the change in the size of the compartment.}
 
 \item{obstimes}{numeric vector of observation times with first element the
-time at which the process is initialized, and last element the final
-time of observation. The user may specify \code{Inf} as an option, in
-which case the epidemic is completely observed.}
+time at which the process is initialized, and last element the final time
+of observation. The user may specify \code{Inf} as an option, in which case
+the epidemic is completely observed.}
 
 \item{meas_process}{function specifying the sampling mechanism of the
-measurement process (e.g. binomial), with named arguments proc_state
-and meas_params, which are the current state of the process (of the
-same form as init_state) and the vector of named measurement process
-parameters. The function should return a noisy measurement.}
+measurement process (e.g. binomial), with named arguments proc_state and
+meas_params, which are the current state of the process (of the same form
+as init_state) and the vector of named measurement process parameters. The
+function should return a noisy measurement.}
 
 \item{meas_params}{named vector of measurement process parameters with
 elements corresponding exactly to the arguments to \code{meas_process}}
 
 \item{tmax}{time until which to simulate the process, possibly infinity.}
 
-\item{return_trajectories}{option specifying whether to return a matrix of
+\item{return_trajecs}{option specifying whether to return a matrix of
 subject-level trajectories. Defaults to \code{FALSE}.}
+
+\item{meas_vars}{a character vector specifying which compartments are
+measured}
 }
 \value{
-Data frame with columns for the observation times, and draws
-       from the measurement process at observation times. Optionally, also
-       return a data frame with columns for event times and states of the
-       epidemic compartments at each event time.
+Data frame with columns for the observation times, and draws from the
+  measurement process at observation times. Optionally, also return a data
+  frame with columns for event times and states of the epidemic compartments
+  at each event time.
 }
 \description{
 Simulate a realization from a stochastic epidemic model along with a dataset
@@ -61,16 +63,15 @@ the changes to each compartment due to each type of event. The user also
 specifies a named vector of process parameters, a named vector of initial
 states, and a set of times at which the epidemic process is sampled. The
 syntax for calling the function is deliberately similar to that used in the
-'GillespieSSA' package so as to facilitate limit confusion for users familiar
-with that package.
+'GillespieSSA' package so as to facilitate adoption for users familiar with
+that package.
 }
 \references{
-{Gillespie DT (1976). “A general method for numerically simulating
-       the stochastic time evolution of coupled chemical reactions.” Journal
-       of Computational Physics, *22*(4), pp. 403-434.
+{Gillespie DT (1976). “A general method for numerically
+  simulating the stochastic time evolution of coupled chemical reactions.”
+  Journal of Computational Physics, *22*(4), pp. 403-434.
 
-       Gillespie DT (1977). “Exact stochastic simulation of coupled chemical
-       reactions.” The Journal of Physical Chemistry, *81*(25), pp. 2340-
-       2361.}
+  Gillespie DT (1977). “Exact stochastic simulation of coupled chemical
+  reactions.” The Journal of Physical Chemistry, *81*(25), pp. 2340- 2361.}
 }
 

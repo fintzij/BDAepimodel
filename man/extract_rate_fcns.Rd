@@ -8,8 +8,7 @@ extract_rate_fcns(rates, compartments, params)
 }
 \arguments{
 \item{rates}{character vector of rates of flow rates between compartments
-with compartments corresponding to names of elements of
-\code{init_state}.}
+with compartments corresponding to names of elements of \code{init_state}.}
 
 \item{compartments}{vector of compartment names}
 
