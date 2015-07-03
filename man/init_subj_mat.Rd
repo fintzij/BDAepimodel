@@ -20,4 +20,9 @@ matrix of subject level trajectories, where each subject has two
 \description{
 Initializes a matrix of subject level trajectories.
 }
+\examples{
+init_state <- c(S = 45, I = 5, R = 0)
+tmax <- 5
+init_subj_mat(init_state, tmax)
+}
 

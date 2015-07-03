@@ -1,19 +1,19 @@
 #' Extracts a list of functions for computing flow rates.
 #' 
 #' @param compartments vector of compartment names
-#' @param params vector of parameter names
-#' @inheritParams simulate_epimodel
+#' @param param_names vector of parameter names
+#' @inheritparam_names simulate_epimodel
 #'   
 #' @return Returns a list of functions to compute rates. 
 #' @export
 #' 
 #' @examples rates <- c("beta * S * I", "mu * I")
 #' compartments <- c("S", "I", "R")
-#' params <- c("beta", "mu")
-#' extract_rate_fcns(rates, compartments, params)      
+#' param_names <- c("beta", "mu")
+#' extract_rate_fcns(rates, compartments, param_names)      
 #'        
 
-extract_rate_fcns <- function(rates, compartments, params) {
+extract_rate_fcns <- function(rates, compartments, param_names) {
           
           # convert rates to list of unevaluated expressions
           .rates <- eval(parse(text = paste("alist(",paste(c(rates), collapse = ", "), ")", sep = "")))
@@ -26,7 +26,7 @@ extract_rate_fcns <- function(rates, compartments, params) {
                     
                     # identify the compartments and parameters for the rate
                     .args_s <- c(compartments[sapply(compartments, grepl, rates[.s])], 
-                                 params[sapply(params, grepl, rates[.s])])
+                                 param_names[sapply(param_names, grepl, rates[.s])])
                     
                     # generate a list of arguments
                     .arg_list <- eval(parse(text = paste("alist(",paste(c(.args_s,"...="), collapse = "=,"),")",sep="")))

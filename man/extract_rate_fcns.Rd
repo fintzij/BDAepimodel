@@ -4,7 +4,7 @@
 \alias{extract_rate_fcns}
 \title{Extracts a list of functions for computing flow rates.}
 \usage{
-extract_rate_fcns(rates, compartments, params)
+extract_rate_fcns(rates, compartments, param_names)
 }
 \arguments{
 \item{rates}{character vector of rates of flow rates between compartments
@@ -12,7 +12,7 @@ with compartments corresponding to names of elements of \code{init_state}.}
 
 \item{compartments}{vector of compartment names}
 
-\item{params}{vector of parameter names}
+\item{param_names}{vector of parameter names}
 }
 \value{
 Returns a list of functions to compute rates.
@@ -23,7 +23,7 @@ Extracts a list of functions for computing flow rates.
 \examples{
 rates <- c("beta * S * I", "mu * I")
 compartments <- c("S", "I", "R")
-params <- c("beta", "mu")
+param_names <- c("beta", "mu")
 extract_rate_fcns(rates, compartments, params)
 }
 

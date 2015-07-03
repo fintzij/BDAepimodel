@@ -6,6 +6,9 @@
 #'   rows, one for time zero and one for tmax.
 #' @export
 #' 
+#' @examples init_state <- c(S = 45, I = 5, R = 0)
+#' tmax <- 5
+#' init_subj_mat(init_state, tmax)
 init_subj_mat <- function(init_state, tmax){
          
           # calculate popsize
