@@ -24,6 +24,6 @@ Extracts a list of functions for computing flow rates.
 rates <- c("beta * S * I", "mu * I")
 compartments <- c("S", "I", "R")
 param_names <- c("beta", "mu")
-extract_rate_fcns(rates, compartments, params)
+extract_rate_fcns(rates, compartments, param_names)
 }
 

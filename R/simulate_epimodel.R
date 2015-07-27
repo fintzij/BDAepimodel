@@ -48,6 +48,8 @@
 #'   frame with columns for event times and states of the epidemic compartments 
 #'   at each event time.
 #'   
+#'   @section WhyBother Because.
+#'   
 #' @references {Gillespie DT (1976). “A general method for numerically 
 #'   simulating the stochastic time evolution of coupled chemical reactions.” 
 #'   Journal of Computational Physics, *22*(4), pp. 403-434.

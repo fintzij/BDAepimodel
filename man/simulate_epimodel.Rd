@@ -27,15 +27,6 @@ time at which the process is initialized, and last element the final time
 of observation. The user may specify \code{Inf} as an option, in which case
 the epidemic is completely observed.}
 
-\item{meas_process}{function specifying the sampling mechanism of the
-measurement process (e.g. binomial), with named arguments proc_state and
-meas_params, which are the current state of the process (of the same form
-as init_state) and the vector of named measurement process parameters. The
-function should return a noisy measurement.}
-
-\item{meas_params}{named vector of measurement process parameters with
-elements corresponding exactly to the arguments to \code{meas_process}}
-
 \item{tmax}{time until which to simulate the process, possibly infinity.}
 
 \item{return_trajecs}{option specifying whether to return a matrix of
@@ -43,6 +34,16 @@ subject-level trajectories. Defaults to \code{FALSE}.}
 
 \item{meas_vars}{a character vector specifying which compartments are
 measured}
+
+\item{r_meas_process}{function specifying the sampling mechanism of the
+measurement process (e.g. binomial) for simulation of the observed counts,
+with named arguments proc_state and meas_params, which are the current
+state of the process (of the same form as init_state) and the vector of
+named measurement process parameters. The function should return a noisy
+measurement.}
+
+\item{r_meas_params}{named vector of measurement process parameters with
+elements corresponding exactly to the arguments to \code{r_meas_process}}
 }
 \value{
 Data frame with columns for the observation times, and draws from the
@@ -65,6 +66,9 @@ states, and a set of times at which the epidemic process is sampled. The
 syntax for calling the function is deliberately similar to that used in the
 'GillespieSSA' package so as to facilitate adoption for users familiar with
 that package.
+}
+\section{WhyBother Because.}{
+
 }
 \references{
 {Gillespie DT (1976). “A general method for numerically

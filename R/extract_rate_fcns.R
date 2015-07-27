@@ -2,7 +2,7 @@
 #' 
 #' @param compartments vector of compartment names
 #' @param param_names vector of parameter names
-#' @inheritparam_names simulate_epimodel
+#' @inheritParams simulate_epimodel
 #'   
 #' @return Returns a list of functions to compute rates. 
 #' @export
