@@ -55,6 +55,12 @@ Source: CRAN
 Version: 1.0-6
 Hash: 931f9972deae0f205e1c78a51f33149b
 
+Package: caTools
+Source: CRAN
+Version: 1.17.1
+Hash: 97cb6f6293cd18d17df77a6383cc6763
+Requires: bitops
+
 Package: codetools
 Source: CRAN
 Version: 0.2-11
@@ -137,6 +143,12 @@ Source: CRAN
 Version: 0.5
 Hash: 25f9c02030b94c8154273699a7df9cf8
 
+Package: htmltools
+Source: CRAN
+Version: 0.2.6
+Hash: 595e7dea94f5f049dfc1ed739f5161af
+Requires: digest
+
 Package: httr
 Source: CRAN
 Version: 0.6.1
@@ -157,7 +169,7 @@ Package: knitr
 Source: CRAN
 Version: 1.10.5
 Hash: 3734733a01c3a749fcf26a6c9adfb8e4
-Requires: digest, formatR, highr, yaml, markdown, stringr, evaluate
+Requires: digest, evaluate, formatR, highr, markdown, stringr, yaml
 
 Package: labeling
 Source: CRAN
@@ -224,10 +236,16 @@ Version: 1.4.1
 Hash: 5990382c4af41f623890b1aeb63ffab5
 Requires: Rcpp, plyr, stringr
 
+Package: rmarkdown
+Source: CRAN
+Version: 0.7
+Hash: bf9c8cfc700d2417a309dd7a5ebd41d3
+Requires: caTools, htmltools, knitr, yaml
+
 Package: roxygen2
 Source: CRAN
 Version: 4.1.1
-Hash: cb8a42732d3f42541c6f861352894a0e
+Hash: 5dce64dda925a35cbbf1c1072dc1eed7
 Requires: Rcpp, brew, digest, stringr
 
 Package: rstudioapi
@@ -272,7 +290,7 @@ Hash: 803d662762e532705c2c066a82d066e7
 Package: xml2
 Source: CRAN
 Version: 0.1.1
-Hash: e7f536ade10080af4b268fadf1397021
+Hash: 020898e8e339f4f68a1e94b0ec28b518
 Requires: BH, Rcpp
 
 Package: yaml

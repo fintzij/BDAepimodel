@@ -8,7 +8,8 @@ external.packages:
     reshape2
     doParallel
     foreach
-    pryr
     testthat
+    knitr
+    rmarkdown
 local.repos: 
 load.external.packages.on.startup: TRUE

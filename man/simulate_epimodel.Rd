@@ -4,8 +4,8 @@
 \alias{simulate_epimodel}
 \title{Simulates a stochastic epidemic model.}
 \usage{
-simulate_epimodel(proc_params, init_state, rates, flow, obstimes, meas_process,
-  meas_params, tmax, return_trajecs = FALSE)
+simulate_epimodel(epimodel, proc_params, init_state, rates, flow, obstimes,
+  meas_process, meas_params, tmax, return_trajecs = FALSE)
 }
 \arguments{
 \item{proc_params}{named vector of process parameters with elements

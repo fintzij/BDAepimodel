@@ -7,7 +7,7 @@ flow = matrix(c(-1, 1, 0, 0, -1, 1))
 obstimes = seq(0, 10, by = 0.5)
 obs_vars = "I"
 
-r_meas_process <- function(proc_state, meas_params){
+meas_process <- function(proc_state, meas_params){
           rbinom(n = 1, size = proc_state$I, prob = meas_params)
 }
 

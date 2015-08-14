@@ -60,7 +60,15 @@
 #'   
 #' @export
 #' 
-simulate_epimodel <- function(proc_params, init_state, rates, flow, obstimes, meas_process, meas_params, tmax, return_trajecs = FALSE){
+simulate_epimodel <- function(epimodel, proc_params, init_state, rates, flow, obstimes, meas_process, meas_params, tmax, return_trajecs = FALSE){
+          
+          # initialize bookkeeping object if one is not supplied
+          if(missing(epimodel)){
+                    # if the epimodel object is not supplied, require user to provide 
+                    if(missing())
+                    .epimodel <- init_epimodel()
+          }
+          
           # move arguments to internal objects 
           .proc_params        <- proc_params
           .init_state         <- init_state
@@ -79,18 +87,18 @@ simulate_epimodel <- function(proc_params, init_state, rates, flow, obstimes, me
           .proc_param_names   <- names(.proc_params)
           .meas_param_names   <- names(.meas_params)
           
+          
           # compute auxilliary quantities
           .popsize            <- sum(.init_state)
           
           
           # define propensity functions and measurement process function
-          .rate_fcns <- extract_rate_fcns(rates = .rates, compartments = .compartments, param_names = .proc_param_names)
-          
+          .rate_fcns          <- extract_rate_fcns(rates = .rates, compartments = .compartments, param_names = .proc_param_names)
   
           # initialize list of bookkeeping matrices
-          epimod_mats <- init_bookkeeping(dat = TRUE, pop = TRUE, subj = return_trajecs, obstimes = .obstimes, meas_vars = .meas_vars, init_state = .init_state, tmax = .tmax)
+          .epimod_mats        <- init_epimodel(dat = TRUE, pop = TRUE, subj = return_trajecs, obstimes = .obstimes, meas_vars = .meas_vars, init_state = .init_state, tmax = .tmax)
           
           
-          
+          # 
 
 }

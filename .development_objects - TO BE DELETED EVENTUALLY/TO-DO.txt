@@ -1,0 +1,1 @@
+- .init_subj_mat: consider when the subject level matrix will be instantiated and how to manage initial allocation. 

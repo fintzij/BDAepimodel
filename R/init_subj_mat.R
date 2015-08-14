@@ -1,26 +1,20 @@
 #' Initializes a matrix of subject level trajectories.
 #' 
+#' @param epimodel bookkeeping object
 #' @inheritParams simulate_epimodel
 #'   
 #' @return matrix of subject level trajectories, where each subject has two
 #'   rows, one for time zero and one for tmax.
-#' @export
-#' 
-#' @examples init_state <- c(S = 45, I = 5, R = 0)
-#' tmax <- 5
-#' init_subj_mat(init_state, tmax)
-init_subj_mat <- function(init_state, tmax){
+#'   
+init_subj_mat <- function(epimodel, init_state){
          
-          # calculate popsize
-          popsize <- sum(init_state)
-          
           # set up matrix
-          subj_mat <- matrix(0, nrow = 2*popsize, ncol = 2 + length(init_state))
-          colnames(subj_mat) <- c("ID", "time", names(init_state))
+          subj_mat <- matrix(0, nrow = 2*epimodel$popsize, ncol = 2 + length(epimodel$states))
+          colnames(subj_mat) <- c("ID", "time", epimodel$states)
           
-          # individual IDs and times
-          subj_mat[, 1] <- rep(1:popsize, each = 2)
-          subj_mat[, 2] <- rep(c(0,tmax), popsize)
+          # individual IDs and times - n.b. tmax = max(obstimes)
+          subj_mat[, "ID"] <- rep(1:popsize, each = 2)
+          subj_mat[, "time"] <- rep(c(0, max(epimodel$dat[, epimodel$obstimes])), epimodel$popsize)
           
           # set initial and final statuses according to init_state
           IDs <- 1:popsize
