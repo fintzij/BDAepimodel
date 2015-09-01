@@ -4,31 +4,39 @@
 \alias{init_epimodel}
 \title{Initialize epimodel bookkeeping object.}
 \usage{
-init_epimodel(dat = NULL, times = NULL, t_0 = 0, popsize = NULL, states,
-  params, pop_mat = NULL, subj_mat = NULL, obs_mat = NULL,
-  meas_vars = NULL, r_meas_process = NULL, d_meas_process = NULL,
-  pop_rates = NULL, pop_flow = NULL, subj_rates = NULL,
-  subj_flow = NULL, covar = NULL, tcovar = NULL, rprior = NULL,
-  dprior = NULL, to_estimation_scale = NULL, from_estimation_scale = NULL)
+init_epimodel(states, params, rates, flow, dat = NULL, time_var = NULL,
+  obstimes = NULL, popsize = NULL, pop_mat = NULL, subj_mat = NULL,
+  obs_mat = NULL, meas_vars = NULL, r_meas_process = NULL,
+  d_meas_process = NULL, covar = NULL, tcovar = NULL, rprior = NULL,
+  dprior = NULL, to_estimation_scale = NULL, from_estimation_scale = NULL,
+  init_state = NULL)
 }
 \arguments{
+\item{states}{character vector with names of compartments corresponding
+exactly to the names of compartments used in the \code{*_rates} arguments.}
+
+\item{params}{character vector of process parameters with element names
+corresponding exactly to names of parameters used in the \code{rates}
+arguments.}
+
+\item{rates}{list of functions or a character vector with strings specifying
+the flow rates between compartments with compartments corresponding to
+names given by \code{states}.}
+
+\item{flow}{numeric matrix with reactions as columns and where each row in a
+column indicates the change in the size of the compartment on the subject
+level.}
+
 \item{dat}{matrix of dimension \code{number of observation times \emph{x}
 number of measured compartments}. \code{dat} must have one column with
 observation times (numeric and strictly increasing), whose the name of
 which is given by the \code{times} variable. The matrix must be sorted in
 ascending time order.}
 
-\item{t_0}{time at which the epidemic begins, no later than the first
-observation time.}
+\item{time_var}{string indicating the name of the variable coding observation
+times in \code{dat}.}
 
 \item{popsize}{size of the population.}
-
-\item{states}{character vector with names of compartments corresponding
-exactly to the names of compartments used in the \code{*_rates} arguments.}
-
-\item{params}{named vector of process parameters with element names
-corresponding exactly to names of parameters used in the \code{*_rates}
-arguments.}
 
 \item{pop_mat}{population-level bookkeeping matrix for compartment counts at
 times of state transition.}
@@ -52,26 +60,11 @@ in \code{meas_vars}.}
 \item{d_meas_process}{function to evaluate the density of the measurement
 process with arguments and output specified as in \code{r_meas_process}.}
 
-\item{pop_rates}{list of functions for computing the population level flow
-rates between compartments with compartments corresponding to names given
-by \code{states}.}
-
-\item{pop_flow}{numeric matrix with reactions as columns and where each row
-in a column indicates the change in the size of the compartment on the
-population level.}
-
-\item{subj_rates}{list of functions for computing the flow rates between
-compartments with compartments corresponding to names given by
-\code{states}.}
-
-\item{subj_flow}{numeric matrix with reactions as columns and where each row
-in a column indicates the change in the size of the compartment on the
-subject level.}
-
 \item{covar}{optional numeric matrix of time varying covariates (currently
 not working).}
 
-\item{tcovar}{numeric vector of times for time-varying covariates.}
+\item{tcovar}{numeric vector of times for time-varying covariates (currently
+not working).}
 
 \item{rprior}{list of functions for simulating from the prior distributions
 of model parameters. List element names should correspond to exactly to the
@@ -90,9 +83,6 @@ element names should correspond to exactly to the parameter names given in
   parameters from the a scale on which new parameters are proposed to the
   scale used to evaluate the process likelihood. List element names should
   correspond to exactly to the parameter names given in \code{params}.}
-
-\item{obstimes}{string indicating the name of the variable coding observation
-times in \code{dat}.}
 }
 \value{
 list containing bookkeeping objects and model configuration objects.
@@ -100,7 +90,8 @@ list containing bookkeeping objects and model configuration objects.
 \description{
 Initializes a bookkeeping list containing the population level and subject
 level bookkeeping objects, measurement, and epidemic process settings. At a
-minimum, the epimodel object must be initialized with character vectors of
-compartment names and parameter names.
+minimum, the epimodel object must be initialized with the states, params,
+rates, flow, and either the vector of observation times or a matrix with
+data.
 }
 

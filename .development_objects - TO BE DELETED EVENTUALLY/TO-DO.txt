@@ -1,1 +1,3 @@
-- .init_subj_mat: consider when the subject level matrix will be instantiated and how to manage initial allocation. 
+- Write checks for the simulate_epimodel function to make sure that the user either supplies an epimodel object, or supplies all arguments needed to create one. Add the necessary function arguments to simulate_epimodel for the latter option. 
+
+- init_epimodel: consider how to build infrastructure for parameter inference

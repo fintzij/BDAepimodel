@@ -4,14 +4,14 @@
 \alias{init_subj_mat}
 \title{Initializes a matrix of subject level trajectories.}
 \usage{
-init_subj_mat(init_state, tmax)
+init_subj_mat(epimodel, init_state)
 }
 \arguments{
+\item{epimodel}{bookkeeping object}
+
 \item{init_state}{numeric vector of initial states of compartments the system
 with named elements corresponding exactly to the names of compartments used
 in the \code{rates} argument.}
-
-\item{tmax}{time until which to simulate the process, possibly infinity.}
 }
 \value{
 matrix of subject level trajectories, where each subject has two
@@ -19,10 +19,5 @@ matrix of subject level trajectories, where each subject has two
 }
 \description{
 Initializes a matrix of subject level trajectories.
-}
-\examples{
-init_state <- c(S = 45, I = 5, R = 0)
-tmax <- 5
-init_subj_mat(init_state, tmax)
 }
 

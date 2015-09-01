@@ -12,12 +12,11 @@
 #' specifies a named vector of process parameters, a named vector of initial 
 #' states, and a set of times at which the epidemic process is sampled. The 
 #' syntax for calling the function is deliberately similar to that used in the 
-#' 'GillespieSSA' package so as to facilitate adoption for users familiar with 
-#' that package.
+#' 'GillespieSSA' package so as to facilitate ease of use for users familiar 
+#' with that package.
 #' 
-#' @param proc_params named vector of process parameters with elements 
-#'   corresponding exactly to names of parameters used in the \code{rates} 
-#'   vector.
+#' @param epimodel list of bookkeeping and model objects. If not supplied, the 
+#'   list will be generated.
 #' @param init_state numeric vector of initial states of compartments the system
 #'   with named elements corresponding exactly to the names of compartments used
 #'   in the \code{rates} argument.
@@ -27,28 +26,23 @@
 #'   column indicates the change in the size of the compartment.
 #' @param obstimes numeric vector of observation times with first element the 
 #'   time at which the process is initialized, and last element the final time 
-#'   of observation. The user may specify \code{Inf} as an option, in which case
-#'   the epidemic is completely observed.
+#'   of observation. The user may specify \code{Inf} as the last observation
+#'   time, in which case the epidemic is always completely observed.
 #' @param meas_vars a character vector specifying which compartments are 
 #'   measured
-#' @param r_meas_process function specifying the sampling mechanism of the 
-#'   measurement process (e.g. binomial) for simulation of the observed counts,
-#'   with named arguments proc_state and meas_params, which are the current
-#'   state of the process (of the same form as init_state) and the vector of
-#'   named measurement process parameters. The function should return a noisy
+#' @param meas_process function specifying the sampling mechanism of the 
+#'   measurement process (e.g. binomial) for simulation of the observed counts, 
+#'   with named arguments proc_state and meas_params, which are the current 
+#'   state of the process (of the same form as init_state) and the vector of 
+#'   named measurement process parameters. The function should return a noisy 
 #'   measurement.
-#' @param r_meas_params named vector of measurement process parameters with 
-#'   elements corresponding exactly to the arguments to \code{r_meas_process}
 #' @param return_trajecs option specifying whether to return a matrix of 
 #'   subject-level trajectories. Defaults to \code{FALSE}.
-#' @param tmax time until which to simulate the process, possibly infinity.
 #'   
 #' @return Data frame with columns for the observation times, and draws from the
 #'   measurement process at observation times. Optionally, also return a data 
 #'   frame with columns for event times and states of the epidemic compartments 
 #'   at each event time.
-#'   
-#'   @section WhyBother Because.
 #'   
 #' @references {Gillespie DT (1976). “A general method for numerically 
 #'   simulating the stochastic time evolution of coupled chemical reactions.” 
@@ -57,47 +51,23 @@
 #'   Gillespie DT (1977). “Exact stochastic simulation of coupled chemical 
 #'   reactions.” The Journal of Physical Chemistry, *81*(25), pp. 2340- 2361.}
 #'   
-#'   
 #' @export
 #' 
-simulate_epimodel <- function(epimodel, proc_params, init_state, rates, flow, obstimes, meas_process, meas_params, tmax, return_trajecs = FALSE){
-          
-          # initialize bookkeeping object if one is not supplied
-          if(missing(epimodel)){
-                    # if the epimodel object is not supplied, require user to provide 
-                    if(missing())
-                    .epimodel <- init_epimodel()
-          }
-          
-          # move arguments to internal objects 
-          .proc_params        <- proc_params
-          .init_state         <- init_state
-          .rates              <- rates
-          .flow               <- flow
-          .obstimes           <- obstimes
-          .meas_vars          <- meas_vars
-          .meas_process       <- meas_process
-          .meas_params        <- meas_params
-          .tmax               <- tmax
-          .return_trajecs     <- return_trajecs
-          
+simulate_epimodel <- function(epimodel = NULL, init_state, obstimes = NULL, states = NULL, params = NULL, rates = NULL, flow = NULL, meas_process = NULL, meas_params = NULL, return_trajecs = TRUE){
           
           # extract compartment and process parameter names
-          .compartments       <- names(.init_state)
-          .proc_param_names   <- names(.proc_params)
-          .meas_param_names   <- names(.meas_params)
-          
+          state_names         <- names(init_state)
+          param_names         <- names(params)
+
           
           # compute auxilliary quantities
-          .popsize            <- sum(.init_state)
+          popsize             <- sum(init_state)
           
           
-          # define propensity functions and measurement process function
-          .rate_fcns          <- extract_rate_fcns(rates = .rates, compartments = .compartments, param_names = .proc_param_names)
-  
-          # initialize list of bookkeeping matrices
-          .epimod_mats        <- init_epimodel(dat = TRUE, pop = TRUE, subj = return_trajecs, obstimes = .obstimes, meas_vars = .meas_vars, init_state = .init_state, tmax = .tmax)
-          
+          # initialize bookkeeping object if one is not supplied. If an epimodel list is supplied, it must contain at a minimum the initialized subject, population, and observation matrices, along with states, parameters, flow, 
+          if(missing(epimodel)){
+                    epimodel <- init_epimodel(obstimes = obstimes, states = state_names, params = params, rates = rates, flow = flow, init_state = init_state)
+          }
           
           # 
 

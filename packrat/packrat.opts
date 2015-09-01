@@ -11,5 +11,7 @@ external.packages:
     testthat
     knitr
     rmarkdown
+    pryr
 local.repos: 
 load.external.packages.on.startup: TRUE
+ignored.packages: 

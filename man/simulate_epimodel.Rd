@@ -4,14 +4,10 @@
 \alias{simulate_epimodel}
 \title{Simulates a stochastic epidemic model.}
 \usage{
-simulate_epimodel(epimodel, proc_params, init_state, rates, flow, obstimes,
-  meas_process, meas_params, tmax, return_trajecs = FALSE)
+simulate_epimodel(epimodel, params, init_state, rates, flow, obstimes,
+  meas_process, meas_params, tmax, return_trajecs = TRUE)
 }
 \arguments{
-\item{proc_params}{named vector of process parameters with elements
-corresponding exactly to names of parameters used in the \code{rates}
-vector.}
-
 \item{init_state}{numeric vector of initial states of compartments the system
 with named elements corresponding exactly to the names of compartments used
 in the \code{rates} argument.}
@@ -27,23 +23,24 @@ time at which the process is initialized, and last element the final time
 of observation. The user may specify \code{Inf} as an option, in which case
 the epidemic is completely observed.}
 
-\item{tmax}{time until which to simulate the process, possibly infinity.}
-
-\item{return_trajecs}{option specifying whether to return a matrix of
-subject-level trajectories. Defaults to \code{FALSE}.}
-
-\item{meas_vars}{a character vector specifying which compartments are
-measured}
-
-\item{r_meas_process}{function specifying the sampling mechanism of the
+\item{meas_process}{function specifying the sampling mechanism of the
 measurement process (e.g. binomial) for simulation of the observed counts,
 with named arguments proc_state and meas_params, which are the current
 state of the process (of the same form as init_state) and the vector of
 named measurement process parameters. The function should return a noisy
 measurement.}
 
-\item{r_meas_params}{named vector of measurement process parameters with
-elements corresponding exactly to the arguments to \code{r_meas_process}}
+\item{tmax}{time until which to simulate the process, possibly infinity.}
+
+\item{return_trajecs}{option specifying whether to return a matrix of
+subject-level trajectories. Defaults to \code{FALSE}.}
+
+\item{proc_params}{named vector of process parameters with elements
+corresponding exactly to names of parameters used in the \code{rates}
+vector.}
+
+\item{meas_vars}{a character vector specifying which compartments are
+measured}
 }
 \value{
 Data frame with columns for the observation times, and draws from the
@@ -64,11 +61,8 @@ the changes to each compartment due to each type of event. The user also
 specifies a named vector of process parameters, a named vector of initial
 states, and a set of times at which the epidemic process is sampled. The
 syntax for calling the function is deliberately similar to that used in the
-'GillespieSSA' package so as to facilitate adoption for users familiar with
+'GillespieSSA' package so as to facilitate ease of use for users familiar with
 that package.
-}
-\section{WhyBother Because.}{
-
 }
 \references{
 {Gillespie DT (1976). “A general method for numerically
