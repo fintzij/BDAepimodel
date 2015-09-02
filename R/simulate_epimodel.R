@@ -17,27 +17,10 @@
 #' 
 #' @param epimodel list of bookkeeping and model objects. If not supplied, the 
 #'   list will be generated.
-#' @param init_state numeric vector of initial states of compartments the system
-#'   with named elements corresponding exactly to the names of compartments used
-#'   in the \code{rates} argument.
-#' @param rates character vector of rates of flow rates between compartments 
-#'   with compartments corresponding to names of elements of \code{init_state}.
-#' @param flow numeric matrix with reactions as columns and where each row in a 
-#'   column indicates the change in the size of the compartment.
-#' @param obstimes numeric vector of observation times with first element the 
-#'   time at which the process is initialized, and last element the final time 
-#'   of observation. The user may specify \code{Inf} as the last observation
-#'   time, in which case the epidemic is always completely observed.
-#' @param meas_vars a character vector specifying which compartments are 
-#'   measured
-#' @param meas_process function specifying the sampling mechanism of the 
-#'   measurement process (e.g. binomial) for simulation of the observed counts, 
-#'   with named arguments proc_state and meas_params, which are the current 
-#'   state of the process (of the same form as init_state) and the vector of 
-#'   named measurement process parameters. The function should return a noisy 
-#'   measurement.
+#' @inheritParams init_epimodel
 #' @param return_trajecs option specifying whether to return a matrix of 
-#'   subject-level trajectories. Defaults to \code{FALSE}.
+#'   subject-level trajectories. Defaults to \code{TRUE}.
+#' @param trim option specifying whether to trim the simulated data if the epidemic ends before the final observation time. Defaults to \code{TRUE}.
 #'   
 #' @return Data frame with columns for the observation times, and draws from the
 #'   measurement process at observation times. Optionally, also return a data 
@@ -53,11 +36,34 @@
 #'   
 #' @export
 #' 
-simulate_epimodel <- function(epimodel = NULL, init_state, obstimes = NULL, states = NULL, params = NULL, rates = NULL, flow = NULL, meas_process = NULL, meas_params = NULL, return_trajecs = TRUE){
+simulate_epimodel <- function(epimodel, init_state = NULL, initialization_fcn = NULL, return_trajecs = TRUE, trim = TRUE){
+          
+          # check function arguments and issue warnings/errors
+          
+          if(is.null(init_state) & is.null(initialization_fcn) & is.null(epimodel)) {
+                    stop("Either the initial state vector or a function to simulate it must be supplied.")
+          }
+          
+          if(!is.null(init_state) & !is.null(initialization_fcn)) {
+                    stop("Only one of the initial state vector and an initialization function may be specified.")
+          }
+          
+          if(!is.null(epimodel) & is.null(epimodel$meas_vars)){
+                    stop(sQuote("meas_vars"), "must be specified within the epimodel list.")
+          }
+          
+          if(!is.null(epimodel) & is.null(epimodel$r_meas_process)){
+                    stop(sQuote("r_meas_process"), "must be specified within the epimodel list.")
+          }
+          
+          # generate initial state vector if initialization function is supplied
+          if(!is.null(initialization_fcn)){
+                    init_state <- initialization_fcn()
+          }
           
           # extract compartment and process parameter names
-          state_names         <- names(init_state)
           param_names         <- names(params)
+          states              <- names(init_state)
 
           
           # compute auxilliary quantities
@@ -66,9 +72,15 @@ simulate_epimodel <- function(epimodel = NULL, init_state, obstimes = NULL, stat
           
           # initialize bookkeeping object if one is not supplied. If an epimodel list is supplied, it must contain at a minimum the initialized subject, population, and observation matrices, along with states, parameters, flow, 
           if(missing(epimodel)){
-                    epimodel <- init_epimodel(obstimes = obstimes, states = state_names, params = params, rates = rates, flow = flow, init_state = init_state)
+                    epimodel <- init_epimodel(obstimes = obstimes, states = states, params = params, rates = rates, flow = flow, init_state = init_state, r_meas_process = r_meas_process)
           }
           
-          # 
+          
+          # initialize simulation
+          t <- min(epimodel$obstimes)
+          status_vec <- rep(states, init_state)
+          subj_hazards <- 
+          
+          return(epimodel)
 
 }

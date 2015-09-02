@@ -9,7 +9,7 @@ init_epimodel(states, params, rates, flow, dat = NULL, time_var = NULL,
   obs_mat = NULL, meas_vars = NULL, r_meas_process = NULL,
   d_meas_process = NULL, covar = NULL, tcovar = NULL, rprior = NULL,
   dprior = NULL, to_estimation_scale = NULL, from_estimation_scale = NULL,
-  init_state = NULL)
+  init_state = NULL, initialization_fcn = NULL)
 }
 \arguments{
 \item{states}{character vector with names of compartments corresponding
@@ -49,13 +49,13 @@ observation times.}
 \item{meas_vars}{character vector specifying which compartments are measured.}
 
 \item{r_meas_process}{function to simulate from the measurement process, with
-named arguments \code{proc_state} and \code{meas_params}, which are the
-current state of the process (given as a named character vector with
-element names corresponding exactly to the names of compartments), and
-\code{meas_params}, a vector of named measurement process parameters. The
-function should return noisy measurements of the process in a vector with
-named elements corresponding to each of the measured compartments specified
-in \code{meas_vars}.}
+named arguments \code{proc_state}, \code{meas_vars}, and \code{params},
+which are the current state of the process (given as a named character
+vector with element names corresponding exactly to the names of
+compartments), a vector with the names of the states to be measured, and a
+named vector of process parameters. The function should return noisy
+measurements of the process in a vector with named elements corresponding
+to each of the measured compartments specified in \code{meas_vars}.}
 
 \item{d_meas_process}{function to evaluate the density of the measurement
 process with arguments and output specified as in \code{r_meas_process}.}
@@ -80,9 +80,18 @@ element names should correspond to exactly to the parameter names given in
 \code{params}.}
 
 \item{from_estimation_scale}{list of functions for transforming model
-  parameters from the a scale on which new parameters are proposed to the
-  scale used to evaluate the process likelihood. List element names should
-  correspond to exactly to the parameter names given in \code{params}.}
+parameters from the a scale on which new parameters are proposed to the
+scale used to evaluate the process likelihood. List element names should
+correspond to exactly to the parameter names given in \code{params}.}
+
+\item{init_state}{numeric vector of initial states of compartments the system
+with named elements corresponding exactly to the names of compartments used
+in the \code{rates} argument.}
+
+\item{initialization_function}{optional function requiring no inputs that
+  can be provided in place of init_state to simulate the initial state of the
+  system. The function must output a named vector of the same form as
+  \code{init_state}.}
 }
 \value{
 list containing bookkeeping objects and model configuration objects.

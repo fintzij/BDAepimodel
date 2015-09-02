@@ -8,10 +8,6 @@ init_subj_mat(epimodel, init_state)
 }
 \arguments{
 \item{epimodel}{bookkeeping object}
-
-\item{init_state}{numeric vector of initial states of compartments the system
-with named elements corresponding exactly to the names of compartments used
-in the \code{rates} argument.}
 }
 \value{
 matrix of subject level trajectories, where each subject has two

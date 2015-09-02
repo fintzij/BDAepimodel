@@ -3,7 +3,7 @@
 #' Initializes a bookkeeping list containing the population level and subject 
 #' level bookkeeping objects, measurement, and epidemic process settings. At a 
 #' minimum, the epimodel object must be initialized with the states, params, 
-#' rates, flow, and either the vector of observation times or a matrix with
+#' rates, flow, and either the vector of observation times or a matrix with 
 #' data.
 #' 
 #' @param states character vector with names of compartments corresponding 
@@ -14,8 +14,8 @@
 #' @param rates list of functions or a character vector with strings specifying 
 #'   the flow rates between compartments with compartments corresponding to 
 #'   names given by \code{states}.
-#' @param flow numeric matrix with reactions as columns and where each row in a 
-#'   column indicates the change in the size of the compartment on the subject 
+#' @param flow numeric matrix with reactions as rows and where each column in a 
+#'   row indicates the change in the size of the compartment on the subject 
 #'   level.
 #' @param dat matrix of dimension \code{number of observation times \emph{x} 
 #'   number of measured compartments}. \code{dat} must have one column with 
@@ -32,13 +32,13 @@
 #'   observation times.
 #' @param meas_vars character vector specifying which compartments are measured.
 #' @param r_meas_process function to simulate from the measurement process, with
-#'   named arguments \code{proc_state} and \code{meas_params}, which are the 
-#'   current state of the process (given as a named character vector with 
-#'   element names corresponding exactly to the names of compartments), and 
-#'   \code{meas_params}, a vector of named measurement process parameters. The 
-#'   function should return noisy measurements of the process in a vector with 
-#'   named elements corresponding to each of the measured compartments specified
-#'   in \code{meas_vars}.
+#'   named arguments \code{proc_state}, \code{meas_vars}, and \code{params}, 
+#'   which are the current state of the process (given as a named character 
+#'   vector with element names corresponding exactly to the names of 
+#'   compartments), a vector with the names of the states to be measured, and a
+#'   named vector of process parameters. The function should return noisy
+#'   measurements of the process in a vector with named elements corresponding
+#'   to each of the measured compartments specified in \code{meas_vars}.
 #' @param d_meas_process function to evaluate the density of the measurement 
 #'   process with arguments and output specified as in \code{r_meas_process}.
 #' @param covar optional numeric matrix of time varying covariates (currently 
@@ -59,11 +59,18 @@
 #'   parameters from the a scale on which new parameters are proposed to the 
 #'   scale used to evaluate the process likelihood. List element names should 
 #'   correspond to exactly to the parameter names given in \code{params}.
+#' @param init_state numeric vector of initial states of compartments the system
+#'   with named elements corresponding exactly to the names of compartments used
+#'   in the \code{rates} argument.
+#' @param initialization_function optional function requiring no inputs that
+#'   can be provided in place of init_state to simulate the initial state of the
+#'   system. The function must output a named vector of the same form as
+#'   \code{init_state}.
 #'   
 #' @return list containing bookkeeping objects and model configuration objects.
 #' @export
 #' 
-init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NULL, obstimes = NULL, popsize = NULL, pop_mat = NULL, subj_mat = NULL, obs_mat = NULL, meas_vars = NULL, r_meas_process = NULL, d_meas_process = NULL, covar = NULL, tcovar = NULL, rprior = NULL, dprior = NULL, to_estimation_scale = NULL, from_estimation_scale = NULL, init_state = NULL) {
+init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NULL, obstimes = NULL, popsize = NULL, pop_mat = NULL, subj_mat = NULL, obs_mat = NULL, meas_vars = NULL, r_meas_process = NULL, d_meas_process = NULL, covar = NULL, tcovar = NULL, rprior = NULL, dprior = NULL, to_estimation_scale = NULL, from_estimation_scale = NULL, init_state = NULL, initialization_fcn = NULL) {
           
           
           # user must specify states, parameters, flow, and rates at a minimum. 
@@ -108,6 +115,10 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
                     stop(sQuote("from_estimation_scale"),"must be provided if to_estimation_scale is specified")
           }
           
+          if(!is.null(init_state) & !is.null(initialization_fcn)) {
+                    stop("Only one of the initial state vector and an initialization function may be specified.")
+          }
+          
           # if flow rates were provided as a character vector, extract the rates
           # to instatiate a function list
           if(is.character(rates)) {
@@ -119,6 +130,11 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
           # provided if dat is provided.
           if(is.null(obstimes)) {
                     obstimes <- dat[,time_var]
+          }
+          
+          # generate initial state vector if initialization function is supplied
+          if(!is.null(initialization_fcn)){
+                    init_state <- initialization_fcn()
           }
           
           # if a vector of initial compartment counts is provided, deduce the population size

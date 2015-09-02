@@ -8,6 +8,8 @@
 #' @return vector of rates
 #' @export
 #' 
-eval_rates <- function(rate_fcns, state, proc_params){
+eval_rates <- function(rate_fcns, state, params){
+          
+          
           
 }

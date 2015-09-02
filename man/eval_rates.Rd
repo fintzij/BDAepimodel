@@ -11,10 +11,6 @@ eval_rates(rate_fcns, state, proc_params)
 
 \item{state}{named vector or matrix of states, with names corresponding to
 compartment names}
-
-\item{proc_params}{named vector of process parameters with elements
-corresponding exactly to names of parameters used in the \code{rates}
-vector.}
 }
 \value{
 vector of rates

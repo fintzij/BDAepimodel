@@ -1,3 +1,7 @@
-- Write checks for the simulate_epimodel function to make sure that the user either supplies an epimodel object, or supplies all arguments needed to create one. Add the necessary function arguments to simulate_epimodel for the latter option. 
-
-- init_epimodel: consider how to build infrastructure for parameter inference
+- Write function to evaluate rates
+- Re-consider how to do the bookkeeping for the simulation function. The best option seems to be to compute the vector of lumped rates by:
+          1. evaluate the rate for each state on the subject level
+          2. keep track of which subjects are in which states. use this to assign rates to each subject
+          3. use the subject level rates to simulate the next event
+          
+          A. The issue is what happens when a subject can go into one of several states from his current state. One solution may be to store the rates and transition times in matrices with columns corresponding to the full number of transitions. The rate for transitions not reachable from the current state would then be 0. 

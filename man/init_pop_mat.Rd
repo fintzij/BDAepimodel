@@ -6,13 +6,6 @@
 \usage{
 init_pop_mat(init_state, tmax)
 }
-\arguments{
-\item{init_state}{numeric vector of initial states of compartments the system
-with named elements corresponding exactly to the names of compartments used
-in the \code{rates} argument.}
-
-\item{tmax}{time until which to simulate the process, possibly infinity.}
-}
 \value{
 initialized matrix with columns to store event times and counts of
   individuals in each compartment. The first and last rows of the matrix
