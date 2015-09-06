@@ -9,7 +9,7 @@ init_epimodel(states, params, rates, flow, dat = NULL, time_var = NULL,
   obs_mat = NULL, meas_vars = NULL, r_meas_process = NULL,
   d_meas_process = NULL, covar = NULL, tcovar = NULL, rprior = NULL,
   dprior = NULL, to_estimation_scale = NULL, from_estimation_scale = NULL,
-  init_state = NULL, initialization_fcn = NULL)
+  init_state = NULL)
 }
 \arguments{
 \item{states}{character vector with names of compartments corresponding
@@ -19,13 +19,15 @@ exactly to the names of compartments used in the \code{*_rates} arguments.}
 corresponding exactly to names of parameters used in the \code{rates}
 arguments.}
 
-\item{rates}{list of functions or a character vector with strings specifying
-the flow rates between compartments with compartments corresponding to
-names given by \code{states}.}
+\item{rates}{character vector with strings specifying the flow rates between
+compartments. Each variable in a rate must correspond to the name of one of
+the \code{states}, \code{params}, or \code{covars} (covariates not yet
+implemented).}
 
-\item{flow}{numeric matrix with reactions as columns and where each row in a
-column indicates the change in the size of the compartment on the subject
-level.}
+\item{flow}{numeric matrix with reactions as rows and where each column in a
+row has element 1 to indicate an entry to that compartment, -1 to indicate
+an exit, and 0 for no change in the size of the compartment on the subject
+level. Columns should have names corresponding to the state labels.}
 
 \item{dat}{matrix of dimension \code{number of observation times \emph{x}
 number of measured compartments}. \code{dat} must have one column with
@@ -85,13 +87,8 @@ scale used to evaluate the process likelihood. List element names should
 correspond to exactly to the parameter names given in \code{params}.}
 
 \item{init_state}{numeric vector of initial states of compartments the system
-with named elements corresponding exactly to the names of compartments used
-in the \code{rates} argument.}
-
-\item{initialization_function}{optional function requiring no inputs that
-  can be provided in place of init_state to simulate the initial state of the
-  system. The function must output a named vector of the same form as
-  \code{init_state}.}
+  with named elements corresponding exactly to the names of compartments used
+  in the \code{rates} argument.}
 }
 \value{
 list containing bookkeeping objects and model configuration objects.

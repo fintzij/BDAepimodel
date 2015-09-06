@@ -4,7 +4,7 @@
 \alias{eval_rates}
 \title{Evaluate the rate functions at the current state and the parameter values}
 \usage{
-eval_rates(rate_fcns, state, proc_params)
+eval_rates(rate_fcns, state, params)
 }
 \arguments{
 \item{rate_fcns}{list of rate functions created by extract_rate_fcns}

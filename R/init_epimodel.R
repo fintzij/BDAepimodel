@@ -11,12 +11,14 @@
 #' @param params character vector of process parameters with element names 
 #'   corresponding exactly to names of parameters used in the \code{rates} 
 #'   arguments.
-#' @param rates list of functions or a character vector with strings specifying 
-#'   the flow rates between compartments with compartments corresponding to 
-#'   names given by \code{states}.
+#' @param rates character vector with strings specifying the flow rates between 
+#'   compartments. Each variable in a rate must correspond to the name of one of
+#'   the \code{states}, \code{params}, or \code{covars} (covariates not yet 
+#'   implemented).
 #' @param flow numeric matrix with reactions as rows and where each column in a 
-#'   row indicates the change in the size of the compartment on the subject 
-#'   level.
+#'   row has element 1 to indicate an entry to that compartment, -1 to indicate 
+#'   an exit, and 0 for no change in the size of the compartment on the subject 
+#'   level. Columns should have names corresponding to the state labels.
 #' @param dat matrix of dimension \code{number of observation times \emph{x} 
 #'   number of measured compartments}. \code{dat} must have one column with 
 #'   observation times (numeric and strictly increasing), whose the name of 
@@ -25,19 +27,22 @@
 #' @param time_var string indicating the name of the variable coding observation
 #'   times in \code{dat}.
 #' @param popsize size of the population.
-#' @param pop_mat population-level bookkeeping matrix for compartment counts at 
-#'   times of state transition.
-#' @param subj_mat subject-level bookkeeping matrix for individual trajectories.
+#' @param config_mat population-level bookkeeping matrix for compartment counts
+#'   and the configuration of individuals at times of state transition.
 #' @param obs_mat population-level bookkeeping matrix for compartment counts at 
 #'   observation times.
+#' @param r_initdist function to simulate the subject-level initial distribution
+#'   at time t0.
+#' @param d_initdist function to evaluate the subject-level distribution at time
+#'   t0.
 #' @param meas_vars character vector specifying which compartments are measured.
 #' @param r_meas_process function to simulate from the measurement process, with
 #'   named arguments \code{proc_state}, \code{meas_vars}, and \code{params}, 
 #'   which are the current state of the process (given as a named character 
 #'   vector with element names corresponding exactly to the names of 
-#'   compartments), a vector with the names of the states to be measured, and a
-#'   named vector of process parameters. The function should return noisy
-#'   measurements of the process in a vector with named elements corresponding
+#'   compartments), a vector with the names of the states to be measured, and a 
+#'   named vector of process parameters. The function should return noisy 
+#'   measurements of the process in a vector with named elements corresponding 
 #'   to each of the measured compartments specified in \code{meas_vars}.
 #' @param d_meas_process function to evaluate the density of the measurement 
 #'   process with arguments and output specified as in \code{r_meas_process}.
@@ -62,15 +67,11 @@
 #' @param init_state numeric vector of initial states of compartments the system
 #'   with named elements corresponding exactly to the names of compartments used
 #'   in the \code{rates} argument.
-#' @param initialization_function optional function requiring no inputs that
-#'   can be provided in place of init_state to simulate the initial state of the
-#'   system. The function must output a named vector of the same form as
-#'   \code{init_state}.
 #'   
 #' @return list containing bookkeeping objects and model configuration objects.
 #' @export
 #' 
-init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NULL, obstimes = NULL, popsize = NULL, pop_mat = NULL, subj_mat = NULL, obs_mat = NULL, meas_vars = NULL, r_meas_process = NULL, d_meas_process = NULL, covar = NULL, tcovar = NULL, rprior = NULL, dprior = NULL, to_estimation_scale = NULL, from_estimation_scale = NULL, init_state = NULL, initialization_fcn = NULL) {
+init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NULL, obstimes = NULL, popsize = NULL, pop_mat = NULL, subj_mat = NULL, obs_mat = NULL, r_initdist = NULL, d_initdist = NULL, meas_vars = NULL, r_meas_process = NULL, d_meas_process = NULL, covar = NULL, tcovar = NULL, rprior = NULL, dprior = NULL, to_estimation_scale = NULL, from_estimation_scale = NULL, init_state = NULL) {
           
           
           # user must specify states, parameters, flow, and rates at a minimum. 
@@ -88,6 +89,12 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
           
           if(missing(flow)){
                     stop(sQuote("flow"), "must be specified")
+          }
+          
+          if(ncol(flow) != length(states)){
+                    stop(sQuote("flow"), "must have number of columns equal to the number of states")
+          } else{
+                    colnames(flow) <- states
           }
           
           if(missing(dat) & missing(obstimes)){
@@ -115,15 +122,8 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
                     stop(sQuote("from_estimation_scale"),"must be provided if to_estimation_scale is specified")
           }
           
-          if(!is.null(init_state) & !is.null(initialization_fcn)) {
-                    stop("Only one of the initial state vector and an initialization function may be specified.")
-          }
-          
-          # if flow rates were provided as a character vector, extract the rates
-          # to instatiate a function list
-          if(is.character(rates)) {
-                    rates <- extract_rate_fcns(rates = rates, states = states, param_names = names(params))
-          }
+          # extract the rates to instatiate a function list
+          rates <- extract_rate_fcns(rates = rates, states = states, param_names = names(params))
           
           # if a dataset was provided instead of obstimes, instatiate obstimes. 
           # Note that obstimes and dat cannot both be NULL and that time_var is
@@ -132,11 +132,7 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
                     obstimes <- dat[,time_var]
           }
           
-          # generate initial state vector if initialization function is supplied
-          if(!is.null(initialization_fcn)){
-                    init_state <- initialization_fcn()
-          }
-          
+
           # if a vector of initial compartment counts is provided, deduce the population size
           if(!is.null(init_state)) {
                     popsize = sum(init_state)
@@ -148,12 +144,15 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
                            obstimes = obstimes,
                            popsize = popsize,
                            states = states,
+                           state_lookup = init_state_lookup(states),
                            params = params,
                            rates = rates,
                            flow = flow, 
                            pop_mat = pop_mat,
                            subj_mat = subj_mat, 
                            obs_mat = obs_mat,
+                           r_initdist = r_initdist,
+                           d_initdist = d_initdist,
                            meas_vars = meas_vars,
                            r_meas_process = r_meas_process,
                            d_meas_process = d_meas_process,
@@ -164,6 +163,11 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
                            to_estimation_scale = to_estimation_scale,
                            from_estimation_scale = from_estimation_scale)
           
+          # if the time_var argument was not supplied, default to "time"
+          if(is.null(epimodel$time_var)){
+                    epimodel$time_var <- "time"
+          }
+          
           # if the meas_vars was specified, initialize obs_mat
           if(!is.null(epimodel$meas_vars)){
                     epimodel$obs_mat <- init_obs_mat(epimodel = epimodel)
@@ -173,8 +177,7 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
           # if the initial vector of compartment counts was provided, instatiate
           # the population and subject level matrices
           if(!is.null(init_state)){
-                    epimodel$subj_mat <- init_subj_mat(epimodel = epimodel, init_state = init_state)
-                    epimodel$pop_mat <- init_pop_mat(init_state = init_state, tmax = max(obstimes)) 
+                    epimodel$config_mat <- init_config_mat(init_state = init_state, t0 = min(obstimes), tmax = max(obstimes)) 
           }
           
           # return bookkeeping list

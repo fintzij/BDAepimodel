@@ -12,13 +12,19 @@ simulate_epimodel(epimodel, init_state = NULL, initialization_fcn = NULL,
 list will be generated.}
 
 \item{init_state}{numeric vector of initial states of compartments the system
-with named elements corresponding exactly to the names of compartments used
-in the \code{rates} argument.}
+  with named elements corresponding exactly to the names of compartments used
+  in the \code{rates} argument.}
 
 \item{return_trajecs}{option specifying whether to return a matrix of
 subject-level trajectories. Defaults to \code{TRUE}.}
 
-\item{trim}{option specifying whether to trim the simulated data if the epidemic ends before the final observation time. Defaults to \code{TRUE}.}
+\item{trim}{option specifying whether to trim the simulated data if the
+  epidemic ends before the final observation time. Defaults to \code{TRUE}.}
+
+\item{initialization_function}{optional function requiring no inputs that can
+be provided in place of init_state to simulate the initial state of the
+system. The function must output a named vector of the same form as
+\code{init_state}.}
 }
 \value{
 Data frame with columns for the observation times, and draws from the
@@ -29,17 +35,17 @@ Data frame with columns for the observation times, and draws from the
 \description{
 Simulate a realization from a stochastic epidemic model along with a dataset
 resulting from a specified measurement process. The (latent) population
-trajectory for the epidemic is simulated using Gillespie's direct method
-(Gillespie 1976, 1977), with the trajectory optionally being returned in the
-output. The dataset that is returned consists of observations of the epidemic
-that are distributed according to a measurement process, provided as a
-function by the user. The dynamics of the system are characterized by a named
-vector of flow rates between compartments and a numeric matrix that specifies
-the changes to each compartment due to each type of event. The user also
-specifies a named vector of process parameters, a named vector of initial
-states, and a set of times at which the epidemic process is sampled. The
-syntax for calling the function is deliberately similar to that used in the
-'GillespieSSA' package so as to facilitate ease of use for users familiar
+trajectory for the epidemic is simulated using Gillespie's first reaction
+method (Gillespie 1976, 1977), with the trajectory optionally being returned
+in the output. The dataset that is returned consists of observations of the
+epidemic that are distributed according to a measurement process, provided as
+a function by the user. The dynamics of the system are characterized by a
+named vector of flow rates between compartments and a numeric matrix that
+specifies the changes to each compartment due to each type of event. The user
+also specifies a named vector of process parameters, a named vector of
+initial states, and a set of times at which the epidemic process is sampled.
+The syntax for calling the function is deliberately similar to that used in
+the 'GillespieSSA' package so as to facilitate ease of use for users familiar
 with that package.
 }
 \references{

@@ -18,9 +18,9 @@ Returns a list of functions to compute rates.
 Extracts a list of functions for computing flow rates.
 }
 \examples{
-rates <- c("beta * S * I", "mu * I")
+rates <- c("beta * I", "mu")
 states <- c("S", "I", "R")
 param_names <- c("beta", "mu")
-extract_rate_fcns(rates, compartments, param_names)
+extract_rate_fcns(rates, states, param_names)
 }
 
