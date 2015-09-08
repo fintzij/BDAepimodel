@@ -5,10 +5,11 @@
 \title{Initialize epimodel bookkeeping object.}
 \usage{
 init_epimodel(states, params, rates, flow, dat = NULL, time_var = NULL,
-  obstimes = NULL, popsize = NULL, pop_mat = NULL, subj_mat = NULL,
-  obs_mat = NULL, meas_vars = NULL, r_meas_process = NULL,
-  d_meas_process = NULL, covar = NULL, tcovar = NULL, rprior = NULL,
-  dprior = NULL, to_estimation_scale = NULL, from_estimation_scale = NULL,
+  obstimes = NULL, popsize = NULL, config_mat = NULL, obs_mat = NULL,
+  r_initdist = NULL, d_initdist = NULL, meas_vars = NULL,
+  r_meas_process = NULL, d_meas_process = NULL, covar = NULL,
+  tcovar = NULL, rprior = NULL, dprior = NULL,
+  to_estimation_scale = NULL, from_estimation_scale = NULL,
   init_state = NULL)
 }
 \arguments{
@@ -40,13 +41,17 @@ times in \code{dat}.}
 
 \item{popsize}{size of the population.}
 
-\item{pop_mat}{population-level bookkeeping matrix for compartment counts at
-times of state transition.}
-
-\item{subj_mat}{subject-level bookkeeping matrix for individual trajectories.}
+\item{config_mat}{population-level bookkeeping matrix for compartment counts
+and the configuration of individuals at times of state transition.}
 
 \item{obs_mat}{population-level bookkeeping matrix for compartment counts at
 observation times.}
+
+\item{r_initdist}{function to simulate the subject-level initial distribution
+at time t0.}
+
+\item{d_initdist}{function to evaluate the subject-level distribution at time
+t0.}
 
 \item{meas_vars}{character vector specifying which compartments are measured.}
 

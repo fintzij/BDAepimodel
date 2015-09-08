@@ -17,15 +17,13 @@
 init_config_mat <- function(init_state, t0, tmax){
           
           # initialize matrix object
-          pop_mat <- matrix(rep(c(t0, 0, init_state, rep(1:length(init_state), init_state)), 2 * sum(init_state)), nrow = 2 * sum(init_state), byrow = TRUE)
+          pop_mat <- matrix(rep(c(t0, 0, 0, init_state, rep(1:length(init_state), init_state)), 2), nrow = 2, byrow = TRUE)
           
           # set column names
-          colnames(pop_mat) <- c("time", "ID", names(init_state), paste("X", 1:sum(init_state), sep = ""))
-          # set tmax
-          pop_mat[(sum(init_state) + 1):nrow(pop_mat), "time"] <- tmax
+          colnames(pop_mat) <- c("time", "ID", "Event", names(init_state), paste(".X", 1:sum(init_state), sep = ""))
           
-          # set IDs
-          pop_mat[, "ID"] <- rep(1:sum(init_state), 2)
+          # set tmax
+          pop_mat[2, "time"] <- tmax
           
           return(pop_mat)
 }

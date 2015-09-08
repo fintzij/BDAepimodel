@@ -71,7 +71,7 @@
 #' @return list containing bookkeeping objects and model configuration objects.
 #' @export
 #' 
-init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NULL, obstimes = NULL, popsize = NULL, pop_mat = NULL, subj_mat = NULL, obs_mat = NULL, r_initdist = NULL, d_initdist = NULL, meas_vars = NULL, r_meas_process = NULL, d_meas_process = NULL, covar = NULL, tcovar = NULL, rprior = NULL, dprior = NULL, to_estimation_scale = NULL, from_estimation_scale = NULL, init_state = NULL) {
+init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NULL, obstimes = NULL, popsize = NULL, config_mat = NULL, obs_mat = NULL, r_initdist = NULL, d_initdist = NULL, meas_vars = NULL, r_meas_process = NULL, d_meas_process = NULL, covar = NULL, tcovar = NULL, rprior = NULL, dprior = NULL, to_estimation_scale = NULL, from_estimation_scale = NULL, init_state = NULL) {
           
           
           # user must specify states, parameters, flow, and rates at a minimum. 
@@ -148,8 +148,7 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
                            params = params,
                            rates = rates,
                            flow = flow, 
-                           pop_mat = pop_mat,
-                           subj_mat = subj_mat, 
+                           config_mat = config_mat,
                            obs_mat = obs_mat,
                            r_initdist = r_initdist,
                            d_initdist = d_initdist,

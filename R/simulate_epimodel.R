@@ -68,20 +68,31 @@ simulate_epimodel <- function(epimodel, init_state = NULL, initialization_fcn = 
           }
           
 
-          # initialize bookkeeping matrices
+          # initialize bookkeeping matrix
+          epimodel$config_mat <- init_config_mat(init_state = init_state, t0 = min(epimodel$obstimes), tmax = max(epimodel$obstimes))
           
-          if(is.null(epimodel$pop_mat)){
-                    epimodel$pop_mat <- init_pop_mat(init_state = init_state, t0 = min(epimodel$obstimes), tmax = max(epimodel$obstimes))
-          }
 
-          
           # initialize simulation
-          .t <- min(epimodel$obstimes)
-          .cur_config <- epimodel$config_mat[which(epimodel$pop_mat[, "time"] == min(epimodel$obstimes))[1], ]
-          .rates <- eval_rates(rate_fcns = epimodel$rates, state = .cur_config, params = epimodel$params)
+          config <- epimodel$config_mat[epimodel$config_mat[,"time"] == min(epimodel$obstimes), , drop = FALSE]
+          rate_mat <- matrix(1, nrow = epimodel$popsize, ncol = nrow(epimodel$flow)) # initialize rate matrix
+          dt_mat <- matrix(Inf, nrow = epimodel$popsize, ncol = nrow(epimodel$flow)) # initialize dt matrix 
           
-          while(t < max(epimodel$obstimes) & !all(.rates == 0)) {
-                    sim_one()
+          config_list <- list(config = config, rate_mat = rate_mat, dt_mat = dt_mat, keep_going = TRUE)
+
+          while(config_list$keep_going) {
+                    
+                    config_list <- sim_one_event(config_list, epimodel)
+                    
+                    if(config_list$keep_going){# insert the new row
+
+                              epimodel$config_mat <-insert_row(mat = epimodel$config_mat, 
+                                                               row_num = nrow(epimodel$config_mat),
+                                                               vec = config_list$config)
+                    } else { # replace the final row
+                              epimodel$config_mat[nrow(epimodel$config_mat),] <- config_list$config
+                    }
+
+                    
           }
 
           return(epimodel)
