@@ -67,10 +67,8 @@ simulate_epimodel <- function(epimodel, init_state = NULL, initialization_fcn = 
                     epimodel$popsize <- sum(init_state)
           }
           
-
           # initialize bookkeeping matrix
           epimodel$config_mat <- init_config_mat(init_state = init_state, t0 = min(epimodel$obstimes), tmax = max(epimodel$obstimes))
-          
 
           # initialize simulation
           config <- epimodel$config_mat[epimodel$config_mat[,"time"] == min(epimodel$obstimes), , drop = FALSE]
@@ -79,6 +77,7 @@ simulate_epimodel <- function(epimodel, init_state = NULL, initialization_fcn = 
           
           config_list <- list(config = config, rate_mat = rate_mat, dt_mat = dt_mat, keep_going = TRUE)
 
+          # simulate until tmax or no more events
           while(config_list$keep_going) {
                     
                     config_list <- sim_one_event(config_list, epimodel)
@@ -91,10 +90,14 @@ simulate_epimodel <- function(epimodel, init_state = NULL, initialization_fcn = 
                     } else { # replace the final row
                               epimodel$config_mat[nrow(epimodel$config_mat),] <- config_list$config
                     }
-
-                    
           }
 
+          # initialize obs_mat
+          epimodel$obs_mat <- init_obs_mat(epimodel)
+          
+          # generate the data
+          epimodel$obs_mat <- 
+          
           return(epimodel)
 
 }

@@ -21,4 +21,5 @@ epimodel <- init_epimodel(obstimes = 0:10,
                           rates = c("beta * I", "mu"), 
                           flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                           meas_vars = "I",
-                          r_meas_process = r_meas_process)
+                          r_meas_process = r_meas_process, 
+                          init_state = c(S = 7, I = 3, R = 0))

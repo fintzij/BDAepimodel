@@ -1,3 +1,8 @@
+9/8/2015
+================================
+- Wrote test function for sim_one_event and slightly reworked init_obs_mat. 
+- Tomorrow: function to simulate the data and update the obs_mat and dat objets. 
+
 9/7/2015
 ================================
 - Wrote function to be iterated in the simulation function: sim_one_event.

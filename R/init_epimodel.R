@@ -168,7 +168,7 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
           }
           
           # if the meas_vars was specified, initialize obs_mat
-          if(!is.null(epimodel$meas_vars)){
+          if(!is.null(epimodel$meas_vars) && !is.null(epimodel$dat)){
                     epimodel$obs_mat <- init_obs_mat(epimodel = epimodel)
           }
           
