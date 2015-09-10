@@ -4,14 +4,22 @@
 \alias{sim_one_event}
 \title{Simulate the next event using Gillespie's next reaction method.}
 \usage{
-sim_one_event()
+sim_one_event(config_list, epimodel)
+}
+\arguments{
+\item{config_list}{list with three named elements - config, rate_mat, and
+dt_mat - where config should correspond to a row in
+\code{epimodel$config}.}
+
+\item{epimodel}{list of bookkeeping and model objects. If not supplied, the
+list will be generated.}
 }
 \value{
-modifies the epimodel list in the parent environment to reflect
+updated config_list
 }
 \description{
 Internal function for \code{simulate_epimodel}, which is its parent
-environment. This function uses the .rate_mat, .t, and epimodel objects in
-its parent environment, modifying them there.
+environment. This function uses the rate_mat, t, and epimodel objects in its
+parent environment, modifying them there.
 }
 

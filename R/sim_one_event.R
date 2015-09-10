@@ -36,6 +36,10 @@ sim_one_event <- function(config_list, epimodel) {
           if(!all(.rates == 0)) {
                     # apply the rates to the appropriate subjects in the rate matrix
                     for(.r in seq_along(.rates)){
+                              # if the rate is 0, move on to the next iteration
+                              if(.rates[.r] == 0) next
+                              
+                              # otherwise fill in the rates and compute event times
                               .which_state <- which(epimodel$flow[.r, , drop = FALSE] == -1)
                               .rate_mat[.subj_config == .which_state, .r] <- .rates[.r]
                               .dt_mat[.subj_config == .which_state, .r] <- rexp(n = sum(.subj_config == .which_state), rate = .rate_mat[.subj_config == .which_state, .r])

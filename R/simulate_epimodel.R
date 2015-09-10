@@ -22,7 +22,7 @@
 #'   be provided in place of init_state to simulate the initial state of the 
 #'   system. The function must output a named vector of the same form as 
 #'   \code{init_state}.
-#' @param return_trajecs option specifying whether to return a matrix of 
+#' @param return_config option specifying whether to return a matrix of 
 #'   subject-level trajectories. Defaults to \code{TRUE}.
 #' @param trim option specifying whether to trim the simulated data if the 
 #'   epidemic ends before the final observation time. Defaults to \code{TRUE}.
@@ -41,11 +41,11 @@
 #'   
 #' @export
 #' 
-simulate_epimodel <- function(epimodel, init_state = NULL, initialization_fcn = NULL, return_trajecs = TRUE, trim = TRUE){
+simulate_epimodel <- function(epimodel, init_state = NULL, initialization_fcn = NULL, return_config = TRUE, trim = TRUE){
           
           # check function arguments and issue warnings/errors
           
-          if(is.null(init_state) & is.null(initialization_fcn)) {
+          if(is.null(init_state) & is.null(initialization_fcn) & is.null(epimodel$init_state)) {
                     stop("Either the initial state vector or a function to simulate it must be supplied.")
           }
           
@@ -64,8 +64,10 @@ simulate_epimodel <- function(epimodel, init_state = NULL, initialization_fcn = 
           # generate initial state vector if initialization function is supplied
           if(!is.null(initialization_fcn)){
                     init_state <- initialization_fcn()
-                    epimodel$popsize <- sum(init_state)
           }
+          
+          # get population size 
+          epimodel$popsize <- sum(init_state)
           
           # initialize bookkeeping matrix
           epimodel$config_mat <- init_config_mat(init_state = init_state, t0 = min(epimodel$obstimes), tmax = max(epimodel$obstimes))
@@ -79,7 +81,7 @@ simulate_epimodel <- function(epimodel, init_state = NULL, initialization_fcn = 
 
           # simulate until tmax or no more events
           while(config_list$keep_going) {
-                    
+                    if(config_list$config[,"I"] == 0) break
                     config_list <- sim_one_event(config_list, epimodel)
                     
                     if(config_list$keep_going){# insert the new row
@@ -91,12 +93,36 @@ simulate_epimodel <- function(epimodel, init_state = NULL, initialization_fcn = 
                               epimodel$config_mat[nrow(epimodel$config_mat),] <- config_list$config
                     }
           }
-
+          
           # initialize obs_mat
           epimodel$obs_mat <- init_obs_mat(epimodel)
           
-          # generate the data
-          epimodel$obs_mat <- 
+          # sample from the measurement process
+          epimodel$obs_mat[, paste(epimodel$meas_vars, "_observed", sep = "")] <- 
+                    r_meas_process(epimodel$obs_mat, paste(epimodel$meas_vars, "_truth", sep = ""), epimodel$params)
+          
+          # instatiate data matrix
+          epimodel$dat <- epimodel$obs_mat[, c("time", paste(epimodel$meas_vars, "_observed", sep = ""))]
+          colnames(epimodel$dat) <- c(epimodel$time_var, epimodel$meas_vars)
+          
+          # if trim is TRUE, then trim off the excess 0 measurements in the case
+          # when the epidemic died off before the final observation time.
+          if((trim == TRUE) && all(config_list$rate_mat == 0)) {
+                    # find the index of the first observation time where the rates are 0
+                    end_ind <- which(epimodel$obstimes > epimodel$config_mat[nrow(epimodel$config_mat) - 1, "time"])[1]
+                    
+                    # trim the observation times, observation matrix, and data matrix
+                    epimodel$obstimes <- epimodel$obstimes[1:end_ind]
+                    epimodel$obs_mat <- epimodel$obs_mat[1:end_ind, ]
+                    epimodel$dat <- epimodel$dat[1:end_ind, ]
+                    
+                    # reset the final observation time in the configuration matrix
+                    epimodel$config_mat[nrow(epimodel$config_mat),"time"] <- max(epimodel$obstimes)
+          }
+          
+          if(return_config == FALSE) {
+                    epimodel$config_mat <- NULL
+          }
           
           return(epimodel)
 

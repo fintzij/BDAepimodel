@@ -7,10 +7,6 @@
 init_config_mat(init_state, t0, tmax)
 }
 \arguments{
-\item{init_state}{numeric vector of initial states of compartments the system
-  with named elements corresponding exactly to the names of compartments used
-  in the \code{rates} argument.}
-
 \item{t0}{the first observation time}
 
 \item{tmax}{the final observation time}

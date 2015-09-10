@@ -1,3 +1,7 @@
+9/9/2015
+================================
+- Reconsider how r_meas_process and d_meas_process operate. Consider how to facilitate their handling matrices as arguments rather than restricting to vectors. 
+
 9/8/2015
 ================================
 - Wrote test function for sim_one_event and slightly reworked init_obs_mat. 
@@ -6,11 +10,10 @@
 9/7/2015
 ================================
 - Wrote function to be iterated in the simulation function: sim_one_event.
-          + Need to write test functions for this.
 
 9/4/2015
 ================================
-- Deprecated subject level bookkeeping matrix in favor of a combined subject-level and population          -level bookeeping matrix. 
+- Deprecated subject level bookkeeping matrix in favor of a combined subject-level and population -level bookeeping matrix. 
 
 
 9/2/2015

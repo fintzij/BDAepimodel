@@ -10,8 +10,8 @@ initialization_fcn <- function(){
 obstimes = seq(0, 10, by = 1)
 meas_vars = "I"
 
-r_meas_process <- function(proc_state, meas_vars, meas_params){
-          rbinom(n = 1, size = proc_state$meas_vars, prob = meas_params)
+r_meas_process <- function(state, meas_vars, params){
+          rbinom(n = nrow(state), size = state[,meas_vars], prob = params["rho"])
 }
 
 
@@ -21,5 +21,4 @@ epimodel <- init_epimodel(obstimes = 0:10,
                           rates = c("beta * I", "mu"), 
                           flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                           meas_vars = "I",
-                          r_meas_process = r_meas_process, 
-                          init_state = c(S = 7, I = 3, R = 0))
+                          r_meas_process = r_meas_process)

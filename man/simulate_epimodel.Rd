@@ -5,17 +5,13 @@
 \title{Simulates a stochastic epidemic model.}
 \usage{
 simulate_epimodel(epimodel, init_state = NULL, initialization_fcn = NULL,
-  return_trajecs = TRUE, trim = TRUE)
+  return_config = TRUE, trim = TRUE)
 }
 \arguments{
 \item{epimodel}{list of bookkeeping and model objects. If not supplied, the
 list will be generated.}
 
-\item{init_state}{numeric vector of initial states of compartments the system
-  with named elements corresponding exactly to the names of compartments used
-  in the \code{rates} argument.}
-
-\item{return_trajecs}{option specifying whether to return a matrix of
+\item{return_config}{option specifying whether to return a matrix of
 subject-level trajectories. Defaults to \code{TRUE}.}
 
 \item{trim}{option specifying whether to trim the simulated data if the

@@ -27,7 +27,7 @@
 #' @param time_var string indicating the name of the variable coding observation
 #'   times in \code{dat}.
 #' @param popsize size of the population.
-#' @param config_mat population-level bookkeeping matrix for compartment counts
+#' @param config_mat population-level bookkeeping matrix for compartment counts 
 #'   and the configuration of individuals at times of state transition.
 #' @param obs_mat population-level bookkeeping matrix for compartment counts at 
 #'   observation times.
@@ -37,13 +37,14 @@
 #'   t0.
 #' @param meas_vars character vector specifying which compartments are measured.
 #' @param r_meas_process function to simulate from the measurement process, with
-#'   named arguments \code{proc_state}, \code{meas_vars}, and \code{params}, 
-#'   which are the current state of the process (given as a named character 
-#'   vector with element names corresponding exactly to the names of 
-#'   compartments), a vector with the names of the states to be measured, and a 
-#'   named vector of process parameters. The function should return noisy 
-#'   measurements of the process in a vector with named elements corresponding 
-#'   to each of the measured compartments specified in \code{meas_vars}.
+#'   named arguments \code{state}, \code{meas_vars}, and \code{params}, which
+#'   are the current state of the process (given as a named character vector
+#'   with element names corresponding exactly to the names of compartments), a
+#'   vector with the names of the states to be measured, and a named vector of
+#'   process parameters. The function should return noisy measurements of the
+#'   process in a vector with named elements corresponding to each of the
+#'   measured compartments specified in \code{meas_vars}. The function must
+#'   index into the state vector and parameter vector using element names.
 #' @param d_meas_process function to evaluate the density of the measurement 
 #'   process with arguments and output specified as in \code{r_meas_process}.
 #' @param covar optional numeric matrix of time varying covariates (currently 
@@ -64,14 +65,11 @@
 #'   parameters from the a scale on which new parameters are proposed to the 
 #'   scale used to evaluate the process likelihood. List element names should 
 #'   correspond to exactly to the parameter names given in \code{params}.
-#' @param init_state numeric vector of initial states of compartments the system
-#'   with named elements corresponding exactly to the names of compartments used
-#'   in the \code{rates} argument.
 #'   
 #' @return list containing bookkeeping objects and model configuration objects.
 #' @export
 #' 
-init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NULL, obstimes = NULL, popsize = NULL, config_mat = NULL, obs_mat = NULL, r_initdist = NULL, d_initdist = NULL, meas_vars = NULL, r_meas_process = NULL, d_meas_process = NULL, covar = NULL, tcovar = NULL, rprior = NULL, dprior = NULL, to_estimation_scale = NULL, from_estimation_scale = NULL, init_state = NULL) {
+init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NULL, obstimes = NULL, popsize = NULL, config_mat = NULL, obs_mat = NULL, r_initdist = NULL, d_initdist = NULL, meas_vars = NULL, r_meas_process = NULL, d_meas_process = NULL, covar = NULL, tcovar = NULL, rprior = NULL, dprior = NULL, to_estimation_scale = NULL, from_estimation_scale = NULL) {
           
           
           # user must specify states, parameters, flow, and rates at a minimum. 
@@ -132,12 +130,7 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
                     obstimes <- dat[,time_var]
           }
           
-
-          # if a vector of initial compartment counts is provided, deduce the population size
-          if(!is.null(init_state)) {
-                    popsize = sum(init_state)
-          }
-          
+                    
           #initialize list object
           epimodel <- list(dat = dat,
                            time_var = time_var,
@@ -167,17 +160,6 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
                     epimodel$time_var <- "time"
           }
           
-          # if the meas_vars was specified, initialize obs_mat
-          if(!is.null(epimodel$meas_vars) && !is.null(epimodel$dat)){
-                    epimodel$obs_mat <- init_obs_mat(epimodel = epimodel)
-          }
-          
-          
-          # if the initial vector of compartment counts was provided, instatiate
-          # the population and subject level matrices
-          if(!is.null(init_state)){
-                    epimodel$config_mat <- init_config_mat(init_state = init_state, t0 = min(obstimes), tmax = max(obstimes)) 
-          }
           
           # return bookkeeping list
           return(epimodel)
