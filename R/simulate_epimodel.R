@@ -2,16 +2,16 @@
 #' 
 #' Simulate a realization from a stochastic epidemic model along with a dataset 
 #' resulting from a specified measurement process. The (latent) population 
-#' trajectory for the epidemic is simulated using Gillespie's first reaction
-#' method (Gillespie 1976, 1977), with the trajectory optionally being returned
-#' in the output. The dataset that is returned consists of observations of the
+#' trajectory for the epidemic is simulated using Gillespie's first reaction 
+#' method (Gillespie 1976, 1977), with the trajectory optionally being returned 
+#' in the output. The dataset that is returned consists of observations of the 
 #' epidemic that are distributed according to a measurement process, provided as
-#' a function by the user. The dynamics of the system are characterized by a
-#' named vector of flow rates between compartments and a numeric matrix that
+#' a function by the user. The dynamics of the system are characterized by a 
+#' named vector of flow rates between compartments and a numeric matrix that 
 #' specifies the changes to each compartment due to each type of event. The user
-#' also specifies a named vector of process parameters, a named vector of
-#' initial states, and a set of times at which the epidemic process is sampled.
-#' The syntax for calling the function is deliberately similar to that used in
+#' also specifies a named vector of process parameters, a named vector of 
+#' initial states, and a set of times at which the epidemic process is sampled. 
+#' The syntax for calling the function is deliberately similar to that used in 
 #' the 'GillespieSSA' package so as to facilitate ease of use for users familiar
 #' with that package.
 #' 
@@ -26,6 +26,13 @@
 #'   subject-level trajectories. Defaults to \code{TRUE}.
 #' @param trim option specifying whether to trim the simulated data if the 
 #'   epidemic ends before the final observation time. Defaults to \code{TRUE}.
+#' @param lump option specifying whether to simulate the next event directly on 
+#'   the extended state space of individuals, or to simulate on the lumped state
+#'   space of compartment counts, and then choose a subject uniformly at random 
+#'   for each event from the set of subjects in the risk pool for that event. 
+#'   A value of TRUE, corresponding to the lumped state space, is appropriate 
+#'   when there is no subject level heterogeneity and is significantly faster in
+#'   even moderate sized populations.
 #'   
 #' @return Data frame with columns for the observation times, and draws from the
 #'   measurement process at observation times. Optionally, also return a data 
@@ -41,7 +48,7 @@
 #'   
 #' @export
 #' 
-simulate_epimodel <- function(epimodel, init_state = NULL, initialization_fcn = NULL, return_config = TRUE, trim = TRUE){
+simulate_epimodel <- function(epimodel, init_state = NULL, initialization_fcn = NULL, return_config = TRUE, trim = TRUE, lump = TRUE){
           
           # check function arguments and issue warnings/errors
           
@@ -74,15 +81,22 @@ simulate_epimodel <- function(epimodel, init_state = NULL, initialization_fcn = 
 
           # initialize simulation
           config <- epimodel$config_mat[epimodel$config_mat[,"time"] == min(epimodel$obstimes), , drop = FALSE]
-          rate_mat <- matrix(1, nrow = epimodel$popsize, ncol = nrow(epimodel$flow)) # initialize rate matrix
-          dt_mat <- matrix(Inf, nrow = epimodel$popsize, ncol = nrow(epimodel$flow)) # initialize dt matrix 
+          
+          if(lump == TRUE) {
+                    rate_mat <- matrix(1, nrow = 1, ncol = nrow(epimodel$flow)) # initialize rate matrix
+                    dt_mat <- matrix(Inf, nrow = 1, ncol = nrow(epimodel$flow)) # initialize dt matrix
+                    
+          } else if(lump == FALSE) {
+                    rate_mat <- matrix(1, nrow = epimodel$popsize, ncol = nrow(epimodel$flow)) # initialize rate matrix
+                    dt_mat <- matrix(Inf, nrow = epimodel$popsize, ncol = nrow(epimodel$flow)) # initialize dt matrix          
+          }
           
           config_list <- list(config = config, rate_mat = rate_mat, dt_mat = dt_mat, keep_going = TRUE)
 
           # simulate until tmax or no more events
           while(config_list$keep_going) {
-                    if(config_list$config[,"I"] == 0) break
-                    config_list <- sim_one_event(config_list, epimodel)
+
+                    config_list <- sim_one_event(config_list, epimodel, lump)
                     
                     if(config_list$keep_going){# insert the new row
 
@@ -99,7 +113,7 @@ simulate_epimodel <- function(epimodel, init_state = NULL, initialization_fcn = 
           
           # sample from the measurement process
           epimodel$obs_mat[, paste(epimodel$meas_vars, "_observed", sep = "")] <- 
-                    r_meas_process(epimodel$obs_mat, paste(epimodel$meas_vars, "_truth", sep = ""), epimodel$params)
+                    epimodel$r_meas_process(epimodel$obs_mat, paste(epimodel$meas_vars, "_truth", sep = ""), epimodel$params)
           
           # instatiate data matrix
           epimodel$dat <- epimodel$obs_mat[, c("time", paste(epimodel$meas_vars, "_observed", sep = ""))]

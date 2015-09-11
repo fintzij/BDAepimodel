@@ -15,6 +15,8 @@
 
 extract_rate_fcns <- function(rates, states, param_names) {
           
+          require(pryr, quietly = TRUE)
+          
           for(t in 1:length(rates)){
                     
                     rates[t] <- paste("unname(", rates[t], ")", sep = "")

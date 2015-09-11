@@ -5,7 +5,7 @@ context("Instatiating the observation matrix")
 test_that("The compartment counts at observation times are correct", {
           # initialize epimodel
           r_meas_process <- function(state, meas_vars, params){
-                    rbinom(n = 1, size = state[meas_vars], prob = params["rho"])
+                    rbinom(n = nrow(state), size = state[,meas_vars], prob = params["rho"])
           }
           
           epimodel <- init_epimodel(obstimes = 0:10,
@@ -18,7 +18,7 @@ test_that("The compartment counts at observation times are correct", {
           
           # simulate the epidemic
           set.seed(52787)
-          epimodel <- simulate_epimodel(epimodel, init_state = c(S = 7, I = 3, R = 0)) 
+          epimodel <- simulate_epimodel(epimodel, init_state = c(S = 7, I = 3, R = 0), lump = TRUE) 
           
-          expect_equal(as.numeric(epimodel$obs_mat[,"I_truth"]), c(3, 5, 4, 1, 0)) 
+          expect_equal(as.numeric(epimodel$obs_mat[,"I_truth"]), c(3, 2, 5, 3, 1, 1, 0)) 
 })

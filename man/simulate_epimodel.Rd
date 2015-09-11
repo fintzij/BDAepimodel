@@ -5,7 +5,7 @@
 \title{Simulates a stochastic epidemic model.}
 \usage{
 simulate_epimodel(epimodel, init_state = NULL, initialization_fcn = NULL,
-  return_config = TRUE, trim = TRUE)
+  return_config = TRUE, trim = TRUE, lump = TRUE)
 }
 \arguments{
 \item{epimodel}{list of bookkeeping and model objects. If not supplied, the
@@ -15,7 +15,15 @@ list will be generated.}
 subject-level trajectories. Defaults to \code{TRUE}.}
 
 \item{trim}{option specifying whether to trim the simulated data if the
-  epidemic ends before the final observation time. Defaults to \code{TRUE}.}
+epidemic ends before the final observation time. Defaults to \code{TRUE}.}
+
+\item{lump}{option specifying whether to simulate the next event directly on
+  the extended state space of individuals, or to simulate on the lumped state
+  space of compartment counts, and then choose a subject uniformly at random
+  for each event from the set of subjects in the risk pool for that event.
+  A value of TRUE, corresponding to the lumped state space, is appropriate
+  when there is no subject level heterogeneity and is significantly faster in
+  even moderate sized populations.}
 
 \item{initialization_function}{optional function requiring no inputs that can
 be provided in place of init_state to simulate the initial state of the
