@@ -18,7 +18,7 @@ parseCommandArgs()
 
 # Set up simulation objects ----------------------------------------------------------------
 
-niter <- 250000; nobs <- length(seq(0, 10, by = 0.05))
+niter <- 100000; nobs <- length(seq(0, 10, by = 0.05))
 
 if(sim_num == 1){
           # Set up BDAepimodel objects
@@ -96,7 +96,7 @@ trajecs <- foreach(j = 1:niter, .combine = 'cbind', .packages = c("BDAepimodel",
                     }
           }
           
-          BDAepimodel_traj <- simulate_epimodel(epimodel = epimodel, init_state = init_state, lump = TRUE, trim = FALSE)$obs_mat[,"I_truth"] 
+          BDAepimodel_traj <- simulate_epimodel(epimodel = epimodel, init_state = init_state, lump = FALSE, trim = FALSE)$obs_mat[,"I_truth"] 
           
           gSSA_sim <- ssa(init_state, a, nu, params, tf = 10)$data[,c(1,3)]
           
@@ -124,12 +124,11 @@ results_diff <- data.frame(time = seq(0, 10, by = 0.05),
                            estimate = rep(0, nobs),
                            lower = rep(0, nobs), 
                            upper = rep(0, nobs))
-results_diff$estimate <- rowMeans(trajecs[1:nobs, ] - trajecs[(nobs+1):(2*nobs), ])
-results_diff$lower <- results_diff$estimate - 1.96 * apply((trajecs[1:nobs, ] - trajecs[(nobs+1):(2*nobs), ]), 1, sd) / sqrt(niter)
-results_diff$upper <- results_diff$estimate + 1.96 * apply((trajecs[1:nobs, ] - trajecs[(nobs+1):(2*nobs), ]), 1, sd) / sqrt(niter)
+results_diff$estimate <- rowMeans(trajecs[1:nobs, ]) - rowMeans(trajecs[(nobs+1):(2*nobs), ])
+results_diff$lower <- results_diff$estimate - 1.96 * (apply(trajecs[1:nobs, ], 1, sd) + apply(trajecs[(nobs+1):(2*nobs), ], 1, sd)) / sqrt(niter)
+results_diff$upper <- results_diff$estimate + 1.96 * (apply(trajecs[1:nobs, ], 1, sd) + apply(trajecs[(nobs+1):(2*nobs), ], 1, sd)) / sqrt(niter)
 
-
-pdf("test_simulate_epimodel.pdf")
+pdf(paste("test_simulate_epimodel_extendedSS",sim_num,".pdf", sep = ""))
 
 ggplot(results, aes(x = time, y = estimate, colour = method)) + geom_line(size = 1) + geom_ribbon(data = results, aes(x = time, ymin = lower, ymax = upper, fill = method), alpha = 0.1, size = 0) + labs(y = "Average number of infecteds") + theme_bw()
 
