@@ -1,58 +1,104 @@
 ---
 title: "Tractable fitting of stochastic epidemic models via Bayesian data augmentation using BDAepimodel"
-author: "Jon Fintzi, Jon Wakefield, Vladimir Minin"
+author: "Jon Fintzi, Jon Wakefield, Vladimir N. Minin"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output:
+      rmarkdown::html_document:
+        fig_caption           : yes
+        number_sections       : true 
+        theme                 : readable
+        highlight             : pygments
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{Tractable fitting of stochastic epidemic models via Bayesian data augmentation using BDAepimodel}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-Vignettes are long form documentation commonly included in packages. Because they are part of the distribution of the package, they need to be as compact as possible. The `html_vignette` output type provides a custom style sheet (and tweaks some options) to ensure that the resulting html is as small as possible. The `html_vignette` format:
-
-- Never uses retina figures
-- Has a smaller default figure size
-- Uses a custom CSS stylesheet instead of the default Twitter Bootstrap style
-
-## Vignette Info
-
-Note the various macros within the `vignette` setion of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the `title` field and the `\VignetteIndexEntry` to match the title of your vignette.
-
-## Styles
-
-The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
-
-    output: 
-      rmarkdown::html_vignette:
-        css: mystyles.css
-
-## Figures
-
-The figure sizes have been customised so that you can easily put two images side-by-side. 
-
-```{r, fig.show='hold'}
-plot(1:10)
-plot(10:1)
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache=TRUE)
 ```
 
-You can enable figure captions by `fig_caption: yes` in YAML:
+```{r, echo = FALSE}
+library(BDAepimodel)
+set.seed(52787)
 
-    output:
-      rmarkdown::html_vignette:
-        fig_caption: yes
-
-Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
-
-## More Examples
-
-You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
-
-```{r, echo=FALSE, results='asis'}
-knitr::kable(head(mtcars, 10))
 ```
 
-Also a quote using `>`:
 
-> "He who gives up [code] safety for [code] speed deserves neither."
-([via](https://twitter.com/hadleywickham/status/504368538874703872))
+# Introduction
+The purpose of this vignette is to explain how to simulate from and fit a stochastic epidemic model using the Bayesian data augmentation scheme implemented in `BDAepimodel`. Briefly, the augmentation scheme augments noisy measurements of comparment counts by resampling subject-level disease trajectories from a time-inhomogeneous continuous time Markov chain (CTMC) with rates depending on the infection histories of all other subject. This data augmentation leverages, and depends on, the hidden Markov model (HMM) formulation of the complete data likelihood. The package is capable of fitting a broad class of stochastic epidemic models, which are specified fully by the user, and accesses various utilities for MCMC diagnostics. The first part of the tutorial explains how to specify and simulate from a stochastic epidemic model. In part two we discuss how to fit a stochastic epidemic model to data and how to set options for the MCMC. Part three presents results from an analysis of an time-series data from a flue outbreak in a boarding school. 
+
+# Simulating from a stochastic epidemic model
+
+All of the user-oriented functions in `BDAepimodel` act on one of two bookkeeping lists of class `epimodel` - an `epimodel` list, or an `epimodel_results` list. The former is used in simulating from and fitting a stochastic epidemic model, while the latter is used to store results, generate plots, and assess various diagnostics. Therefore, the `epimodel` object represents the "input" to the method, while the `epimodel_results` contains the "output". 
+
+In order to simulate a path and draw samples from a stochastic epidemic model we must first instatiate an `epimodel` object, accomplished via the `init_epimodel` command. At a minimum, we must supply the initialization function with four arguments:
+
+1. `states`, a character vector whose elements specify the compartment names in the stochastic epidemic model. 
+2. `params`, a numeric vector with named elements containing values of the parameters governing the time-evolution of the epidemic process. 
+3. `rates`, a character vector with strings specifying the rates at which an individual transitions between model compartments. The strings in the vector are parsed and matched to the state and parameter names. Therefore, it is *critical* that the state and parameter names match their counterparts in the `rates` vector exactly. 
+4. `flow`, a numeric matrix of dimension `number of transitions` $\times$ `number of compartments`. Each row corresponds to a possible transition, and each column in a row has element 1 to indicate an entry to that compartment, -1 to indicate an exit, and 0 for no change in the size of the compartment on the subject level. It is *critical* that the order of rows in the `flow` matrix correspond exactly to the order of the strings in the `rates` vector. Furthermore, the columns in the `flow` matrix are assumed to have the same order as the elements of the `state` vector. 
+
+As an example, suppose we would like to initialize an `epimodel` object for an SIR model. There are three states that a subject may occupy - susceptible (S), infected (I), or recovered (R). Therefore, our vector of state labels is `c("S", "I", "R")`.  The rate at which a susceptible individual becomes infected is equal to the contact rate between infectives and the susceptible individual, $\beta$, times the number of infecteds. The subject then recovers with rate $\mu$. Therefore, our vector of rates is `c("beta * I", "mu")`. When a subject becomes infected, he exits the susceptible compartment, and enters the infected compartment. Therefore, the first row in the `flow` matrix has a -1 in the first column (the susceptible compartment), and a 1 in the second column (the infected compartmnet). There is no change to the number of recovered individuals, so the first row has a 0 in the recovered column. The other rows in the flow matrix are constructed similarly. Finally, we must specify a vector of named parameters governing both the latent epidemic process and the measurement process. Thus, to initialize the `epimodel` object, we would execute the following: 
+
+```{r}
+epimodel <- init_epimodel(states = c("S", "I", "R"), 
+                          params = c(beta = 0.02, mu = 1, rho = 0.5, p0 = 0.05), 
+                          rates = c("beta * I", "mu"), 
+                          flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T))
+```
+
+If we inspect the `epimodel` object, we notice that the character vector of rates has been parsed and evaluated to create a list of functions to compute rates. These functions are called internally within the simulation and model fitting functions. Furthermore, a lookup table for matching compartment names to their internal codes has been created, and the columns of the flow matrix have been given names corresponding to the elements of the `states` vector. 
+```{r}
+epimodel$rates
+epimodel$state_lookup
+epimodel$flow
+```
+
+
+## Simulating a collection of subject-level trajectories and a dataset
+
+To simulate a collection of trajectories and a dataset using the `simulate_epimodel` function, we need to specify a few more inputs beyond the minimal inputs to instatiate an `epimodel`. We must also provide the simulation function with a vector of observation times, a function to simulate from the measurement process, a character vector specifying the compartments which are under observation, and either a vector of initial compartment counts, or a function to sample from the distribution of compartment counts at the first observation time. The initialization function and initial state arguments are supplied as arguments to `simulate_epimodel`, while the other arguments can either be specified when we initialize the `epimodel` object, or they be provided either as arguments to `simulate_epimodel`. 
+
+We must bear in mind a couple of important points regarding how to specify the initialization function and the function to simulate from the measurement proces. Regarding the former, the initialization function must be specified without arguments. It is callable by merely invoking it, as in: `initialization_function <- function(); f()`. Second, the initialization function must return a numeric vector of compartment counts with element names corresponding exactly to the names provided in the `states` argument used to initialize the `epimodel` object. Regarding the latter, the function to simulate from the measurement process must have the arguments `state`, `meas_vars`, and `params`. The body of the function should therefore reference these arguments and their composite elements. Therefore, `state` refers to a matrix of compartment counts where each row is a vector of the same form as is returned by the `initialization_function`. `state` should be indexed into using the `meas_vars` argument, where `meas_vars` should correspond to the names of the compartments under observations. `params` will match the vector of parameters supplied to `init_epimodel`. 
+
+To simulate from our SIRS model, we will re-initialize the `epimodel` list with all of the arguments required for the simulation. 
+
+```{r}
+          # Set up initialization funtion and measurement process function
+          initialization_fcn <- function(){
+                    init_state <- as.numeric(rmultinom(1, 100, c(0.95, 0.05, 0)))
+                    names(init_state ) <- c("S", "I", "R")
+                    return(init_state)
+          }
+          
+          r_meas_process <- function(state, meas_vars, params){
+                    obs_vec <- rbinom(n = nrow(state), size = state[,meas_vars, drop = FALSE], prob = params["rho"])
+                    names(obs_vec) <- meas_vars
+                    return(obs_vec)
+          }
+          
+          # initialize epimodel
+          epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.5),
+                                    states = c("S", "I", "R"), 
+                                    params = c(beta = 0.02, mu = 1, rho = 0.5, p0 = 0.05), 
+                                    rates = c("beta * I", "mu"), 
+                                    flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
+                                    meas_vars = "I",
+                                    r_meas_process = r_meas_process)
+          
+```
+
+We may now proceed to simulate from the epimodel object:
+```{r SIRS_sim, cache= TRUE}
+          epimodel <- simulate_epimodel(epimodel, initialization_fcn = initialization_fcn)
+```
+We can now plot the simulated data using the `plot_epimodel` function: 
+```{r SIRS_plot, message = FALSE, cache=TRUE}
+          plot_epimodel(epimodel)
+          
+```
+
+
+There are a few additional options that may be specified within the `simulate_epimodel` function, all three of which default to `TRUE`. The first is `return_config`. When this is true, the simulation function will keep the configuration of subject level trajectories in addition to the noisy counts at observation times. When the `trim` option is set to `TRUE`, only the first observation after the end of the epidemic will be retained, and all subsequent observations discarded, should the epidemic end before the final observation time. Finally, the `lump` option specifies whether the next event should be simulated by lumping the compartment counts, then sampling an individual from the risk set for the next event. When `lump` is `FALSE`, transition times for the next event are simulated for all subjects directly. Simulation on the unlumped state space becomes substantially slower as the population size increases.  
+

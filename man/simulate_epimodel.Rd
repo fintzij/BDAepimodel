@@ -4,12 +4,25 @@
 \alias{simulate_epimodel}
 \title{Simulates a stochastic epidemic model.}
 \usage{
-simulate_epimodel(epimodel, init_state = NULL, initialization_fcn = NULL,
+simulate_epimodel(epimodel, obstimes = NULL, init_state = NULL,
+  initialization_fcn = NULL, meas_vars = NULL, r_meas_process = NULL,
   return_config = TRUE, trim = TRUE, lump = TRUE)
 }
 \arguments{
 \item{epimodel}{list of bookkeeping and model objects. If not supplied, the
 list will be generated.}
+
+\item{meas_vars}{character vector specifying which compartments are measured.}
+
+\item{r_meas_process}{function to simulate from the measurement process, with
+named arguments \code{state}, \code{meas_vars}, and \code{params}, which
+are the current state of the process (given as a named character vector
+with element names corresponding exactly to the names of compartments), a
+vector with the names of the states to be measured, and a named vector of
+process parameters. The function should return noisy measurements of the
+process in a vector with named elements corresponding to each of the
+measured compartments specified in \code{meas_vars}. The function must
+index into the state vector and parameter vector using element names.}
 
 \item{return_config}{option specifying whether to return a matrix of
 subject-level trajectories. Defaults to \code{TRUE}.}
@@ -51,6 +64,32 @@ initial states, and a set of times at which the epidemic process is sampled.
 The syntax for calling the function is deliberately similar to that used in
 the 'GillespieSSA' package so as to facilitate ease of use for users familiar
 with that package.
+}
+\examples{
+# Set up initialization funtion and measurement process function
+initialization_fcn <- function(){
+          init_state <- as.numeric(rmultinom(1, 200, c(0.95, 0.05, 0)))
+                    names(init_state ) <- c("S", "I", "R")
+                    return(init_state)
+                    }
+
+                    r_meas_process <- function(state, meas_vars, params){
+                    obs_vec <- rbinom(n = nrow(state), size = state[,meas_vars], prob = params["rho"])
+                    names(obs_vec) <- meas_vars
+                    return(obs_vec)
+                    }
+
+# initialize epimodel
+epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.05),
+                          states = c("S", "I", "R"),
+                          params = c(beta = 0.02, mu = 1, gamma = 0.5, rho = 0.5, p0 = 0.05),
+                          rates = c("beta * I", "mu", "gamma"),
+                          flow = matrix(c(-1, 1, 0, 0, -1, 1, 1, 0, -1), ncol = 3, byrow = T),
+                          meas_vars = "I",
+                          r_meas_process = r_meas_process)
+
+# simulate from model
+epimodel <- simulate_epimodel(epimodel, initialization_fcn = initialization_fcn)
 }
 \references{
 {Gillespie DT (1976). “A general method for numerically

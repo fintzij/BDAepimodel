@@ -3,4 +3,5 @@
 export(extract_rate_fcns)
 export(init_config_mat)
 export(init_epimodel)
+export(plot_epimodel)
 export(simulate_epimodel)

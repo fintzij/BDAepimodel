@@ -15,7 +15,7 @@ init_epimodel(states, params, rates, flow, dat = NULL, time_var = NULL,
 \item{states}{character vector with names of compartments corresponding
 exactly to the names of compartments used in the \code{*_rates} arguments.}
 
-\item{params}{character vector of process parameters with element names
+\item{params}{numeric vector of process parameters with element names
 corresponding exactly to names of parameters used in the \code{rates}
 arguments.}
 
@@ -24,10 +24,11 @@ compartments. Each variable in a rate must correspond to the name of one of
 the \code{states}, \code{params}, or \code{covars} (covariates not yet
 implemented).}
 
-\item{flow}{numeric matrix with reactions as rows and where each column in a
-row has element 1 to indicate an entry to that compartment, -1 to indicate
-an exit, and 0 for no change in the size of the compartment on the subject
-level. Columns should have names corresponding to the state labels.}
+\item{flow}{numeric matrix of dimension \code{number of transitions \emph{x}
+number of compartments}. Each row corresponds to a possible transition, and
+each column in a row has element 1 to indicate an entry to that
+compartment, -1 to indicate an exit, and 0 for no change in the size of the
+compartment on the subject level.}
 
 \item{dat}{matrix of dimension \code{number of observation times \emph{x}
 number of measured compartments}. \code{dat} must have one column with
@@ -100,5 +101,11 @@ level bookkeeping objects, measurement, and epidemic process settings. At a
 minimum, the epimodel object must be initialized with the states, params,
 rates, flow, and either the vector of observation times or a matrix with
 data.
+}
+\examples{
+epimodel <- init_epimodel(states = c("S", "I", "R"),
+params = c(beta = 0.02, mu = 1, gamma = 0.5, rho = 0.5, p0 = 0.05),
+rates = c("beta * I", "mu", "gamma"),
+flow = matrix(c(-1, 1, 0, 0, -1, 1, 1, 0, -1), ncol = 3, byrow = T))
 }
 

@@ -48,7 +48,32 @@
 #'   
 #' @export
 #' 
-simulate_epimodel <- function(epimodel, init_state = NULL, initialization_fcn = NULL, return_config = TRUE, trim = TRUE, lump = TRUE){
+#' @examples # Set up initialization funtion and measurement process function
+#' initialization_fcn <- function(){
+#'           init_state <- as.numeric(rmultinom(1, 200, c(0.95, 0.05, 0)))
+#'                     names(init_state ) <- c("S", "I", "R")
+#'                     return(init_state)
+#'                     }
+#'                     
+#'                     r_meas_process <- function(state, meas_vars, params){
+#'                     obs_vec <- rbinom(n = nrow(state), size = state[,meas_vars], prob = params["rho"])
+#'                     names(obs_vec) <- meas_vars
+#'                     return(obs_vec)
+#'                     }
+#' 
+#' # initialize epimodel
+#' epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.05),
+#'                           states = c("S", "I", "R"),
+#'                           params = c(beta = 0.02, mu = 1, gamma = 0.5, rho = 0.5, p0 = 0.05),
+#'                           rates = c("beta * I", "mu", "gamma"),
+#'                           flow = matrix(c(-1, 1, 0, 0, -1, 1, 1, 0, -1), ncol = 3, byrow = T),
+#'                           meas_vars = "I",
+#'                           r_meas_process = r_meas_process)
+#'                           
+#' # simulate from model
+#' epimodel <- simulate_epimodel(epimodel, initialization_fcn = initialization_fcn)
+#' 
+simulate_epimodel <- function(epimodel, obstimes = NULL, init_state = NULL, initialization_fcn = NULL, meas_vars = NULL, r_meas_process = NULL,  return_config = TRUE, trim = TRUE, lump = TRUE){
           
           # check function arguments and issue warnings/errors
           
@@ -60,14 +85,17 @@ simulate_epimodel <- function(epimodel, init_state = NULL, initialization_fcn = 
                     stop("Only one of the initial state vector and an initialization function may be specified.")
           }
           
-          if(is.null(epimodel$meas_vars)){
-                    stop(sQuote("meas_vars"), "must be specified within the epimodel list.")
+          if(is.null(epimodel$meas_vars) && is.null(meas_vars)){
+                    stop(sQuote("meas_vars"), "must be specified either within the epimodel list or as an argument to the simulation function.")
           }
           
-          if(is.null(epimodel$r_meas_process)){
-                    stop(sQuote("r_meas_process"), "must be specified within the epimodel list.")
+          if(is.null(epimodel$r_meas_process) && is.null(r_meas_process)){
+                    stop(sQuote("r_meas_process"), "must be specified either within the epimodel list or as an argument to the simulation function.")
           }
           
+          if(is.null(epimodel$obstimes) && is.null(obstimes)) {
+                    stop("The observation times must be supplied, either within the epimodel list or as an argument to the simulation function.")
+          }
           # generate initial state vector if initialization function is supplied
           if(!is.null(initialization_fcn)){
                     init_state <- initialization_fcn()
@@ -77,6 +105,10 @@ simulate_epimodel <- function(epimodel, init_state = NULL, initialization_fcn = 
           epimodel$popsize <- sum(init_state)
           
           # initialize bookkeeping matrix
+          if(is.null(epimodel$obstimes) && !is.null(obstimes)){
+                    epimodel$obstimes <- obstimes
+          }
+          
           epimodel$config_mat <- init_config_mat(init_state = init_state, t0 = min(epimodel$obstimes), tmax = max(epimodel$obstimes))
 
           # initialize simulation

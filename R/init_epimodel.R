@@ -8,17 +8,18 @@
 #' 
 #' @param states character vector with names of compartments corresponding 
 #'   exactly to the names of compartments used in the \code{*_rates} arguments.
-#' @param params character vector of process parameters with element names 
+#' @param params numeric vector of process parameters with element names 
 #'   corresponding exactly to names of parameters used in the \code{rates} 
 #'   arguments.
 #' @param rates character vector with strings specifying the flow rates between 
 #'   compartments. Each variable in a rate must correspond to the name of one of
 #'   the \code{states}, \code{params}, or \code{covars} (covariates not yet 
 #'   implemented).
-#' @param flow numeric matrix with reactions as rows and where each column in a 
-#'   row has element 1 to indicate an entry to that compartment, -1 to indicate 
-#'   an exit, and 0 for no change in the size of the compartment on the subject 
-#'   level. Columns should have names corresponding to the state labels.
+#' @param flow numeric matrix of dimension \code{number of transitions \emph{x}
+#'   number of compartments}. Each row corresponds to a possible transition, and
+#'   each column in a row has element 1 to indicate an entry to that
+#'   compartment, -1 to indicate an exit, and 0 for no change in the size of the
+#'   compartment on the subject level. 
 #' @param dat matrix of dimension \code{number of observation times \emph{x} 
 #'   number of measured compartments}. \code{dat} must have one column with 
 #'   observation times (numeric and strictly increasing), whose the name of 
@@ -37,13 +38,13 @@
 #'   t0.
 #' @param meas_vars character vector specifying which compartments are measured.
 #' @param r_meas_process function to simulate from the measurement process, with
-#'   named arguments \code{state}, \code{meas_vars}, and \code{params}, which
-#'   are the current state of the process (given as a named character vector
-#'   with element names corresponding exactly to the names of compartments), a
-#'   vector with the names of the states to be measured, and a named vector of
-#'   process parameters. The function should return noisy measurements of the
-#'   process in a vector with named elements corresponding to each of the
-#'   measured compartments specified in \code{meas_vars}. The function must
+#'   named arguments \code{state}, \code{meas_vars}, and \code{params}, which 
+#'   are the current state of the process (given as a named character vector 
+#'   with element names corresponding exactly to the names of compartments), a 
+#'   vector with the names of the states to be measured, and a named vector of 
+#'   process parameters. The function should return noisy measurements of the 
+#'   process in a vector with named elements corresponding to each of the 
+#'   measured compartments specified in \code{meas_vars}. The function must 
 #'   index into the state vector and parameter vector using element names.
 #' @param d_meas_process function to evaluate the density of the measurement 
 #'   process with arguments and output specified as in \code{r_meas_process}.
@@ -69,6 +70,11 @@
 #' @return list containing bookkeeping objects and model configuration objects.
 #' @export
 #' 
+#' @examples epimodel <- init_epimodel(states = c("S", "I", "R"), 
+#' params = c(beta = 0.02, mu = 1, gamma = 0.5, rho = 0.5, p0 = 0.05),
+#' rates = c("beta * I", "mu", "gamma"),
+#' flow = matrix(c(-1, 1, 0, 0, -1, 1, 1, 0, -1), ncol = 3, byrow = T))
+#' 
 init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NULL, obstimes = NULL, popsize = NULL, config_mat = NULL, obs_mat = NULL, r_initdist = NULL, d_initdist = NULL, meas_vars = NULL, r_meas_process = NULL, d_meas_process = NULL, covar = NULL, tcovar = NULL, rprior = NULL, dprior = NULL, to_estimation_scale = NULL, from_estimation_scale = NULL) {
           
           
@@ -93,10 +99,6 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
                     stop(sQuote("flow"), "must have number of columns equal to the number of states")
           } else{
                     colnames(flow) <- states
-          }
-          
-          if(missing(dat) & missing(obstimes)){
-                    stop("Either the observation times or a dataset must be specified")
           }
           
           # check that the user has indicated which is the times variable if a 
@@ -126,13 +128,13 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
           # if a dataset was provided instead of obstimes, instatiate obstimes. 
           # Note that obstimes and dat cannot both be NULL and that time_var is
           # provided if dat is provided.
-          if(is.null(obstimes)) {
+          if(is.null(obstimes) & !is.null(dat)) {
                     obstimes <- dat[,time_var]
           }
           
                     
           #initialize list object
-          epimodel <- list(dat = dat,
+          epimodel <- structure(list(dat = dat,
                            time_var = time_var,
                            obstimes = obstimes,
                            popsize = popsize,
@@ -153,7 +155,7 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
                            rprior = rprior,
                            dprior = dprior,
                            to_estimation_scale = to_estimation_scale,
-                           from_estimation_scale = from_estimation_scale)
+                           from_estimation_scale = from_estimation_scale), class = "epimodel")
           
           # if the time_var argument was not supplied, default to "time"
           if(is.null(epimodel$time_var)){

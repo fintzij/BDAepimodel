@@ -52,7 +52,7 @@ extract_rate_fcns <- function(rates, states, param_names) {
                     .arg_list <- eval(parse(text = paste("alist(",paste(c("state", "params","...="), collapse = "=,"),")",sep="")))
                     
                     # capture text for the body of the function
-                    .rate_fcns[[.s]] <- make_function(.arg_list, .rates[[.s]])
+                    .rate_fcns[[.s]] <- pryr::make_function(.arg_list, .rates[[.s]])
           }
           
           return(.rate_fcns)

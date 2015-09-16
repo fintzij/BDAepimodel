@@ -12,6 +12,7 @@ external.packages:
     knitr
     rmarkdown
     pryr
+    coda
 local.repos: 
 load.external.packages.on.startup: TRUE
 ignored.packages: 

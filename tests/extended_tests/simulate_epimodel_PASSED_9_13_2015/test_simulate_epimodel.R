@@ -18,7 +18,7 @@ parseCommandArgs()
 
 # Set up simulation objects ----------------------------------------------------------------
 
-niter <- 100000; nobs <- length(seq(0, 10, by = 0.05))
+niter <- 1000000; nobs <- length(seq(0, 10, by = 0.05))
 
 if(sim_num == 1){
           # Set up BDAepimodel objects
@@ -67,8 +67,8 @@ if(sim_num == 1){
           # R0 = 4, mu = 1, rho = 0.5, p0 = 0.05
           epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.05),
                                     states = c("S", "I", "R"), 
-                                    params = c(beta = 0.02, mu = 1, lambda = 0.5, rho = 0.5, p0 = 0.05), 
-                                    rates = c("beta * I", "mu", "lambda"), 
+                                    params = c(beta = 0.02, mu = 1, gamma = 0.5, rho = 0.5, p0 = 0.05), 
+                                    rates = c("beta * I", "mu", "gamma"), 
                                     flow = matrix(c(-1, 1, 0, 0, -1, 1, 1, 0, -1), ncol = 3, byrow = T), 
                                     meas_vars = "I",
                                     r_meas_process = r_meas_process)
