@@ -99,6 +99,5 @@ We can now plot the simulated data using the `plot_epimodel` function:
           
 ```
 
-
 There are a few additional options that may be specified within the `simulate_epimodel` function, all three of which default to `TRUE`. The first is `return_config`. When this is true, the simulation function will keep the configuration of subject level trajectories in addition to the noisy counts at observation times. When the `trim` option is set to `TRUE`, only the first observation after the end of the epidemic will be retained, and all subsequent observations discarded, should the epidemic end before the final observation time. Finally, the `lump` option specifies whether the next event should be simulated by lumping the compartment counts, then sampling an individual from the risk set for the next event. When `lump` is `FALSE`, transition times for the next event are simulated for all subjects directly. Simulation on the unlumped state space becomes substantially slower as the population size increases.  
 

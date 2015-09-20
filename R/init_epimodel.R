@@ -58,14 +58,7 @@
 #' @param dprior list of functions for evaluating the prior densities of model 
 #'   parameters. List element names should correspond to exactly to the 
 #'   parameter names given in \code{params}.
-#' @param to_estimation_scale list of functions for transforming model 
-#'   parameters to the scale on which new parameters should be proposed. List 
-#'   element names should correspond to exactly to the parameter names given in 
-#'   \code{params}.
-#' @param from_estimation_scale list of functions for transforming model 
-#'   parameters from the a scale on which new parameters are proposed to the 
-#'   scale used to evaluate the process likelihood. List element names should 
-#'   correspond to exactly to the parameter names given in \code{params}.
+#' @param sim_settings bookkeeping list for simulation settings.
 #'   
 #' @return list containing bookkeeping objects and model configuration objects.
 #' @export
@@ -75,7 +68,7 @@
 #' rates = c("beta * I", "mu", "gamma"),
 #' flow = matrix(c(-1, 1, 0, 0, -1, 1, 1, 0, -1), ncol = 3, byrow = T))
 #' 
-init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NULL, obstimes = NULL, popsize = NULL, config_mat = NULL, obs_mat = NULL, r_initdist = NULL, d_initdist = NULL, meas_vars = NULL, r_meas_process = NULL, d_meas_process = NULL, covar = NULL, tcovar = NULL, rprior = NULL, dprior = NULL, to_estimation_scale = NULL, from_estimation_scale = NULL) {
+init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NULL, obstimes = NULL, popsize = NULL, config_mat = NULL, obs_mat = NULL, r_initdist = NULL, d_initdist = NULL, meas_vars = NULL, r_meas_process = NULL, d_meas_process = NULL, covar = NULL, tcovar = NULL, rprior = NULL, dprior = NULL, sim_settings = NULL) {
           
           
           # user must specify states, parameters, flow, and rates at a minimum. 
@@ -112,16 +105,6 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
                     stop(sQuote("tcovar"), "must be specified along with covariates")
           }
           
-          # check that if the one of the transformation arguments was provided,
-          # then its inverse should be as well.
-          if(is.null(to_estimation_scale) & !is.null(from_estimation_scale)){
-                stop(sQuote("to_estimation_scale"),"must be provided if from_estimation_scale is specified")    
-          }
-          
-          if(is.null(from_estimation_scale) & !is.null(to_estimation_scale)){
-                    stop(sQuote("from_estimation_scale"),"must be provided if to_estimation_scale is specified")
-          }
-          
           # extract the rates to instatiate a function list
           rates <- extract_rate_fcns(rates = rates, states = states, param_names = names(params))
           
@@ -153,9 +136,7 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
                            covar = covar,
                            tcovar = tcovar,
                            rprior = rprior,
-                           dprior = dprior,
-                           to_estimation_scale = to_estimation_scale,
-                           from_estimation_scale = from_estimation_scale), class = "epimodel")
+                           dprior = dprior), class = "epimodel")
           
           # if the time_var argument was not supplied, default to "time"
           if(is.null(epimodel$time_var)){

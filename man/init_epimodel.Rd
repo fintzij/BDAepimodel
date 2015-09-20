@@ -8,8 +8,7 @@ init_epimodel(states, params, rates, flow, dat = NULL, time_var = NULL,
   obstimes = NULL, popsize = NULL, config_mat = NULL, obs_mat = NULL,
   r_initdist = NULL, d_initdist = NULL, meas_vars = NULL,
   r_meas_process = NULL, d_meas_process = NULL, covar = NULL,
-  tcovar = NULL, rprior = NULL, dprior = NULL,
-  to_estimation_scale = NULL, from_estimation_scale = NULL)
+  tcovar = NULL, rprior = NULL, dprior = NULL, sim_settings = NULL)
 }
 \arguments{
 \item{states}{character vector with names of compartments corresponding
@@ -82,15 +81,7 @@ parameter names given in \code{params}.}
 parameters. List element names should correspond to exactly to the
 parameter names given in \code{params}.}
 
-\item{to_estimation_scale}{list of functions for transforming model
-parameters to the scale on which new parameters should be proposed. List
-element names should correspond to exactly to the parameter names given in
-\code{params}.}
-
-\item{from_estimation_scale}{list of functions for transforming model
-  parameters from the a scale on which new parameters are proposed to the
-  scale used to evaluate the process likelihood. List element names should
-  correspond to exactly to the parameter names given in \code{params}.}
+\item{sim_settings}{bookkeeping list for simulation settings.}
 }
 \value{
 list containing bookkeeping objects and model configuration objects.

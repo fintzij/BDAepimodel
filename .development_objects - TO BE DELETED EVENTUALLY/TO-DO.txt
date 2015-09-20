@@ -1,3 +1,10 @@
+9/19/2015
+================================
+- Write update_prior_prob function - should compare new and old vectors of parameters on estimation scale, then update the prior distributions for the parameters that have changed. 
+- Write functions to calculate the log-likelihood, population- and subject-level likelihoods
+- Functions to compute the IRMs and TPMs
+- Consider what is the best way to save and index into an array of IRMs and TPMs
+
 9/9/2015
 ================================
 - Reconsider how r_meas_process and d_meas_process operate. Consider how to facilitate their handling matrices as arguments rather than restricting to vectors. 
