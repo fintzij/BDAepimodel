@@ -12,7 +12,7 @@
 #'   init_simulation.
 #' @param priors list of functions to evaluate prior distributions.
 #' @param cov_mtx covariance matrix for parameters to be used in M-H updates.
-#' @param config_resampling number of subject level trajectories to sample 
+#' @param configs_to_redraw number of subject level trajectories to sample 
 #'   between parameter updates.
 #' @param to_estimation_scale list of functions for transforming model 
 #'   parameters to the scale on which new parameters should be proposed. List 
@@ -105,9 +105,9 @@
 #                  params_every <- 1, 
 #                  configs_every <- 10,
 #                  kernel = kernel,
-#                  config_resampling = 10)
+#                  configs_to_redraw = 10)
 #' 
-init_settings <- function(epimodel, niter, burnin, params_every = 1, configs_every = floor(niter / 100), kernel, cov_mtx = NULL, config_resampling, to_estimation_scale = NULL, from_estimation_scale = NULL) {
+init_settings <- function(epimodel, niter, burnin, params_every = 1, configs_every = floor(niter / 100), kernel, cov_mtx = NULL, configs_to_redraw, to_estimation_scale = NULL, from_estimation_scale = NULL) {
           
           # check that the appropriate argumentsare provided as integers
           if(!all(c(niter, burnin, params_every, configs_every, config_resample_prop) == floor(c(niter, burnin, params_every, configs_every, config_resample_prop)))) {
@@ -132,7 +132,7 @@ init_settings <- function(epimodel, niter, burnin, params_every = 1, configs_eve
                                configs_every = configs_every,
                                kernel = kernel,
                                cov_mtx = cov_mtx,
-                               config_resampling = config_resampling,
+                               configs_to_redraw = configs_to_redraw,
                                to_estimation_scale = to_estimation_scale,
                                from_estimation_scale = from_estimation_scale)
           

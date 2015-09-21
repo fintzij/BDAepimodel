@@ -22,6 +22,5 @@ fun3 <- function(epimodel) {
           return(log_likelihood)
 }
 
-system.time({for(k in 1:100000) fun1(.epimodel)})
-system.time({for(k in 1:100000) {epimodel$config_mat <- fun2(epimodel)};
-          for(j in 1:100000) {epimodel$log_likelihood <- 361}})
+system.time({for(k in 1:10000) fun1(.epimodel)})
+system.time({for(k in 1:10000) {epimodel$config_mat <- fun2(epimodel); epimodel$log_likelihood <- 361}})

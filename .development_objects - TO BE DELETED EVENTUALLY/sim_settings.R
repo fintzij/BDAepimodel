@@ -12,23 +12,38 @@ r_meas_process <- function(state, meas_vars, params){
           rbinom(n = nrow(state), size = state[,meas_vars], prob = params["rho"])
 }
 
+d_meas_process <- function(state, meas_vars, params, log = TRUE) {
+          dbinom(x = state[, paste(meas_vars, "_observed", sep="")], size = state[, paste(meas_vars, "_truth", sep = "")], prob = params["rho"], log = log) 
+}
+
+# evaluates initial distribution for a single subject
+d_initdist <- function(state, params, log = TRUE) {
+          if(log == TRUE) {
+                    (state == 2)* log(params["p0"]) + (state == 1) * log(1-params["p0"])
+          } else {
+                    (params["p0"] ^ (state == 2)) * ((1-params["p0"])^(state == 1))
+          }
+}
+
+# subject level simulation of initial state at time t0
+r_initdist <- function(params) {
+          sample.int(3, 1, prob = c(1-params["rho"], params["rho"], 0))
+          }
+
 # R0 = 4, mu = 1, rho = 0.5, p0 = 0.05
 epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.5),
+                          popsize = 200,
                           states = c("S", "I", "R"), 
                           params = c(beta = 0.02, mu = 1, rho = 0.5, p0 = 0.05), 
                           rates = c("beta * I", "mu"), 
                           flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                           meas_vars = "I",
-                          r_meas_process = r_meas_process)
+                          r_meas_process = r_meas_process,
+                          d_meas_process = d_meas_process,
+                          d_initdist = d_initdist,
+                          r_initdist = r_initdist)
 
-init_state <- initialization_fcn()
-if(init_state["I"] == 0){
-          while(init_state["I"] == 0){
-                    init_state <- initialization_fcn()
-          }
-}
-
-epimodel <- simulate_epimodel(epimodel = epimodel, init_state = init_state, lump = TRUE, trim = FALSE)
+epimodel <- simulate_epimodel(epimodel = epimodel, lump = TRUE, trim = FALSE)
 
 
 to_estimation_scale <- list(function(params, popsize) {log(params["beta"] * popsize/params["mu"])}, 
@@ -89,7 +104,7 @@ rho_p0_kernel <- function(epimodel) {
 }
 
 kernel <- list(beta_mu_kernel, rho_p0_kernel)
-cov_mtx <- diag(c(0.005, 0.1))
+cov_mtx <- diag(c(0.005, 0.1), nrow = 2, ncol = 2)
 config_resample_prop <- 10
 
 # save new parameters every iteration
@@ -101,6 +116,6 @@ epimodel$sim_settings <- init_settings(niter = 1000,
                 configs_every <- 10,
                 kernel = kernel,
                 cov_mtx = cov_mtx,
-                config_resampling = 20,
+                configs_to_redraw = 20,
                 to_estimation_scale = to_estimation_scale,
                 from_estimation_scale = from_estimation_scale)

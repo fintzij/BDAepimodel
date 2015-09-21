@@ -6,7 +6,7 @@
 \usage{
 init_settings(epimodel, niter, burnin, params_every = 1,
   configs_every = floor(niter/100), kernel, cov_mtx = NULL,
-  config_resampling, to_estimation_scale = NULL,
+  configs_to_redraw, to_estimation_scale = NULL,
   from_estimation_scale = NULL)
 }
 \arguments{
@@ -17,7 +17,8 @@ sampler.}
 
 \item{params_every}{thin parameter updates by saving every k-th draw.}
 
-\item{configs_every}{thin configurations by saving every k-th configuration.}
+\item{configs_every}{thin configurations by saving the current configuration
+after every k-th parameter update.}
 
 \item{kernel}{transition kernel for parameters, provided as a list of
 transition functions. Each function should use objects that are available
@@ -26,7 +27,7 @@ init_simulation.}
 
 \item{cov_mtx}{covariance matrix for parameters to be used in M-H updates.}
 
-\item{config_resampling}{number of subject level trajectories to sample
+\item{configs_to_redraw}{number of subject level trajectories to sample
 between parameter updates.}
 
 \item{to_estimation_scale}{list of functions for transforming model
@@ -35,11 +36,14 @@ element names should correspond to exactly to the parameter names given in
 \code{params}.}
 
 \item{from_estimation_scale}{list of functions for transforming model
-  parameters from the a scale on which new parameters are proposed to the
-  scale used to evaluate the process likelihood. List element names should
-  correspond to exactly to the parameter names given in \code{params}.}
+parameters from the a scale on which new parameters are proposed to the
+scale used to evaluate the process likelihood. List element names should
+correspond to exactly to the parameter names given in \code{params}.}
 
 \item{priors}{list of functions to evaluate prior distributions.}
+
+\item{parallelize}{option to parallelize computation of transition
+  probability and rate matrices. Defaults to FALSE.}
 }
 \value{
 bookkeeping list

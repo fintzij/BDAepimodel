@@ -17,7 +17,7 @@ insert_row <- function(mat, row_num, vec) {
           if (row_num == 1) {
                     new_mat <- rbind(matrix(vec, ncol = ncols), mat, deparse.level = 0)
           }
-          else if (row_num == nrows + 1) {
+          else if (row_num == (nrows + 1)) {
                     new_mat <- rbind(mat, matrix(vec, ncol = ncols), deparse.level = 0)
           }
           else {
