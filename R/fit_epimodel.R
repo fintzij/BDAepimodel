@@ -15,6 +15,9 @@ fit_epimodel <- function(epimodel) {
           
           if(is.null(epimodel$config_mat)) {
                     warning("An initial configuration was not provided so one has been generated.")
+                    #############################################
+                    ### NEED TO WRITE INITIALIZATION FUNCTION ###
+                    #############################################
                     epimodel$config_mat
           }
           
@@ -39,6 +42,9 @@ fit_epimodel <- function(epimodel) {
           
           # add buffer to the configuration matrix, also instatiates .epimodel$.ind_final_config     
           .epimodel$config_mat <- expand_config_mat(.epimodel)
+          
+          # get indices for the subject configuration portion of the configuration matrix
+          .epimodel$.config_inds <- which(grepl(".X", colnames(.epimodel$config_mat)))
           
           # generate .niter parameter samples
           for(k in 1:.niter) {

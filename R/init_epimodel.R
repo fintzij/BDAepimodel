@@ -122,7 +122,6 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
                            obstimes = obstimes,
                            popsize = popsize,
                            states = states,
-                           state_lookup = init_state_lookup(states),
                            params = params,
                            rates = rates,
                            flow = flow, 
@@ -137,6 +136,9 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
                            tcovar = tcovar,
                            rprior = rprior,
                            dprior = dprior), class = "epimodel")
+          
+          # lookup table for mapping states codes to rates
+          epimodel$rate_map <- init_rate_map(epimodel)
           
           # if the time_var argument was not supplied, default to "time"
           if(is.null(epimodel$time_var)){

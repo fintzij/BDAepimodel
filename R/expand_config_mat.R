@@ -12,7 +12,7 @@
 
 expand_config_mat <- function(epimodel, buffer_size = NULL) {
           
-          epimodel$.ind_final_config <- nrow(epimodel$config_mat)
+          epimodel$.ind_final_config <- which(epimodel$config_mat[,"time"] == max(epimodel$obstimes))
           
           if(is.null(buffer_size)) {
                     buffer_size <- floor(0.3 * epimodel$.ind_final_config)

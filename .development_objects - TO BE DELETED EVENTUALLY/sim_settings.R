@@ -27,12 +27,12 @@ d_initdist <- function(state, params, log = TRUE) {
 
 # subject level simulation of initial state at time t0
 r_initdist <- function(params) {
-          sample.int(3, 1, prob = c(1-params["rho"], params["rho"], 0))
+          sample.int(3, 1, prob = c(1-params["p0"], params["p0"], 0))
           }
 
 # R0 = 4, mu = 1, rho = 0.5, p0 = 0.05
 epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.5),
-                          popsize = 200,
+                          popsize = popsize,
                           states = c("S", "I", "R"), 
                           params = c(beta = 0.02, mu = 1, rho = 0.5, p0 = 0.05), 
                           rates = c("beta * I", "mu"), 

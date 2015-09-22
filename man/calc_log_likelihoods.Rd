@@ -2,18 +2,32 @@
 % Please edit documentation in R/calc_log_likelihoods.R
 \name{calc_log_likelihoods}
 \alias{calc_log_likelihoods}
-\title{Calculate likelihood for the population level trajectory and the measurement process.}
+\title{Calculate likelihood for the population level trajectory and the measurement
+process.}
 \usage{
-calc_log_likelihoods(epimodel, pop = TRUE, obs = TRUE)
+calc_log_likelihoods(epimodel, pop = TRUE, obs = TRUE,
+  epimodel_envir = FALSE)
 }
 \arguments{
 \item{epimodel}{list of bookkeeping and model objects. If not supplied, the
 list will be generated.}
+
+\item{pop}{TRUE/FALSE for whether to compute the population-level
+log-likelihood}
+
+\item{obs}{TRUE/FALSE for whether to compute the likelihood of the
+measurement process.}
+
+\item{epimodel_envir}{TRUE/FALSE for whether the function is called
+  internally within the epimodel environment; if not, the function explicitly
+  returns a list with the log-likelihoods that were requested.}
 }
 \value{
-vector with log-likelihood of the population level trajectory and measurement process log-likelihood.
+vector with log-likelihood of the population level trajectory and
+  measurement process log-likelihood.
 }
 \description{
-Calculate likelihood for the population level trajectory and the measurement process.
+Calculate likelihood for the population level trajectory and the measurement
+process.
 }
 
