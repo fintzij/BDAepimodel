@@ -1,3 +1,9 @@
+9/23/2015
+================================
+- Solved issue of how to store and index into IRMs - used environment of IRMs, indexed into by character string of index state counts. IRM can be pulled out using 'charmatch'. Eigen decompositions should be handled the same way.
+- Next steps: 1) write functions to compute eigen decompositions. Consider whether these should be their own separate environment or whether they can be saved in the same environment as the IRMs. 
+2) Write function to compute the TPMs and save the product sequences appropriately. 
+
 9/19/2015
 ================================
 - Write update_prior_prob function - should compare new and old vectors of parameters on estimation scale, then update the prior distributions for the parameters that have changed. 

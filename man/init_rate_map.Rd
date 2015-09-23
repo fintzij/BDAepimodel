@@ -2,18 +2,24 @@
 % Please edit documentation in R/init_rate_map.R
 \name{init_rate_map}
 \alias{init_rate_map}
-\title{Insert a lookup table to map subjects at risk for each transition to the appropriate rate code label}
+\title{Construct an index matrix identifying with which states each rate varies.}
 \usage{
-init_rate_map(epimodel)
+init_rate_map(rates, states)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects. If not supplied, the
-list will be generated.}
+\item{rates}{character vector with strings specifying the flow rates between
+compartments. Each variable in a rate must correspond to the name of one of
+the \code{states}, \code{params}, or \code{covars} (covariates not yet
+implemented).}
+
+\item{states}{character vector with names of compartments corresponding
+exactly to the names of compartments used in the \code{*_rates} arguments.}
 }
 \value{
-character vector for mapping state codes to compartment names.
+binary index matrix indicating which changes in each compartment affect c3
 }
 \description{
-Insert a lookup table to map subjects at risk for each transition to the appropriate rate code label
+Called internally before rates are parsed when an epimodel object is
+initialized.
 }
 

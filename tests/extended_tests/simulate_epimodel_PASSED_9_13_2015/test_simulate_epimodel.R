@@ -83,7 +83,7 @@ if(sim_num == 1){
 
 # Register the cluster and run the simulation -----------------------------
 
-nclust = 10
+nclust = 15
 cl <- makeForkCluster(nclust)
 registerDoParallel(cl)
 

@@ -40,7 +40,8 @@ fit_epimodel <- function(epimodel) {
           # initialize list for storing results
           .results <- init_results(.epimodel)
           
-          # add buffer to the configuration matrix, also instatiates .epimodel$.ind_final_config     
+          # add buffer to the configuration matrix, also adds configurations at
+          # observation times and instatiates .epimodel$.ind_final_config
           .epimodel$config_mat <- expand_config_mat(.epimodel)
           
           # get indices for the subject configuration portion of the configuration matrix
@@ -49,18 +50,20 @@ fit_epimodel <- function(epimodel) {
           # generate .niter parameter samples
           for(k in 1:.niter) {
                     
-                    # choose which subjects should be redrawn
-                    .subjects <- sample.int(n = .epimodel$popsize, size = .configs_to_redraw, replace = .config_replacement)
-                    
                     # re-compute the array of rate matrices
-                    .irm <- build_irm(.epimodel)
+                    build_irm(.epimodel)
                     
                     # re-compute the population level likelihood, measurement
                     # process likelihood, and complete data log-likelihood
-                    .epimodel$log_likelihoods <- calc_log_likelihoods(epimodel = .epimodel)
+                    calc_likelihoods(epimodel = .epimodel, epimodel_envir = TRUE, log = TRUE)
+                    
+                    # choose which subjects should be redrawn
+                    .subjects <- sample.int(n = .epimodel$popsize, size = .configs_to_redraw, replace = .config_replacement)
                     
                     for(j in 1:.configs_to_redraw) {
                               
+                              # check to see if any 
+                              # if(irms_needed(.epimodel))
                               
                               
                     }

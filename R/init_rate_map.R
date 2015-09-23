@@ -1,15 +1,21 @@
-#' Insert a lookup table to map subjects at risk for each transition to the appropriate rate code label 
-#'
-#' @inheritParams simulate_epimodel 
-#'
-#' @return character vector for mapping state codes to compartment names.
+#' Construct an index matrix identifying with which states each rate varies.
+#' 
+#' Called internally before rates are parsed when an epimodel object is
+#' initialized.
+#' 
+#' @inheritParams init_epimodel
+#' 
+#' @return binary index matrix indicating which changes in each compartment affect c3
 
-init_rate_map <- function(epimodel) {
+init_rate_map <- function(rates, states) {
           
-          # matrix to map the state code to the compartment count
-          rate_map <- rep(0, nrow(epimodel$flow))
-          for(k in 1:length(rate_map)) {
-                    rate_map[k] <- colnames(epimodel$flow)[which(epimodel$flow[k,]==-1)]
+          # initialize matrix
+          rate_map <- matrix(0, nrow = length(rates), ncol = length(states))
+          colnames(rate_map) <- states
+          
+          # identify which states show up as arguments in each rate function
+          for(t in 1:length(rates)) {
+                    rate_map[t, sapply(states, grepl, rates[t])] <- 1
           }
           
           return(rate_map)

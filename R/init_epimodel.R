@@ -105,6 +105,9 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
                     stop(sQuote("tcovar"), "must be specified along with covariates")
           }
           
+          # extract the rate_map
+          rate_map <- init_rate_map(rates = rates, states = states)
+          
           # extract the rates to instatiate a function list
           rates <- extract_rate_fcns(rates = rates, states = states, param_names = names(params))
           
@@ -124,7 +127,8 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
                            states = states,
                            params = params,
                            rates = rates,
-                           flow = flow, 
+                           rate_map = rate_map,
+                           flow = as.matrix(flow), 
                            config_mat = config_mat,
                            obs_mat = obs_mat,
                            r_initdist = r_initdist,
@@ -137,8 +141,11 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
                            rprior = rprior,
                            dprior = dprior), class = "epimodel")
           
-          # lookup table for mapping states codes to rates
-          epimodel$rate_map <- init_rate_map(epimodel)
+          # lookup table for mapping states codes to rates, and vector of states
+          # that index the rates
+          epimodel$state_lookup <- init_state_lookup(epimodel)
+          epimodel$index_states <- colnames(epimodel$rate_map)[apply(epimodel$rate_map, 2, function(x) {1 %in% x})]
+          
           
           # if the time_var argument was not supplied, default to "time"
           if(is.null(epimodel$time_var)){

@@ -16,9 +16,13 @@ list will be generated.}
   specified.}
 }
 \value{
-new configuration matrix and index for the last row in the expanded configuration matrix (corresponding to the configuration at tmax)
+new configuration matrix and index for the last row in the expanded
+  configuration matrix (corresponding to the configuration at tmax)
 }
 \description{
-Each buffer row is made up of NA entries that are inserted at the end of the configuration matrix. This function is designed to operate within an epimodel environment and therefore makes multiple replacements within that environment.
+Each buffer row is made up of NA entries that are inserted at the end of the
+configuration matrix. This function is designed to operate within an epimodel
+environment and therefore makes multiple replacements within that
+environment.
 }
 

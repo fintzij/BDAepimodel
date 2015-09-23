@@ -1,4 +1,13 @@
 
+# Fun with environments ---------------------------------------------------
+
+e <- new.env()
+e[["one"]] <- 4
+e[["two"]] <- 4
+e[["three"]] <- 6
+e[["I2"]] <- 7
+
+
 # Figuring out how to call a function within the environment of another function ----
 x <- new.env()
 x$a <- 1

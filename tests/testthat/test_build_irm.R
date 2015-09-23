@@ -1,12 +1,13 @@
 library(BDAepimodel)
 
-context("Calculation of the population-level log-likelihood and measurement processes log-likelihood") 
+context("Constructing the the rate matrices")
 
-test_that("The population-level log-likelihood is computed correctly", {
+
+test_that("The rate matrices are all computed correctly", {
           
           set.seed(52787)
           
-          popsize <- 3
+          popsize <- 5
           
           r_meas_process <- function(state, meas_vars, params){
                     rbinom(n = nrow(state), size = state[,meas_vars], prob = params["rho"])
@@ -47,20 +48,22 @@ test_that("The population-level log-likelihood is computed correctly", {
           
           .epimodel <- list2env(epimodel, parent = emptyenv(), hash = TRUE)
           
-          .epimodel$config_mat <- expand_config_mat(.epimodel)
           .epimodel$.config_inds <- which(grepl(".X", colnames(.epimodel$config_mat)))
           
+          expand_config_mat(.epimodel)
           
-          pop_log_likelihood <- log(.epimodel$params["p0"]) + 2 * log( 1- .epimodel$params["p0"]) + 
-                    log(1) - (1 + 2)*(.epimodel$config_mat[2, "time"] - .epimodel$config_mat[1, "time"]) +
-                    log(2) - (2 + 2)*(.epimodel$config_mat[3, "time"] - .epimodel$config_mat[2, "time"]) +
-                    log(1) - (3)*(.epimodel$config_mat[4, "time"] - .epimodel$config_mat[3, "time"]) +
-                    log(1) - (2)*(.epimodel$config_mat[5, "time"] - .epimodel$config_mat[4, "time"]) +
-                    log(1) - (1)*(.epimodel$config_mat[6, "time"] - .epimodel$config_mat[5, "time"]) -
-                    (0) * (.epimodel$config_mat[7, "time"] - .epimodel$config_mat[6, "time"]) 
+          build_irm(.epimodel)
           
-          obs_likelihood <-sum(dbinom(.epimodel$obs_mat[,"I_observed"], .epimodel$obs_mat[,"I_truth"], prob = .epimodel$params["rho"], log= TRUE))
-                    
-          expect_equal(as.numeric(calc_log_likelihoods(epimodel = .epimodel)[[1]]), as.numeric(pop_log_likelihood))
-          expect_equal(as.numeric(calc_log_likelihoods(epimodel = .epimodel)[[2]]), as.numeric(obs_likelihood))
+          expect_equal(.epimodel$.irm[["1"]][2,2], -1)
+          expect_equal(.epimodel$.irm[["2"]][1,2], 2)
+          expect_equal(.epimodel$.irm[["0"]][1,], rep(0, 3))
+          expect_equal(.epimodel$.irm[["3"]][3,], rep(0, 3))
+          
+          # update the IRMs and retest
+          build_irm(.epimodel)
+          
+          expect_equal(.epimodel$.irm[["1"]][2,2], -1)
+          expect_equal(.epimodel$.irm[["2"]][1,2], 2)
+          expect_equal(.epimodel$.irm[["0"]][1,], rep(0, 3))
+          expect_equal(.epimodel$.irm[["3"]][3,], rep(0, 3))
 }) 

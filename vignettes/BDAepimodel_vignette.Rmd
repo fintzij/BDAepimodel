@@ -60,17 +60,18 @@ epimodel$flow
 
 To simulate a collection of trajectories and a dataset using the `simulate_epimodel` function, we need to specify a few more inputs beyond the minimal inputs to instatiate an `epimodel`. We must also provide the simulation function with a vector of observation times, a function to simulate from the measurement process, a character vector specifying the compartments which are under observation, and either a vector of initial compartment counts, or a function to sample from the distribution of compartment counts at the first observation time. The initialization function and initial state arguments are supplied as arguments to `simulate_epimodel`, while the other arguments can either be specified when we initialize the `epimodel` object, or they be provided either as arguments to `simulate_epimodel`. 
 
-We must bear in mind a couple of important points regarding how to specify the initialization function and the function to simulate from the measurement proces. Regarding the former, the initialization function must be specified without arguments. It is callable by merely invoking it, as in: `initialization_function <- function(); f()`. Second, the initialization function must return a numeric vector of compartment counts with element names corresponding exactly to the names provided in the `states` argument used to initialize the `epimodel` object. Regarding the latter, the function to simulate from the measurement process must have the arguments `state`, `meas_vars`, and `params`. The body of the function should therefore reference these arguments and their composite elements. Therefore, `state` refers to a matrix of compartment counts where each row is a vector of the same form as is returned by the `initialization_function`. `state` should be indexed into using the `meas_vars` argument, where `meas_vars` should correspond to the names of the compartments under observations. `params` will match the vector of parameters supplied to `init_epimodel`. 
+We must bear in mind a couple of important points regarding how to specify the initialization function and the function to simulate from the measurement proces. Regarding the former, the initialization function must be specified at the subject level as the `r_initdist` variable in the `epimodel` object. The function should return a numeric value indicating which state an individual exists at time `t0`. Regarding the latter, the function to simulate from the measurement process must have the arguments `state`, `meas_vars`, and `params`. The body of the function should therefore reference these arguments and their composite elements. Therefore, `state` refers to a matrix of compartment counts where each row is a vector of the same form as is returned by the `initialization_function`. `state` should be indexed into using the `meas_vars` argument, where `meas_vars` should correspond to the names of the compartments under observations. `params` will match the vector of parameters supplied to `init_epimodel`. 
 
 To simulate from our SIRS model, we will re-initialize the `epimodel` list with all of the arguments required for the simulation. 
 
 ```{r}
-          # Set up initialization funtion and measurement process function
-          initialization_fcn <- function(){
-                    init_state <- as.numeric(rmultinom(1, 100, c(0.95, 0.05, 0)))
-                    names(init_state ) <- c("S", "I", "R")
-                    return(init_state)
-          }
+          # Set up initialization funtion (specified on the level of a single subject as r_initdist) and measurement process function
+
+          # subject level simulation of initial state at time t0
+          r_initdist <- function(params) {
+                    sample.int(3, 1, prob = c(1-params["p0"], params["p0"], 0))
+                    }
+
           
           r_meas_process <- function(state, meas_vars, params){
                     obs_vec <- rbinom(n = nrow(state), size = state[,meas_vars, drop = FALSE], prob = params["rho"])
@@ -80,18 +81,20 @@ To simulate from our SIRS model, we will re-initialize the `epimodel` list with 
           
           # initialize epimodel
           epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.5),
+                                    popsize = 200,
                                     states = c("S", "I", "R"), 
                                     params = c(beta = 0.02, mu = 1, rho = 0.5, p0 = 0.05), 
                                     rates = c("beta * I", "mu"), 
                                     flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                                     meas_vars = "I",
-                                    r_meas_process = r_meas_process)
+                                    r_meas_process = r_meas_process,
+                                    r_initdist = r_initdist)
           
 ```
 
 We may now proceed to simulate from the epimodel object:
 ```{r SIRS_sim, cache= TRUE}
-          epimodel <- simulate_epimodel(epimodel, initialization_fcn = initialization_fcn)
+          epimodel <- simulate_epimodel(epimodel)
 ```
 We can now plot the simulated data using the `plot_epimodel` function: 
 ```{r SIRS_plot, message = FALSE, cache=TRUE}
