@@ -8,8 +8,9 @@ plot_epimodel(epimodel, obs = TRUE, config = TRUE,
   which_compartments = NULL)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects. If not supplied, the
-list will be generated.}
+\item{epimodel}{list of bookkeeping and model objects, or an analagous
+environment. If not supplied, the list will be generated. The epimodel list
+is coerced into an environment, .epimodel, for internal use.}
 
 \item{obs}{TRUE/FALSE for whether to plot the observed data}
 

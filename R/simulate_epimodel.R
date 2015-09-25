@@ -15,8 +15,9 @@
 #' the 'GillespieSSA' package so as to facilitate ease of use for users familiar
 #' with that package.
 #' 
-#' @param epimodel list of bookkeeping and model objects. If not supplied, the 
-#'   list will be generated.
+#' @param epimodel list of bookkeeping and model objects, or an analagous
+#'   environment. If not supplied, the list will be generated. The epimodel list
+#'   is coerced into an environment, .epimodel, for internal use.
 #' @inheritParams init_epimodel
 #' @param return_config option specifying whether to return a matrix of 
 #'   subject-level trajectories. Defaults to \code{TRUE}.
@@ -25,10 +26,10 @@
 #' @param lump option specifying whether to simulate the next event directly on 
 #'   the extended state space of individuals, or to simulate on the lumped state
 #'   space of compartment counts, and then choose a subject uniformly at random 
-#'   for each event from the set of subjects in the risk pool for that event. 
-#'   A value of TRUE, corresponding to the lumped state space, is appropriate 
-#'   when there is no subject level heterogeneity and is significantly faster in
-#'   even moderate sized populations.
+#'   for each event from the set of subjects in the risk pool for that event. A
+#'   value of TRUE, corresponding to the lumped state space, is appropriate when
+#'   there is no subject level heterogeneity and is significantly faster in even
+#'   moderate sized populations.
 #'   
 #' @return Data frame with columns for the observation times, and draws from the
 #'   measurement process at observation times. Optionally, also return a data 
@@ -150,7 +151,7 @@ simulate_epimodel <- function(epimodel, obstimes = NULL, init_state = NULL, meas
           
           # sample from the measurement process
           epimodel$obs_mat[, paste(epimodel$meas_vars, "_observed", sep = "")] <- 
-                    epimodel$r_meas_process(epimodel$obs_mat, paste(epimodel$meas_vars, "_truth", sep = ""), epimodel$params)
+                    epimodel$r_meas_process(epimodel$obs_mat, paste(epimodel$meas_vars, "_augmented", sep = ""), epimodel$params)
           
           # instatiate data matrix
           epimodel$dat <- epimodel$obs_mat[, c("time", paste(epimodel$meas_vars, "_observed", sep = ""))]

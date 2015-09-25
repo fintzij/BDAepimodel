@@ -6,11 +6,12 @@
 process.}
 \usage{
 calc_likelihoods(epimodel, pop = TRUE, obs = TRUE, epimodel_envir = FALSE,
-  log = TRUE)
+  log = FALSE)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects. If not supplied, the
-list will be generated.}
+\item{epimodel}{list of bookkeeping and model objects, or an analagous
+environment. If not supplied, the list will be generated. The epimodel list
+is coerced into an environment, .epimodel, for internal use.}
 
 \item{pop}{TRUE/FALSE for whether to compute the population-level
 log-likelihood}

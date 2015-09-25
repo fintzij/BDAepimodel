@@ -1,8 +1,21 @@
+9/25/2015
+================================
+1) Include keys and observation-interval number in the config_mat matrix
+	a) functions to update: expand_config_mat, build_irm
+2) Write - generate_key function
+3) Finish build_tpm_seqs and write test for it
+
+
+9/24/2015
+================================
+- IRMs and eigen decompositions done. Also finished functions to check whether a rate matrix and eigen decompositition is needed, and to update existing rate matrices and eigen decompositions. All IRM related functions are tested. 
+- Tomorrow: functions to construct sequences of TPMs, emission probabilities, and forward backward matrices. Then FB functions. One consideration is how to deal with processes that are recurrent - consult with Vladimir and Jon. 
+
 9/23/2015
 ================================
 - Solved issue of how to store and index into IRMs - used environment of IRMs, indexed into by character string of index state counts. IRM can be pulled out using 'charmatch'. Eigen decompositions should be handled the same way.
 - Next steps: 1) write functions to compute eigen decompositions. Consider whether these should be their own separate environment or whether they can be saved in the same environment as the IRMs. 
-2) Write function to compute the TPMs and save the product sequences appropriately. 
++ rate matrices and eigen decompositions exist in separate environments
 
 9/19/2015
 ================================

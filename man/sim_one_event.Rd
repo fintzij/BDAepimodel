@@ -11,16 +11,17 @@ sim_one_event(config_list, epimodel, lump)
 dt_mat - where config should correspond to a row in
 \code{epimodel$config}.}
 
-\item{epimodel}{list of bookkeeping and model objects. If not supplied, the
-list will be generated.}
+\item{epimodel}{list of bookkeeping and model objects, or an analagous
+environment. If not supplied, the list will be generated. The epimodel list
+is coerced into an environment, .epimodel, for internal use.}
 
 \item{lump}{option specifying whether to simulate the next event directly on
   the extended state space of individuals, or to simulate on the lumped state
   space of compartment counts, and then choose a subject uniformly at random
-  for each event from the set of subjects in the risk pool for that event.
-  A value of TRUE, corresponding to the lumped state space, is appropriate
-  when there is no subject level heterogeneity and is significantly faster in
-  even moderate sized populations.}
+  for each event from the set of subjects in the risk pool for that event. A
+  value of TRUE, corresponding to the lumped state space, is appropriate when
+  there is no subject level heterogeneity and is significantly faster in even
+  moderate sized populations.}
 }
 \value{
 updated config_list

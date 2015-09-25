@@ -21,3 +21,15 @@ logit <- function(x) {
 expit <- function(x) {
           1/(1 + exp(x))
 }
+
+#' Normalize a vector or matrix. 
+#'
+#' x <- x/sum(x)
+#'
+#' @param x 
+#'
+#' @return normalized object
+
+normalize <- function(x) {
+          x/sum(x)
+}

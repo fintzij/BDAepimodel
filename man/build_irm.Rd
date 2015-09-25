@@ -2,13 +2,15 @@
 % Please edit documentation in R/build_irm.R
 \name{build_irm}
 \alias{build_irm}
-\title{Construct an environment of rate matrices.}
+\title{Construct an environment of rate matrices and another environment for the
+corresponding eigen decompositions.}
 \usage{
 build_irm(epimodel)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects. If not supplied, the
-list will be generated.}
+\item{epimodel}{list of bookkeeping and model objects, or an analagous
+environment. If not supplied, the list will be generated. The epimodel list
+is coerced into an environment, .epimodel, for internal use.}
 }
 \value{
 environment with rate matrices

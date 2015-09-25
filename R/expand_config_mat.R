@@ -36,6 +36,8 @@ expand_config_mat <- function(epimodel, buffer_size = NULL) {
           # get the index for the final configuration
           epimodel$.ind_final_config <- which(epimodel$config_mat[,"time"] == max(epimodel$obstimes))
           
+          # if the column of irm_keys has not been generated, generate it
+
           # add buffer of NAs 
           if(is.null(buffer_size)) {
                     buffer_size <- floor(0.3 * epimodel$.ind_final_config)

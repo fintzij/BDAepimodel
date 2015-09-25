@@ -4,7 +4,8 @@
 \alias{build_rate_mat}
 \title{Construct a single rate matrix from a vector of rates and a flow matrix.}
 \usage{
-build_rate_mat(rates, state, params, flow, env = NULL, key = NULL)
+build_rate_mat(rates, state, params, flow, env = NULL, key = NULL,
+  update = TRUE)
 }
 \arguments{
 \item{rates}{vector containing values of evaluated rates}
@@ -18,6 +19,13 @@ number of compartments}. Each row corresponds to a possible transition, and
 each column in a row has element 1 to indicate an entry to that
 compartment, -1 to indicate an exit, and 0 for no change in the size of the
 compartment on the subject level.}
+
+\item{env}{environment into which to instatiate the rate matrix}
+
+\item{key}{the key for the hash index}
+
+\item{update}{TRUE/FALSE for whether to update an existing rate matrix or to
+  instatiate a new one}
 }
 \value{
 rate matrix of dimension \code{num_states x num_states}

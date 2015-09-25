@@ -13,7 +13,7 @@ r_meas_process <- function(state, meas_vars, params){
 }
 
 d_meas_process <- function(state, meas_vars, params, log = TRUE) {
-          dbinom(x = state[, paste(meas_vars, "_observed", sep="")], size = state[, paste(meas_vars, "_truth", sep = "")], prob = params["rho"], log = log) 
+          dbinom(x = state[, paste(meas_vars, "_observed", sep="")], size = state[, paste(meas_vars, "_augmented", sep = "")], prob = params["rho"], log = log) 
 }
 
 # evaluates initial distribution for a single subject
@@ -34,7 +34,7 @@ r_initdist <- function(params) {
 epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.5),
                           popsize = popsize,
                           states = c("S", "I", "R"), 
-                          params = c(beta = 0.02, mu = 1, rho = 0.5, p0 = 0.05), 
+                          params = c(beta = rnorm(1, 0.02, 1e-6), mu = rnorm(1, 1, 1e-6), rho = 0.5, p0 = 0.05), 
                           rates = c("beta * I", "mu"), 
                           flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                           meas_vars = "I",
@@ -95,7 +95,7 @@ rho_p0_kernel <- function(epimodel) {
           # Gibbs updates for rho and p0 - beta(1, 1) prior for each
           params_new <- epimodel$params
           params_new["rho"] <- rbeta(1, shape1 = 1 + sum(epimodel$obs_mat
-                                                         [,"I_observed"]), shape2 = 1 + sum(epimodel$obs_mat[,"I_truth"] - 
+                                                         [,"I_observed"]), shape2 = 1 + sum(epimodel$obs_mat[,"I_augmented"] - 
                                                                                                       epimodel$obs_mat[,"I_observed"]))
           params_new["p0"] <- rbeta(1, shape1 = 1 + epimodel$config_mat[1, "I"],
                                     shape2 = 1 + epimodel$popsize - epimodel$config_mat[1, "I"])

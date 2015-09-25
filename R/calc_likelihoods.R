@@ -12,7 +12,7 @@
 #'   measurement process log-likelihood.
 #' @export
 #' 
-calc_likelihoods <- function(epimodel, pop = TRUE, obs = TRUE, epimodel_envir = FALSE, log = TRUE) {
+calc_likelihoods <- function(epimodel, pop = TRUE, obs = TRUE, epimodel_envir = FALSE, log = FALSE) {
           
           if(pop == TRUE) {
                     
@@ -33,8 +33,9 @@ calc_likelihoods <- function(epimodel, pop = TRUE, obs = TRUE, epimodel_envir = 
                     # extract the appropriate subject level rate for each transition event
                     .event_rates        <- .all_rates[cbind(1:(length(.left_endpoints)-1), epimodel$config_mat[.right_endpoints[-length(.right_endpoints)], "Event"])]
                     
-                    # compute hazards by multiplying the sybject level rates by
-                    # the number of subjects at risk for each transition
+                    # compute hazards by multiplying the sybject level rates by 
+                    # the number of subjects at risk for each transition -
+                    # indicated by the state_lookup vector
                     .hazards            <- rowSums(.all_rates * epimodel$config_mat[.left_endpoints, epimodel$state_lookup])
                     
                     # compute the time intervals

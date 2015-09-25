@@ -9,8 +9,9 @@ simulate_epimodel(epimodel, obstimes = NULL, init_state = NULL,
   trim = TRUE, lump = TRUE)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects. If not supplied, the
-list will be generated.}
+\item{epimodel}{list of bookkeeping and model objects, or an analagous
+environment. If not supplied, the list will be generated. The epimodel list
+is coerced into an environment, .epimodel, for internal use.}
 
 \item{meas_vars}{character vector specifying which compartments are measured.}
 
@@ -33,10 +34,10 @@ epidemic ends before the final observation time. Defaults to \code{TRUE}.}
 \item{lump}{option specifying whether to simulate the next event directly on
   the extended state space of individuals, or to simulate on the lumped state
   space of compartment counts, and then choose a subject uniformly at random
-  for each event from the set of subjects in the risk pool for that event.
-  A value of TRUE, corresponding to the lumped state space, is appropriate
-  when there is no subject level heterogeneity and is significantly faster in
-  even moderate sized populations.}
+  for each event from the set of subjects in the risk pool for that event. A
+  value of TRUE, corresponding to the lumped state space, is appropriate when
+  there is no subject level heterogeneity and is significantly faster in even
+  moderate sized populations.}
 }
 \value{
 Data frame with columns for the observation times, and draws from the

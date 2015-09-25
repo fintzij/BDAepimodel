@@ -13,7 +13,7 @@ test_that("The population-level log-likelihood is computed correctly", {
           }
           
           d_meas_process <- function(state, meas_vars, params, log = TRUE) {
-                    dbinom(x = state[, paste(meas_vars, "_observed", sep="")], size = state[, paste(meas_vars, "_truth", sep = "")], prob = params["rho"], log = log) 
+                    dbinom(x = state[, paste(meas_vars, "_observed", sep="")], size = state[, paste(meas_vars, "_augmented", sep = "")], prob = params["rho"], log = log) 
           }
           
           # evaluates initial distribution for a single subject
@@ -61,7 +61,7 @@ test_that("The population-level log-likelihood is computed correctly", {
                     log(1) - (1)*(config_mat[6, "time"] - config_mat[5, "time"]) -
                     (0) * (config_mat[7, "time"] - .epimodel$config_mat[6, "time"]) 
           
-          obs_likelihood <-sum(dbinom(.epimodel$obs_mat[,"I_observed"], .epimodel$obs_mat[,"I_truth"], prob = .epimodel$params["rho"], log= TRUE))
+          obs_likelihood <-sum(dbinom(.epimodel$obs_mat[,"I_observed"], .epimodel$obs_mat[,"I_augmented"], prob = .epimodel$params["rho"], log= TRUE))
           
           expect_equal(as.numeric(calc_likelihoods(epimodel = .epimodel)[[1]]), as.numeric(pop_likelihood))
           expect_equal(as.numeric(calc_likelihoods(epimodel = .epimodel)[[2]]), as.numeric(obs_likelihood))

@@ -7,8 +7,9 @@
 update_obs_mat(epimodel, direction, trajec)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects. If not supplied, the
-list will be generated.}
+\item{epimodel}{list of bookkeeping and model objects, or an analagous
+environment. If not supplied, the list will be generated. The epimodel list
+is coerced into an environment, .epimodel, for internal use.}
 
 \item{direction}{update observation matrix to reflect the addition or removal
 of a subject-level trajectory. Valid arguments are \code{add} or

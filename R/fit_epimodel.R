@@ -44,28 +44,57 @@ fit_epimodel <- function(epimodel) {
           # observation times and instatiates .epimodel$.ind_final_config
           .epimodel$config_mat <- expand_config_mat(.epimodel)
           
+          # Initialize two lists for the transition probability matrices, one 
+          # for the matrices and one for products. Also initialize a bookkeeping
+          # vector indicating which tpms and tpm product matrices need to be 
+          # recomputed. All tpms and products need to be recomputed following 
+          # parameter updates, but only the tpms and products for the intervals 
+          # affected by a change in one of the compartments indicated by 
+          # index_states need to be recomputed when a new trajectory is redrawn.
+          .epimodel$.tpms               <- vector("list", length = nrow(.epimodel$config_mat))
+          .epimodel$.tpm_products       <- vector("list", length = nrow(.epimodel$config_mat))
+          
           # get indices for the subject configuration portion of the configuration matrix
           .epimodel$.config_inds <- which(grepl(".X", colnames(.epimodel$config_mat)))
           
           # generate .niter parameter samples
           for(k in 1:.niter) {
                     
-                    # re-compute the array of rate matrices
+                    # re-compute the array of rate matrices - only needs to be
+                    # recomputed every time parameters are updated.
                     build_irm(.epimodel)
                     
+                    # reset the vector of tpms to build (set all to false at the end of the build), then build the tpm
+                    # sequences
+                    .epimodel$.tpms_to_build      <- 1:(.epimodel$.ind_final_config - 1)
+                    .epimodel$.tpm_prods_to_build <- 1:(length(.epimodel$obstimes) -1)
+                    build_tpm_seqs(.epimodel)
+
                     # re-compute the population level likelihood, measurement
                     # process likelihood, and complete data log-likelihood
                     calc_likelihoods(epimodel = .epimodel, epimodel_envir = TRUE, log = TRUE)
                     
                     # choose which subjects should be redrawn
-                    .subjects <- sample.int(n = .epimodel$popsize, size = .configs_to_redraw, replace = .config_replacement)
-                    
+                    .subjects <- paste0(".X",sample.int(n = .epimodel$popsize, size = .configs_to_redraw, replace = .config_replacement))
+
+                    # cycle through subject-level trajectories to be re-drawn
                     for(j in 1:.configs_to_redraw) {
                               
-                              # check to see if any 
-                              # if(irms_needed(.epimodel))
+                              # remove trajectory from the counts in config_mat 
+                              # and obs_mat, and update the tpm sequences to
+                              # reflect the removal
+                              remove_trajectory(.epimodel, subject = .subjects[j])
                               
+                              # check to see if any additional irms are needed.
+                              # if so, check_irm will instatiate the required
+                              # matrices and their eigen decompositions
+                              check_irm(.epimodel)
                               
+                              # update the transition probability matrix sequences
+                              build_tpm_seqs(.epimodel)
+                              
+                              # after the new configuration has been drawn, update .ind_final_config
+                              .epimodel$.ind_final_config <- which(.epimodel$config_mat[,"time"] == max(.epimodel$obstimes))
                     }
                     
           }

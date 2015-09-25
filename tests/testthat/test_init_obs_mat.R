@@ -20,5 +20,5 @@ test_that("The compartment counts at observation times are correct", {
           set.seed(52787)
           epimodel <- simulate_epimodel(epimodel, init_state = c(S = 7, I = 3, R = 0), lump = TRUE) 
           
-          expect_equal(as.numeric(epimodel$obs_mat[,"I_truth"]), c(3, 2, 5, 3, 1, 1, 0)) 
+          expect_equal(as.numeric(epimodel$obs_mat[,"I_augmented"]), c(3, 2, 5, 3, 1, 1, 0)) 
 })

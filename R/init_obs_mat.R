@@ -13,12 +13,12 @@ init_obs_mat <- function(epimodel){
           obs_mat[,1] <- epimodel$obstimes
           
           # set column names
-          colnames(obs_mat) <- c("time", paste(rep(epimodel$meas_vars, each = 2), c("_observed","_truth"), sep = ""))
+          colnames(obs_mat) <- c("time", paste(rep(epimodel$meas_vars, each = 2), c("_observed","_augmented"), sep = ""))
           
           # if a config_mat is provided, compute the true counts for the latent process at observation times
           if(!is.null(epimodel$config_mat)) {
                     for(k in 1:nrow(obs_mat)) {
-                              obs_mat[k, paste(epimodel$meas_vars, "_truth", sep="")] <- 
+                              obs_mat[k, paste(epimodel$meas_vars, "_augmented", sep="")] <- 
                                         epimodel$config_mat[, epimodel$meas_vars][sum(epimodel$config_mat[,"time"] <= obs_mat[k, "time"])]
                     }
           }
