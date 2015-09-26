@@ -13,8 +13,8 @@
 build_tpm_seqs <- function(epimodel) {
           
           # get the keys for the tpms that need rebuilding
-          .keys <- apply(epimodel$config_mat[epimodel$.tpms_to_build, epimodel$index_states, drop = FALSE], 1, paste0, collapse = epimodel$index_states)
-          
+          .keys <- generate_keys(.epimodel, inds = .epimodel$.tpms_to_build)
+
           # construct the tpms for all indexes in the .tpms_to_build vector
           for(k in epimodel$.tpms_to_build) {
                     epimodel$.tpms[[k]] <- build_tpm(values = epimodel$.eigen[[.keys[k]]]$values,

@@ -2,12 +2,6 @@
 # are not necessary for the package to work.
 popsize <- 200
 
-initialization_fcn <- function(){
-          init_state <- as.numeric(rmultinom(1, popsize, c(0.95, 0.05, 0)))
-          names(init_state ) <- c("S", "I", "R")
-          return(init_state)
-}
-
 r_meas_process <- function(state, meas_vars, params){
           rbinom(n = nrow(state), size = state[,meas_vars], prob = params["rho"])
 }
