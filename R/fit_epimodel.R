@@ -67,7 +67,6 @@ fit_epimodel <- function(epimodel) {
                     # reset the vector of tpms to build (set all to false at the end of the build), then build the tpm
                     # sequences
                     .epimodel$.tpms_to_build      <- 1:(.epimodel$.ind_final_config - 1)
-                    .epimodel$.tpm_prods_to_build <- 1:(length(.epimodel$obstimes) -1)
                     build_tpm_seqs(.epimodel)
 
                     # re-compute the population level likelihood, measurement

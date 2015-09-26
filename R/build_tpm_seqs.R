@@ -16,16 +16,16 @@ build_tpm_seqs <- function(epimodel) {
           .keys <- generate_keys(.epimodel, inds = .epimodel$.tpms_to_build)
 
           # construct the tpms for all indexes in the .tpms_to_build vector
-          for(k in epimodel$.tpms_to_build) {
+          for(k in 1:length(epimodel$.tpms_to_build)) {
                     epimodel$.tpms[[k]] <- build_tpm(values = epimodel$.eigen[[.keys[k]]]$values,
                                                 vectors = epimodel$.eigen[[.keys[k]]]$vectors,
                                                 inv_vectors = epimodel$.eigen[[.keys[k]]]$inv_vectors,
                                                 t0 = epimodel$config_mat[k, "time"],
-                                                t1 = epimodel$config_mat[k, "time"])
+                                                t1 = epimodel$config_mat[k + 1, "time"])
           }
           
           # get the observation intervals to which the tpms belong
-          .intervals <- findInterval(epimodel$config_mat[1:(epimodel$.ind_final_config-1),"time"][epimodel$.tpms_to_build], epimodel$obstimes, all.inside = TRUE)
+          .intervals <- findInterval(epimodel$config_mat[epimodel$.tpms_to_build,"time"], epimodel$obstimes, all.inside = TRUE)
           
           # construct the tpm products in reverse order within each observation interval
           for(k in unique(.intervals)) {
@@ -36,8 +36,9 @@ build_tpm_seqs <- function(epimodel) {
                     
                     .subseq_inds <- which(epimodel$config_mat[,"time"][1:(epimodel$.ind_final_config-1)] < .right_endpoint & epimodel$config_mat[,"time"][1:(epimodel$.ind_final_config-1)] >= .left_endpoint)
                     
-                    # get the keys for the subsequence of indices
-                    .subseq_keys <- .keys
+                    # Successive multiplication beginning with the rightmost matrix
+                    epimodel$.tpm_products[.subseq_inds] <- Reduce("%*%", epimodel$.tpms[.subseq_inds], accumulate = TRUE, right = TRUE)
                     
           }
+
 }
