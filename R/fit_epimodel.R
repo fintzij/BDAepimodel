@@ -13,6 +13,10 @@ fit_epimodel <- function(epimodel) {
                     stop(sQuote("sim_settings"), "must be specified in the epimodel object.")
           }
           
+          if(is.null(epimodel$meas_vars)) {
+                    stop(sQuote("meas_vars"), "must be specified within the epimodel object.")
+          }
+          
           if(is.null(epimodel$config_mat)) {
                     warning("An initial configuration was not provided so one has been generated.")
                     #############################################
@@ -37,13 +41,16 @@ fit_epimodel <- function(epimodel) {
           .to_estimation_scale <- .epimodel$sim_settings$to_estimation_scale
           .from_estimation_scale <- .epimodel$sim_settings$from_estimation_scale
           
+          # identify the unmeasured compartments
+          .epimodel$.unmeasured_vars <- setdiff(.epimodel$states, .epimodel$meas_vars)
+          
           # initialize list for storing results
           .results <- init_results(.epimodel)
           
           # add buffer to the configuration matrix, also adds configurations at
           # observation times and instatiates .epimodel$.ind_final_config
           .epimodel$config_mat <- expand_config_mat(.epimodel)
-          
+
           # Initialize two lists for the transition probability matrices, one 
           # for the matrices and one for products. Also initialize a bookkeeping
           # vector indicating which tpms and tpm product matrices need to be 
@@ -53,6 +60,9 @@ fit_epimodel <- function(epimodel) {
           # index_states need to be recomputed when a new trajectory is redrawn.
           .epimodel$.tpms               <- vector("list", length = nrow(.epimodel$config_mat))
           .epimodel$.tpm_products       <- vector("list", length = nrow(.epimodel$config_mat))
+          
+          # initialize the matrix of emission probabilities
+          .epimodel$.emission_mat       <- matrix(0, nrow = length(.epimodel$states), ncol = length(.epimodel$obstimes), dimnames = list(.epimodel$states, .epimodel$obstimes))
           
           # get indices for the subject configuration portion of the configuration matrix
           .epimodel$.config_inds <- which(grepl(".X", colnames(.epimodel$config_mat)))
@@ -66,7 +76,7 @@ fit_epimodel <- function(epimodel) {
                     
                     # reset the vector of tpms to build (set all to false at the end of the build), then build the tpm
                     # sequences
-                    .epimodel$.tpms_to_build      <- 1:(.epimodel$.ind_final_config - 1)
+                    .epimodel$.tpms_to_build <- get_tpms_to_build(.epimodel)
                     build_tpm_seqs(.epimodel)
 
                     # re-compute the population level likelihood, measurement
@@ -74,14 +84,16 @@ fit_epimodel <- function(epimodel) {
                     calc_likelihoods(epimodel = .epimodel, epimodel_envir = TRUE, log = TRUE)
                     
                     # choose which subjects should be redrawn
-                    .subjects <- paste0(".X",sample.int(n = .epimodel$popsize, size = .configs_to_redraw, replace = .config_replacement))
+                    .subjects <- sample.int(n = .epimodel$popsize, size = .configs_to_redraw, replace = .config_replacement)
 
                     # cycle through subject-level trajectories to be re-drawn
                     for(j in 1:.configs_to_redraw) {
                               
                               # remove trajectory from the counts in config_mat 
-                              # and obs_mat, and update the tpm sequences to
-                              # reflect the removal
+                              # and obs_mat, and update the tpm sequences to 
+                              # reflect the removal. Also sets .other_inds, the
+                              # vector of indices for events not belonging to
+                              # the subject to be redrawn 
                               remove_trajectory(.epimodel, subject = .subjects[j])
                               
                               # check to see if any additional irms are needed.
@@ -89,8 +101,16 @@ fit_epimodel <- function(epimodel) {
                               # matrices and their eigen decompositions
                               check_irm(.epimodel)
                               
+                              # get indices of tpms that need to be rebuilt
+                              .epimodel$.tpms_to_build <- get_tpms_to_build(.epimodel, subject = .subjects[j])
+                              
                               # update the transition probability matrix sequences
                               build_tpm_seqs(.epimodel)
+                              
+                              # update the emission probability matrix
+                              build_emission_mat(.epimodel)
+                              
+                              
                               
                               # after the new configuration has been drawn, update .ind_final_config
                               .epimodel$.ind_final_config <- which(.epimodel$config_mat[,"time"] == max(.epimodel$obstimes))

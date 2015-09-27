@@ -1,6 +1,9 @@
 # this file contains pieces of code that are used in developing the package but
 # are not necessary for the package to work.
-popsize <- 200
+set.seed(52787)
+require(BDAepimodel)
+
+popsize <- 10
 
 r_meas_process <- function(state, meas_vars, params){
           rbinom(n = nrow(state), size = state[,meas_vars], prob = params["rho"])
@@ -28,7 +31,7 @@ r_initdist <- function(params) {
 epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.5),
                           popsize = popsize,
                           states = c("S", "I", "R"), 
-                          params = c(beta = rnorm(1, 0.02, 1e-6), mu = rnorm(1, 1, 1e-6), rho = 0.5, p0 = 0.05), 
+                          params = c(beta = rnorm(1, 0.5, 1e-6), mu = rnorm(1, 1, 1e-6), rho = 0.5, p0 = 0.2), 
                           rates = c("beta * I", "mu"), 
                           flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                           meas_vars = "I",
@@ -110,6 +113,6 @@ epimodel$sim_settings <- init_settings(niter = 1000,
                 configs_every <- 10,
                 kernel = kernel,
                 cov_mtx = cov_mtx,
-                configs_to_redraw = 20,
+                configs_to_redraw = 5,
                 to_estimation_scale = to_estimation_scale,
                 from_estimation_scale = from_estimation_scale)

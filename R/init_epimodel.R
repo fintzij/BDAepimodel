@@ -145,7 +145,7 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
           # that index the rates
           epimodel$state_lookup <- init_state_lookup(epimodel)
           epimodel$index_states <- colnames(epimodel$rate_map)[apply(epimodel$rate_map, 2, function(x) {1 %in% x})]
-          
+          epimodel$index_state_num <- which(epimodel$states %in% epimodel$index_states)
           
           # if the time_var argument was not supplied, default to "time"
           if(is.null(epimodel$time_var)){

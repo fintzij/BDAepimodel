@@ -43,6 +43,7 @@ expand_config_mat <- function(epimodel, buffer_size = NULL) {
                     buffer_size <- floor(0.3 * epimodel$.ind_final_config)
           }
           
+          # expand the configuration matrix 
           epimodel$config_mat <- rbind(epimodel$config_mat, matrix(NA, nrow = buffer_size, ncol = ncol(epimodel$config_mat)))
           
 }

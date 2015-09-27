@@ -51,7 +51,7 @@ test_that("The updated counts are correct in the configuration matrix", {
           
           expand_config_mat(.epimodel)
           
-          remove_trajectory(.epimodel, ".X2")
+          remove_trajectory(.epimodel, 2)
           
           # subject 2 is susceptible in the interval [0, 1.8705), infected in
           # the interval [1.8705, 4.44065), and recovered after. Therefore, the
@@ -60,7 +60,7 @@ test_that("The updated counts are correct in the configuration matrix", {
           # be reduced by one, and the counts of recovered individuals at times
           # 4.5 and 5 should be reduced by one.
           
-          expect_equal(.epimodel$config_mat[which(.epimodel$config_mat[,"time"] < .epimodel$config_mat[which(.epimodel$config_mat[,"ID"] == 2)[1],"time"]) ,"S"], c(1, 1, 0, 0, 0, 0, 0, 0))
+          expect_equal(.epimodel$config_mat[which(.epimodel$config_mat[,"time"] < 1.8705) ,"S"], c(1, 1, 0, 0, 0, 0, 0, 0))
 })
 
 test_that("The observation matrix is updated correctly when a trajectory is removed", {
@@ -112,7 +112,7 @@ test_that("The observation matrix is updated correctly when a trajectory is remo
           
           expand_config_mat(.epimodel)
           
-          remove_trajectory(.epimodel, ".X2")
+          remove_trajectory(.epimodel, 2)
           
           # subject 2 is susceptible in the interval [0, 1.8705), infected in
           # the interval [1.8705, 4.44065), and recovered after. Therefore, the

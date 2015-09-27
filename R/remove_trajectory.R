@@ -9,12 +9,30 @@
 
 remove_trajectory <- function(epimodel, subject) {
           
-          .rows_to_replace <- 1:epimodel$.ind_final_config
+          # extract the current trajectory
+          .subject_ID         <- paste0(".X", subject)
+          .subj_inds          <- which(epimodel$config_mat[,"ID"] == subject)
+          
+          epimodel$.path_cur  <- epimodel$config_mat[c(1, .subj_inds, epimodel$.ind_final_config), c("time", "ID", "Event", epimodel$states, .subject_ID)]
+          
+          # remove the rows relating to the trajectory from the configuration matrix
+          epimodel$config_mat[.subj_inds,] <- NA
+          epimodel$config_mat <- epimodel$config_mat[order(epimodel$config_mat[,"time"]),]
+          
+          # set the index of the final configuration
+          epimodel$.ind_final_config <- epimodel$.ind_final_config - (nrow(epimodel$.path_cur) - 2)
+          .rows_to_update <- 1:epimodel$.ind_final_config
   
           # remove the contribution to the compartment counts in the configuration matrix
-          epimodel$config_mat[, epimodel$states][cbind(.rows_to_replace, epimodel$config_mat[, subject][.rows_to_replace])] <- epimodel$config_mat[, epimodel$states][cbind(.rows_to_replace, epimodel$config_mat[, subject][.rows_to_replace])] - 1
+          epimodel$config_mat[, epimodel$states][cbind(.rows_to_update, epimodel$config_mat[, .subject_ID][.rows_to_update])] <- epimodel$config_mat[,epimodel$states][cbind(.rows_to_update, epimodel$config_mat[, .subject_ID][.rows_to_update])] - 1
           
           # remove the contribution to the compartment counts in the observation matrix
-          epimodel$obs_mat[, paste0(epimodel$meas_vars, "_augmented")] <- (epimodel$config_mat[, epimodel$meas_vars][.rows_to_replace])[epimodel$config_mat[,"Event"][.rows_to_replace] == 0]
-
+          epimodel$obs_mat[, paste0(epimodel$meas_vars, "_augmented")] <- (epimodel$config_mat[, epimodel$meas_vars][.rows_to_update])[epimodel$config_mat[,"Event"][.rows_to_update] == 0]
+          
+          # re-order the .tpms and .tpm_products objects, setting the offending
+          # matrices to null and placing them at the end
+          .tpm_order <- c(setdiff(1:length(epimodel$.tpms), .subj_inds), .subj_inds)
+          epimodel$.tpms[.subj_inds] <- epimodel$.tpm_products[.subj_inds] <- list(NULL)
+          epimodel$.tpms <- epimodel$.tpms[.tpm_order]
+          epimodel$.tpm_products <- epimodel$.tpm_products[.tpm_order]
 }

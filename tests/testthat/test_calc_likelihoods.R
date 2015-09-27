@@ -63,6 +63,6 @@ test_that("The population-level log-likelihood is computed correctly", {
           
           obs_likelihood <-sum(dbinom(.epimodel$obs_mat[,"I_observed"], .epimodel$obs_mat[,"I_augmented"], prob = .epimodel$params["rho"], log= TRUE))
           
-          expect_equal(as.numeric(calc_likelihoods(epimodel = .epimodel)[[1]]), as.numeric(pop_likelihood))
-          expect_equal(as.numeric(calc_likelihoods(epimodel = .epimodel)[[2]]), as.numeric(obs_likelihood))
+          expect_equal(as.numeric(calc_likelihoods(epimodel = .epimodel, log = TRUE)[[1]]), as.numeric(pop_likelihood))
+          expect_equal(as.numeric(calc_likelihoods(epimodel = .epimodel, log = TRUE)[[2]]), as.numeric(obs_likelihood))
 }) 

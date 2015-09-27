@@ -13,15 +13,16 @@
 build_tpm_seqs <- function(epimodel) {
           
           # get the keys for the tpms that need rebuilding
-          .keys <- generate_keys(.epimodel, inds = .epimodel$.tpms_to_build)
-
-          # construct the tpms for all indexes in the .tpms_to_build vector
+          .keys <- generate_keys(epimodel, inds = epimodel$.tpms_to_build)
+          
+          # construct the tpms for all indices in the .tpms_to_build vector
           for(k in 1:length(epimodel$.tpms_to_build)) {
-                    epimodel$.tpms[[k]] <- build_tpm(values = epimodel$.eigen[[.keys[k]]]$values,
+                    .ind <- epimodel$.tpms_to_build[k]
+                    epimodel$.tpms[[.ind]] <- build_tpm(values = epimodel$.eigen[[.keys[k]]]$values,
                                                 vectors = epimodel$.eigen[[.keys[k]]]$vectors,
                                                 inv_vectors = epimodel$.eigen[[.keys[k]]]$inv_vectors,
-                                                t0 = epimodel$config_mat[k, "time"],
-                                                t1 = epimodel$config_mat[k + 1, "time"])
+                                                t0 = epimodel$config_mat[.ind, "time"],
+                                                t1 = epimodel$config_mat[.ind + 1, "time"])
           }
           
           # get the observation intervals to which the tpms belong

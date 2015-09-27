@@ -1,3 +1,21 @@
+9/27/2015
+================================
+0) Trajectory sampling procedure:
+          i. compute subject-level log-likelihood for current trajectory
+          ii. save the current trajectory in .subj_traj_cur
+          iii. remove the current trajectory by NA-ing it out and re-sort the config_mat
+          iv. draw new subject-level path
+          v. insert the new path
+          vi. M-H step
+1) test the removal steps above
+2) build_tpm_seq - need to modify the indexing for t0 and t1 to use .other_inds
+3) 
+
+9/26/2015
+================================
+1) Functions to generate the emission matrices and FB matrices
+2) Function to determine whether there are absorbing states and whether the process is recurrent. 
+
 9/25/2015
 ================================
 1) Include keys and observation-interval number in the config_mat matrix
