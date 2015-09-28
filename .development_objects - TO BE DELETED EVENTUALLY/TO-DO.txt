@@ -1,3 +1,7 @@
+9/28/2015
+================================
+- Consider just standardizing the initial distribution arguments rather than providing general functionality here. Ask Vladimir about this. 
+
 9/27/2015
 ================================
 0) Trajectory sampling procedure:

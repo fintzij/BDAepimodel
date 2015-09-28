@@ -1,9 +1,8 @@
 library(BDAepimodel)
 
-context("Constructing the the rate matrices")
+context("Generating the correct sequence of tpm and tpm products after a trajectory is removed")
 
-
-test_that("The rate matrices are all computed correctly", {
+test_that("The correct indices for tpms to be rebuilt are retrieved", {
           
           set.seed(52787)
           
@@ -35,7 +34,7 @@ test_that("The rate matrices are all computed correctly", {
           epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.5),
                                     popsize = popsize,
                                     states = c("S", "I", "R"), 
-                                    params = c(beta = 0.9, mu = 1, rho = 0.5, p0 = 0.5), 
+                                    params = c(beta = rnorm(1, 1, 1e-6), mu = rnorm(1, 1, 1e-6), rho = 0.5, p0 = 0.5), 
                                     rates = c("beta * I", "mu"), 
                                     flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                                     meas_vars = "I",
@@ -52,18 +51,20 @@ test_that("The rate matrices are all computed correctly", {
           
           expand_config_mat(.epimodel)
           
-          build_irm(.epimodel)
+          remove_trajectory(.epimodel, 1)
           
-          expect_equal(.epimodel$.irm[["1"]][2,2], -1)
-          expect_equal(.epimodel$.irm[["2"]][1,2], 1.8)
-          expect_equal(.epimodel$.irm[["0"]][1,], rep(0, 3))
-          expect_equal(.epimodel$.irm[["3"]][3,], rep(0, 3))
+          # check to see if any additional irms are needed.
+          # if so, check_irm will instatiate the required
+          # matrices and their eigen decompositions
+          check_irm(.epimodel)
           
-          # update the IRMs and retest
-          build_irm(.epimodel)
+          # get indices of tpms that need to be rebuilt
+          .epimodel$.tpms_to_build <- get_tpms_to_build(.epimodel, subject = 1)
           
-          expect_equal(.epimodel$.irm[["1"]][1,1], -0.9)
-          expect_equal(.epimodel$.irm[["2"]][2,3], 1)
-          expect_equal(.epimodel$.irm[["0"]][1,], rep(0, 3))
-          expect_equal(.epimodel$.irm[["3"]][3,], rep(0, 3))
-}) 
+          
+          # subject 2 was infected in [0.4167, 3.7778). Rows 3 and 14 should be set to NA and the configuration matrix re-ordered. The tpms indices should be 2:12. 
+          expect_equal(.epimodel$.tpms_to_build, 2:12)
+          expect_equal(as.numeric(.epimodel$config_mat[3,1]), 0.5)
+          expect_equal(as.numeric(.epimodel$config_mat[13,1]), 4)
+})
+

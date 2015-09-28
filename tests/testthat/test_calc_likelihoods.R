@@ -19,9 +19,9 @@ test_that("The population-level log-likelihood is computed correctly", {
           # evaluates initial distribution for a single subject
           d_initdist <- function(state, params, log = TRUE) {
                     if(log == TRUE) {
-                              (state == 2)* log(params["p0"]) + (state == 1) * log(1-params["p0"])
+                              (state == 2)* log(params["p0"]) + (state == 1) * log(1-params["p0"]) + ifelse(state == 3, -Inf, 0)
                     } else {
-                              (params["p0"] ^ (state == 2)) * ((1-params["p0"])^(state == 1))
+                              (params["p0"] ^ (state == 2)) * ((1-params["p0"])^(state == 1)) * (0^(state == 3))
                     }
           }
           

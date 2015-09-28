@@ -1,9 +1,8 @@
 library(BDAepimodel)
 
-context("Constructing the the rate matrices")
+context("Constructing the vector of subject-level initial state probabilities")
 
-
-test_that("The rate matrices are all computed correctly", {
+test_that("The vector of subject-level initial state probabilities is correct",{
           
           set.seed(52787)
           
@@ -35,7 +34,7 @@ test_that("The rate matrices are all computed correctly", {
           epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.5),
                                     popsize = popsize,
                                     states = c("S", "I", "R"), 
-                                    params = c(beta = 0.9, mu = 1, rho = 0.5, p0 = 0.5), 
+                                    params = c(beta = 1, mu = 1, rho = 0.5, p0 = 0.5), 
                                     rates = c("beta * I", "mu"), 
                                     flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                                     meas_vars = "I",
@@ -48,22 +47,12 @@ test_that("The rate matrices are all computed correctly", {
           
           .epimodel <- list2env(epimodel, parent = emptyenv(), hash = TRUE)
           
-          .epimodel$.config_inds <- which(grepl(".X", colnames(.epimodel$config_mat)))
+          .epimodel$unmeasured_vars     <- setdiff(.epimodel$states, .epimodel$meas_vars)
+          .epimodel$num_unmeasured      <- length(.epimodel$unmeasured_vars)
+          .epimodel$num_measured        <- length(.epimodel$meas_vars)
           
-          expand_config_mat(.epimodel)
+          .epimodel$num_states          <- length(.epimodel$states)
           
-          build_irm(.epimodel)
+          expect_equal(unname(build_initdist(.epimodel)), c(0.5, 0.5, 0))
           
-          expect_equal(.epimodel$.irm[["1"]][2,2], -1)
-          expect_equal(.epimodel$.irm[["2"]][1,2], 1.8)
-          expect_equal(.epimodel$.irm[["0"]][1,], rep(0, 3))
-          expect_equal(.epimodel$.irm[["3"]][3,], rep(0, 3))
-          
-          # update the IRMs and retest
-          build_irm(.epimodel)
-          
-          expect_equal(.epimodel$.irm[["1"]][1,1], -0.9)
-          expect_equal(.epimodel$.irm[["2"]][2,3], 1)
-          expect_equal(.epimodel$.irm[["0"]][1,], rep(0, 3))
-          expect_equal(.epimodel$.irm[["3"]][3,], rep(0, 3))
-}) 
+})

@@ -41,8 +41,12 @@ fit_epimodel <- function(epimodel) {
           .to_estimation_scale <- .epimodel$sim_settings$to_estimation_scale
           .from_estimation_scale <- .epimodel$sim_settings$from_estimation_scale
           
-          # identify the unmeasured compartments
-          .epimodel$.unmeasured_vars <- setdiff(.epimodel$states, .epimodel$meas_vars)
+          # identify the unmeasured compartments, constants for number of
+          # measured and unmeasured states
+          .epimodel$unmeasured_vars     <- setdiff(.epimodel$states, .epimodel$meas_vars)
+          .epimodel$num_unmeasured      <- length(.epimodel$unmeasured_vars)
+          .epimodel$num_measured        <- length(.epimodel$meas_vars)
+          .epimodel$num_states          <- length(.epimodel$states)
           
           # initialize list for storing results
           .results <- init_results(.epimodel)
@@ -62,7 +66,11 @@ fit_epimodel <- function(epimodel) {
           .epimodel$.tpm_products       <- vector("list", length = nrow(.epimodel$config_mat))
           
           # initialize the matrix of emission probabilities
-          .epimodel$.emission_mat       <- matrix(0, nrow = length(.epimodel$states), ncol = length(.epimodel$obstimes), dimnames = list(.epimodel$states, .epimodel$obstimes))
+          .epimodel$nobs                <- length(.epimodel$obstimes)
+          .epimodel$.emission_mat       <- matrix(0, nrow = length(.epimodel$states), ncol = .epimodel$nobs, dimnames = list(.epimodel$states, .epimodel$obstimes))
+          
+          # initialize the vector of subject-level initial state probabilities
+          .epimodel$initdist <- build_initdist(.epimodel)
           
           # get indices for the subject configuration portion of the configuration matrix
           .epimodel$.config_inds <- which(grepl(".X", colnames(.epimodel$config_mat)))
@@ -109,7 +117,6 @@ fit_epimodel <- function(epimodel) {
                               
                               # update the emission probability matrix
                               build_emission_mat(.epimodel)
-                              
                               
                               
                               # after the new configuration has been drawn, update .ind_final_config
