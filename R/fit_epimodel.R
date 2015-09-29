@@ -67,10 +67,13 @@ fit_epimodel <- function(epimodel) {
           
           # initialize the matrix of emission probabilities
           .epimodel$nobs                <- length(.epimodel$obstimes)
-          .epimodel$.emission_mat       <- matrix(0, nrow = length(.epimodel$states), ncol = .epimodel$nobs, dimnames = list(.epimodel$states, .epimodel$obstimes))
+          .epimodel$.emission_mat       <- matrix(0, nrow = .epimodel$num_states, ncol = .epimodel$nobs, dimnames = list(.epimodel$states, .epimodel$obstimes))
+          
+          # initialize the forward-backward matrices
+          .epimodel$.fb_mats             <- vector("list", length = .epimodel$nobs - 1)
           
           # initialize the vector of subject-level initial state probabilities
-          .epimodel$initdist <- build_initdist(.epimodel)
+          .epimodel$.initdist <- build_initdist(.epimodel)
           
           # get indices for the subject configuration portion of the configuration matrix
           .epimodel$.config_inds <- which(grepl(".X", colnames(.epimodel$config_mat)))
@@ -117,6 +120,9 @@ fit_epimodel <- function(epimodel) {
                               
                               # update the emission probability matrix
                               build_emission_mat(.epimodel)
+                              
+                              # construct the forward-backward matrices
+                              build_fb_mats(.epimodel)
                               
                               
                               # after the new configuration has been drawn, update .ind_final_config
