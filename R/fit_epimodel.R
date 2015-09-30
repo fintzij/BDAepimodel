@@ -48,6 +48,10 @@ fit_epimodel <- function(epimodel) {
           .epimodel$num_measured        <- length(.epimodel$meas_vars)
           .epimodel$num_states          <- length(.epimodel$states)
           
+          # identify whether there is structure in the flow matrix that can be
+          # leveraged when resampling subject-level trajectories
+          detect_structure(.epimodel)
+          
           # initialize list for storing results
           .results <- init_results(.epimodel)
           
