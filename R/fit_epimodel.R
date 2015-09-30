@@ -111,25 +111,15 @@ fit_epimodel <- function(epimodel) {
                               # the subject to be redrawn 
                               remove_trajectory(.epimodel, subject = .subjects[j])
                               
-                              # check to see if any additional irms are needed.
-                              # if so, check_irm will instatiate the required
-                              # matrices and their eigen decompositions
-                              check_irm(.epimodel)
+                              # update instatiate missing IRMs, update TPMs, TPM
+                              # products, and FB matrices.
+                              update_matrices(.epimodel, subject = .subjects[j])
                               
-                              # get indices of tpms that need to be rebuilt
-                              .epimodel$.tpms_to_build <- get_tpms_to_build(.epimodel, subject = .subjects[j])
+                              # draw a new subject level trajectory
+                              draw_trajec(.epimodel, subject = .subjects[j])
                               
-                              # update the transition probability matrix sequences
-                              build_tpm_seqs(.epimodel)
-                              
-                              # update the emission probability matrix
-                              build_emission_mat(.epimodel)
-                              
-                              # construct the forward-backward matrices
-                              build_fb_mats(.epimodel)
-                              
-                              
-                              # after the new configuration has been drawn, update .ind_final_config
+                              # after the new configuration has been drawn,
+                              # update .ind_final_config
                               .epimodel$.ind_final_config <- which(.epimodel$config_mat[,"time"] == max(.epimodel$obstimes))
                     }
                     

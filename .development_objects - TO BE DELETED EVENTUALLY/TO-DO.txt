@@ -1,3 +1,7 @@
+9/29/2015
+================================
+- Write the function to sample the DT skeleton. 
+
 9/28/2015
 ================================
 - Consider just standardizing the initial distribution arguments rather than providing general functionality here. Ask Vladimir about this. 

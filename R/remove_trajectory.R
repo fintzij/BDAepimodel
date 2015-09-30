@@ -22,12 +22,15 @@ remove_trajectory <- function(epimodel, subject) {
           # set the index of the final configuration
           epimodel$.ind_final_config <- epimodel$.ind_final_config - (nrow(epimodel$.path_cur) - 2)
           .rows_to_update <- 1:epimodel$.ind_final_config
+          
+          # set the vector of observation time indices
+          epimodel$.obs_time_inds <- which(epimodel$config_mat[,"ID"] == 0)
   
           # remove the contribution to the compartment counts in the configuration matrix
           epimodel$config_mat[, epimodel$states][cbind(.rows_to_update, epimodel$config_mat[, .subject_ID][.rows_to_update])] <- epimodel$config_mat[,epimodel$states][cbind(.rows_to_update, epimodel$config_mat[, .subject_ID][.rows_to_update])] - 1
           
           # remove the contribution to the compartment counts in the observation matrix
-          epimodel$obs_mat[, paste0(epimodel$meas_vars, "_augmented")] <- (epimodel$config_mat[, epimodel$meas_vars][.rows_to_update])[epimodel$config_mat[,"Event"][.rows_to_update] == 0]
+          epimodel$obs_mat[, paste0(epimodel$meas_vars, "_augmented")] <- (epimodel$config_mat[, epimodel$meas_vars][.rows_to_update])[epimodel$.obs_time_inds]
           
           # re-order the .tpms and .tpm_products objects, setting the offending
           # matrices to null and placing them at the end

@@ -35,7 +35,7 @@ build_tpm_seqs <- function(epimodel) {
                     .left_endpoint      <- epimodel$obstimes[k]
                     .right_endpoint     <- epimodel$obstimes[k+1]
                     
-                    .subseq_inds <- which(epimodel$config_mat[,"time"][1:(epimodel$.ind_final_config-1)] < .right_endpoint & epimodel$config_mat[,"time"][1:(epimodel$.ind_final_config-1)] >= .left_endpoint)
+                    .subseq_inds <- which((epimodel$config_mat[,"time"][1:(epimodel$.ind_final_config-1)] < .right_endpoint) & (epimodel$config_mat[,"time"][1:(epimodel$.ind_final_config-1)] >= .left_endpoint))
                     
                     # Successive multiplication beginning with the rightmost matrix
                     epimodel$.tpm_products[.subseq_inds] <- Reduce("%*%", epimodel$.tpms[.subseq_inds], accumulate = TRUE, right = TRUE)

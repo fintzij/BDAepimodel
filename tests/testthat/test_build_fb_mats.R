@@ -113,7 +113,7 @@ test_that("FB matrix construction in BDAepimodel matches the tested augSIR build
           
           augSIR_tpms <- array(0, dim = c(3,3,.epimodel$nobs - 1))
           for(k in 1:dim(augSIR_tpms)[3]){
-                    augSIR_tpms[,,k] <- .epimodel$.tpm_products[[which(.epimodel$config_mat[,"ID"] == 0)[k]]]
+                    augSIR_tpms[,,k] <- .epimodel$.tpm_products[[.epimodel$.obs_time_inds[k]]]
           }
           
           augSIR_fbarray <- fwd_augSIR(tpms = augSIR_tpms, emits = .epimodel$.emission_mat, initdist = .epimodel$.initdist)
