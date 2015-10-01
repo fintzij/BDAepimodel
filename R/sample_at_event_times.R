@@ -4,10 +4,7 @@
 #'
 #' @return updated configuration matrix of subject level trajectories
 
-sample_at_event_times <- function(epimodel, subject) {
-          
-          # get subject ID
-          .subj_ID <- paste0(".X", subject)
+sample_at_event_times <- function(epimodel, subject, subj_ID) {
           
           # If the model is progressive and has an absorbing state, only need to
           # sample the discrete time skeleton where the endpoints of observation
@@ -18,9 +15,16 @@ sample_at_event_times <- function(epimodel, subject) {
                               
                               # draw the status at inter-event times conditional on the
                               # status at observation times only if a change is observed
-                              if(epimodel$config_mat[epimodel$.obs_time_inds[t], .subj_ID] != epimodel$config_mat[epimodel$.obs_time_inds[t + 1], .subj_ID]) {
+                              if(epimodel$config_mat[epimodel$.obs_time_inds[t], subj_ID] != epimodel$config_mat[epimodel$.obs_time_inds[t + 1], subj_ID]) {
                                         
-                                        epimodel$config_mat[epimodel$.obs_time_inds[t] : epimodel$.obs_time_inds[t + 1], .subj_ID] <- sample_dt_skeleton(epimodel, init_ind = epimodel$.obs_time_inds[t], final_ind= epimodel$.obs_time_inds[t+1])
+                                        # if rates change in the inter-observation time interval, 
+                                        # sample the discrete time skeleton at event times
+                                        if(diff(epimodel$.obs_time_inds[t:(t+1)], lag = 1) != 1) {
+                                                  
+                                                  sample_DT_skeleton(epimodel, subj_ID = subj_ID, init_ind = epimodel$.obs_time_inds[t], final_ind= epimodel$.obs_time_inds[t+1]) 
+                                                  
+                                        }
+                                        
                               }
                               
                     }
@@ -34,9 +38,13 @@ sample_at_event_times <- function(epimodel, subject) {
                               # draw the status at inter-event times conditional
                               # on the status at observation times only if the
                               # subject is not in an absorbing state
-                              if(!epimodel$config_mat[epimodel$.obs_time_inds[t], .subj_ID] %in% epimodel$absorbing_states) {
+                              if(!epimodel$config_mat[epimodel$.obs_time_inds[t], subj_ID] %in% epimodel$absorbing_states) {
+                                        if(diff(epimodel$.obs_time_inds[t:(t+1)], lag = 1) != 1) {
+                                                  
+                                                  sample_DT_skeleton(epimodel, subj_ID = subj_ID, init_ind = epimodel$.obs_time_inds[t], final_ind= epimodel$.obs_time_inds[t+1])   
+                                                  
+                                        }
                                         
-                                        epimodel$config_mat[epimodel$.obs_time_inds[t] : epimodel$.obs_time_inds[t + 1], .subj_ID] <- sample_dt_skeleton(epimodel, init_ind = epimodel$.obs_time_inds[t], final_ind= epimodel$.obs_time_inds[t+1])
                                         
                               } else break
                               
@@ -47,7 +55,11 @@ sample_at_event_times <- function(epimodel, subject) {
           } else {
                     for(t in 1:(epimodel$nobs - 1)) {
                               
-                              epimodel$config_mat[epimodel$.obs_time_inds[t] : epimodel$.obs_time_inds[t + 1], .subj_ID] <- sample_dt_skeleton(epimodel, init_ind = epimodel$.obs_time_inds[t], final_ind= epimodel$.obs_time_inds[t+1])
+                              if(diff(epimodel$.obs_time_inds[t:(t+1)], lag = 1) != 1) {
+                                        
+                                        sample_DT_skeleton(epimodel, subj_ID = subj_ID, init_ind = epimodel$.obs_time_inds[t], final_ind= epimodel$.obs_time_inds[t+1])
+                                        
+                              }
                               
                     }
                     

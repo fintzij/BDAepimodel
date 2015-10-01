@@ -4,7 +4,7 @@
 \alias{sample_at_event_times}
 \title{Sample the infection status at times of state transition of other subjects}
 \usage{
-sample_at_event_times(epimodel, subject)
+sample_at_event_times(epimodel, subject, subj_ID)
 }
 \value{
 updated configuration matrix of subject level trajectories

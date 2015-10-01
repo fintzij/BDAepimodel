@@ -13,7 +13,7 @@ remove_trajectory <- function(epimodel, subject) {
           .subject_ID         <- paste0(".X", subject)
           .subj_inds          <- which(epimodel$config_mat[,"ID"] == subject)
           
-          epimodel$.path_cur  <- epimodel$config_mat[c(1, .subj_inds, epimodel$.ind_final_config), c("time", "ID", "Event", epimodel$states, .subject_ID)]
+          epimodel$.path_cur  <- epimodel$config_mat[c(1, .subj_inds, epimodel$.ind_final_config), c("time", "ID", "Event", .subject_ID)]
           
           # remove the rows relating to the trajectory from the configuration matrix
           epimodel$config_mat[.subj_inds,] <- NA

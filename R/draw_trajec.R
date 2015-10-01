@@ -13,18 +13,21 @@
 
 draw_trajec <- function(epimodel, subject) {
           
+          # generate subject ID
+          .subj_ID <- paste0(".X", subject)
+          
           # sample status at observation times
-          sample_at_obs_times(epimodel, subject)
+          sample_at_obs_times(epimodel, subject = subject, subj_ID = .subj_ID)
           
           # sample status at event times
-          sample_at_event_times(epimodel, subject)
+          sample_at_event_times(epimodel, subject = subject, subj_ID = .subj_ID)
           
           # sample paths in inter-event intervals
-          sample_paths(epimodel, subject)
+          sample_path(epimodel, subject = subject, subj_ID = .subj_ID)
           
           # insert trajectory back into the compartment counts and the
           # observation matrix
-          insert_trajec(epimodel, subject)
+          insert_trajectory(epimodel, subject, .subj_ID)
           
           # accept or reject the proposed path via metropolis-hastings
           MH_accept_reject(epimodel, subject)

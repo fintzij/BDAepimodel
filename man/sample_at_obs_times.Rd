@@ -4,7 +4,7 @@
 \alias{sample_at_obs_times}
 \title{Sample the infection status for the specified subject at observation times.}
 \usage{
-sample_at_obs_times(epimodel, subj_ID)
+sample_at_obs_times(epimodel, subject, subj_ID)
 }
 \value{
 updated configuration matrix
