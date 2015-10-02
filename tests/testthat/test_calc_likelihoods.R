@@ -2,7 +2,7 @@ library(BDAepimodel)
 
 context("Calculation of the population-level log-likelihood and measurement processes log-likelihood") 
 
-test_that("The population-level log-likelihood is computed correctly", {
+test_that("The log-likelihoods are computed correctly", {
           
           set.seed(52787)
           
@@ -34,7 +34,7 @@ test_that("The population-level log-likelihood is computed correctly", {
           epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.5),
                                     popsize = popsize,
                                     states = c("S", "I", "R"), 
-                                    params = c(beta = 1, mu = 1, rho = 0.5, p0 = 0.5), 
+                                    params = c(beta = rnorm(1, 1, 1e-6), mu = rnorm(1,1,1e-6), rho = 0.5, p0 = 0.5), 
                                     rates = c("beta * I", "mu"), 
                                     flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                                     meas_vars = "I",
@@ -51,18 +51,21 @@ test_that("The population-level log-likelihood is computed correctly", {
           
           expand_config_mat(.epimodel)
           
+          build_irm(.epimodel)
+          
           config_mat <- .epimodel$config_mat[c(1, which(.epimodel$config_mat[,"ID"] != 0), .epimodel$.ind_final_config),]
           
-          pop_likelihood <- log(.epimodel$params["p0"]) + 2 * log( 1- .epimodel$params["p0"]) + 
-                    log(1) - (1 + 2)*(config_mat[2, "time"] - config_mat[1, "time"]) +
-                    log(2) - (2 + 2)*(config_mat[3, "time"] - config_mat[2, "time"]) +
-                    log(1) - (3)*(config_mat[4, "time"] - config_mat[3, "time"]) +
-                    log(1) - (2)*(config_mat[5, "time"] - config_mat[4, "time"]) +
-                    log(1) - (1)*(config_mat[6, "time"] - config_mat[5, "time"]) -
-                    (0) * (config_mat[7, "time"] - .epimodel$config_mat[6, "time"]) 
+          pop_likelihood <- 2 * log(.epimodel$params["p0"]) + log( 1- .epimodel$params["p0"]) + 
+                    log(2 * epimodel$params["beta"]) - (2 + 2)*(config_mat[2, "time"] - config_mat[1, "time"]) +
+                    log(1) - (3)*(config_mat[3, "time"] - config_mat[2, "time"]) +
+                    log(1) - (2)*(config_mat[4, "time"] - config_mat[3, "time"]) +
+                    log(1) - (1)*(config_mat[5, "time"] - config_mat[4, "time"]) 
           
           obs_likelihood <-sum(dbinom(.epimodel$obs_mat[,"I_observed"], .epimodel$obs_mat[,"I_augmented"], prob = .epimodel$params["rho"], log= TRUE))
           
-          expect_equal(as.numeric(calc_likelihoods(epimodel = .epimodel, log = TRUE)[[1]]), as.numeric(pop_likelihood))
-          expect_equal(as.numeric(calc_likelihoods(epimodel = .epimodel, log = TRUE)[[2]]), as.numeric(obs_likelihood))
+          subj1_likelihood <- log(1 - .epimodel$params["p0"]) + log(2*.epimodel$params["beta"]) - 2*.epimodel$params["beta"] * (config_mat[2,"time"] - config_mat[1,"time"]) + log(.epimodel$params["mu"])  - .epimodel$params["mu"] *(config_mat[3,"time"] - config_mat[2,"time"])
+          
+          expect_equal(signif(calc_pop_likelihood(epimodel = .epimodel, log = TRUE), digits = 6), as.numeric(signif(pop_likelihood, digits = 6)))
+          expect_equal(as.numeric(calc_obs_likelihood(epimodel = .epimodel, log = TRUE)), as.numeric(obs_likelihood))
+          expect_equal(as.numeric(calc_subj_likelihood(epimodel = .epimodel, subject = 1, subj_ID = ".X1", log = TRUE)), as.numeric(subj1_likelihood))
 }) 

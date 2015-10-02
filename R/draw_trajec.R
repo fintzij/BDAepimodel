@@ -24,9 +24,8 @@ draw_trajec <- function(epimodel, subject) {
           
           # sample paths in inter-event intervals
           sample_path(epimodel, subject = subject, subj_ID = .subj_ID)
-          
-          # insert trajectory back into the compartment counts and the
-          # observation matrix
+
+          # insert trajectory back into the configuration matrix 
           insert_trajectory(epimodel, subject, .subj_ID)
           
           # accept or reject the proposed path via metropolis-hastings

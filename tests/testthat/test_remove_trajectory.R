@@ -34,7 +34,7 @@ test_that("The updated counts are correct in the configuration matrix", {
           epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.5),
                                     popsize = popsize,
                                     states = c("S", "I", "R"), 
-                                    params = c(beta = 1, mu = 1, rho = 0.5, p0 = 0.5), 
+                                    params = c(beta = rnorm(1, 1, 1e-6), mu = rnorm(1, 1, 1e-6), rho = 0.5, p0 = 0.5),
                                     rates = c("beta * I", "mu"), 
                                     flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                                     meas_vars = "I",
@@ -50,6 +50,8 @@ test_that("The updated counts are correct in the configuration matrix", {
           .epimodel$.config_inds <- which(grepl(".X", colnames(.epimodel$config_mat)))
           
           expand_config_mat(.epimodel)
+          
+          build_irm(.epimodel)
           
           remove_trajectory(.epimodel, 2)
           
@@ -95,7 +97,7 @@ test_that("The observation matrix is updated correctly when a trajectory is remo
           epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.5),
                                     popsize = popsize,
                                     states = c("S", "I", "R"), 
-                                    params = c(beta = 1, mu = 1, rho = 0.5, p0 = 0.5), 
+                                    params = c(beta = rnorm(1, 1, 1e-6), mu = rnorm(1, 1, 1e-6), rho = 0.5, p0 = 0.5),
                                     rates = c("beta * I", "mu"), 
                                     flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                                     meas_vars = "I",
@@ -112,16 +114,14 @@ test_that("The observation matrix is updated correctly when a trajectory is remo
           
           expand_config_mat(.epimodel)
           
-          remove_trajectory(.epimodel, 2)
+          build_irm(.epimodel)
           
-          # subject 2 is susceptible in the interval [0, 1.8705), infected in
-          # the interval [1.8705, 4.44065), and recovered after. Therefore, the
-          # count of susceptibles at times 0, 0.5, 1, and 1.5 should be reduced by
-          # one, the count of infectives at times 2, 2.5, 3, 3.5, and 4 should
-          # be reduced by one, and the counts of recovered individuals at times
-          # 4.5 and 5 should be reduced by one.
+          remove_trajectory(.epimodel, 1)
           
-          expect_equal(.epimodel$obs_mat[,"I_augmented"], c(3, 2, 1, 1, 1, 1, 0, 0, 0, 0))
+          # subject 1 is susceptible in the interval [0, 0.4167), infected in
+          # the interval [0.4167, 3.7778), and recovered after.
+          
+          expect_equal(.epimodel$obs_mat[,"I_augmented"], c(4, 3, 1, 1, 0, 0, 0, 0, 0))
 })
 
 test_that("The correct rows corresponding to a trajectory are removed",{
@@ -156,7 +156,7 @@ test_that("The correct rows corresponding to a trajectory are removed",{
           epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.5),
                                     popsize = popsize,
                                     states = c("S", "I", "R"), 
-                                    params = c(beta = 1, mu = 1, rho = 0.5, p0 = 0.5), 
+                                    params = c(beta = rnorm(1, 1, 1e-6), mu = rnorm(1, 1, 1e-6), rho = 0.5, p0 = 0.5),
                                     rates = c("beta * I", "mu"), 
                                     flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                                     meas_vars = "I",
@@ -172,6 +172,8 @@ test_that("The correct rows corresponding to a trajectory are removed",{
           .epimodel$.config_inds <- which(grepl(".X", colnames(.epimodel$config_mat)))
           
           expand_config_mat(.epimodel)
+          
+          build_irm(.epimodel)
           
           remove_trajectory(.epimodel, 2)
           

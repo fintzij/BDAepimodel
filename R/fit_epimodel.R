@@ -41,6 +41,13 @@ fit_epimodel <- function(epimodel) {
           .to_estimation_scale <- .epimodel$sim_settings$to_estimation_scale
           .from_estimation_scale <- .epimodel$sim_settings$from_estimation_scale
           
+          # initialize the list of log-likelihoods
+          epimodel$likelihoods <- list(pop_likelihood_cur = NULL,
+                                       pop_likelihood_new = NULL,
+                                       subj_likelihood_cur = NULL,
+                                       subj_likelihood_new = NULL,
+                                       obs_likelihood  = NULL)
+          
           # identify the unmeasured compartments, constants for number of
           # measured and unmeasured states
           .epimodel$unmeasured_vars     <- setdiff(.epimodel$states, .epimodel$meas_vars)
@@ -96,31 +103,39 @@ fit_epimodel <- function(epimodel) {
 
                     # re-compute the population level likelihood, measurement
                     # process likelihood, and complete data log-likelihood
-                    calc_likelihoods(epimodel = .epimodel, epimodel_envir = TRUE, log = TRUE)
-                    
+                    epimodel$likelihoods$pop_likelihood_cur <- calc_pop_likelihood(epimodel = .epimodel, log = TRUE)
+                    epimodel$likelihoods$obs_likelihood_cur <- calc_obs_likelihood(epimodel = .epimodel, log = TRUE)
+
                     # choose which subjects should be redrawn
                     .subjects <- sample.int(n = .epimodel$popsize, size = .configs_to_redraw, replace = .config_replacement)
 
                     # cycle through subject-level trajectories to be re-drawn
                     for(j in 1:.configs_to_redraw) {
                               
+                              # update_tpms to reflect removal of subject from
+                              # the configuration
+                              update_tpms(.epimodel, subject = .subjects[j], direction = "removal")
+                              
                               # remove trajectory from the counts in config_mat 
                               # and obs_mat, and update the tpm sequences to 
-                              # reflect the removal. Also sets .other_inds, the
-                              # vector of indices for events not belonging to
-                              # the subject to be redrawn 
+                              # reflect the removal. 
                               remove_trajectory(.epimodel, subject = .subjects[j])
                               
-                              # update instatiate missing IRMs, update TPMs, TPM
-                              # products, and FB matrices.
+                              # update instatiate missing IRMs, update the
+                              # emission probability and FB matrices.
                               update_matrices(.epimodel, subject = .subjects[j])
                               
                               # draw a new subject level trajectory
                               draw_trajec(.epimodel, subject = .subjects[j])
                               
-                              # after the new configuration has been drawn,
-                              # update .ind_final_config
-                              .epimodel$.ind_final_config <- which(.epimodel$config_mat[,"time"] == max(.epimodel$obstimes))
+                              # check the irms to ensure that no additional
+                              # matrices and decompositions are required
+                              check_irm(.epimodel)
+                              
+                              # update the tpms to reflect the insertion of a
+                              # subject-level trajectory into the configuration
+                              update_tpms(.epimodel, subject = .subjects[j], direction = "insertion")
+                              
                     }
                     
           }

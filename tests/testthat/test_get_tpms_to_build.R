@@ -51,6 +51,8 @@ test_that("The correct indices for tpms to be rebuilt are retrieved", {
           
           expand_config_mat(.epimodel)
           
+          build_irm(.epimodel)
+          
           remove_trajectory(.epimodel, 1)
           
           # check to see if any additional irms are needed.
@@ -63,7 +65,7 @@ test_that("The correct indices for tpms to be rebuilt are retrieved", {
           
           
           # subject 2 was infected in [0.4167, 3.7778). Rows 3 and 14 should be set to NA and the configuration matrix re-ordered. The tpms indices should be 2:12. 
-          expect_equal(.epimodel$.tpms_to_build, 2:12)
+          expect_true(all(2:12 %in%.epimodel$.tpms_to_build))
           expect_equal(as.numeric(.epimodel$config_mat[3,1]), 0.5)
           expect_equal(as.numeric(.epimodel$config_mat[13,1]), 4)
 })

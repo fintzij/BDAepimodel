@@ -5,12 +5,16 @@
 \title{Instatiate missing IRMs, and update TPMS, TPM products, and FB matrices
 before drawing a new subject path.}
 \usage{
-update_matrices(epimodel, subject)
+update_matrices(epimodel, subject, irm = TRUE, emission = TRUE, fb = TRUE)
 }
 \arguments{
 \item{epimodel}{list of bookkeeping and model objects, or an analagous
 environment. If not supplied, the list will be generated. The epimodel list
 is coerced into an environment, .epimodel, for internal use.}
+
+\item{emission}{TRUE/FALSE for whether to construct the emission matrices}
+
+\item{fb}{TRUE/FALSE for whether to construct the FB matrices}
 }
 \value{
 updated matrices within the epimodel environment.

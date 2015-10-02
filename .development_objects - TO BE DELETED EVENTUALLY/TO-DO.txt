@@ -1,7 +1,11 @@
+10/1/2015
+================================
+- Write M-H acceptance function for trajecs, as well as function to resolve the decision and re-insert the old trajectory
+- Write test function for forward sampling function - possibly an extended test. 
+- Write test function for HMM sampling
+
 9/30/2015
 ================================
-- Write test to determine whether tpms need to be rebuilt following re-insertion of a trajectory
-- Write test function for forward sampling function - possibly an extended test. 
 - Write function for subject-level likelihood
 
 9/29/2015

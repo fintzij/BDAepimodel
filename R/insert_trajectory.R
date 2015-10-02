@@ -22,15 +22,20 @@ insert_trajectory <- function(epimodel, subject, subj_ID) {
                     # copy the configurations from the previous event times
                     epimodel$config_mat[which(epimodel$config_mat[,"ID"] == subject), epimodel$.config_inds[-subject]] <- epimodel$config_mat[which(epimodel$config_mat[,"ID"] == subject) - 1, epimodel$.config_inds[-subject]] 
                     
-                    # set the index for the final configuration
+                    # update index for the final configuration
                     epimodel$.ind_final_config <- epimodel$.subj_row_ind - 1
                     
                     # set the vector of observation time indices
                     epimodel$.obs_time_inds <- which(epimodel$config_mat[,"ID"] == 0)
           }
           
+          # compute the likelihood of the subject's trajectory from a
+          # time-inhomogeneous CTMC
+          epimodel$likelihoods$subj_likelihood_new <- calc_subj_likelihood(epimodel = epimodel, subject = subject, subj_ID = subj_ID, log = TRUE) 
+          
           # add the subject's contribution back into the compartment counts
           .rows_to_update <- 1:epimodel$.ind_final_config
           
-          epimodel$config_mat[, epimodel$states][cbind(.rows_to_update, epimodel$config_mat[, subj_ID][.rows_to_update])] <- epimodel$config_mat[,epimodel$states][cbind(.rows_to_update, epimodel$config_mat[, subj_ID][.rows_to_update])] + 1
+          epimodel$config_mat[, epimodel$states][cbind(.rows_to_update, epimodel$config_mat[, subj_ID][.rows_to_update])] <-epimodel$config_mat[,epimodel$states][cbind(.rows_to_update, epimodel$config_mat[, subj_ID][.rows_to_update])] + 1
+          
 }

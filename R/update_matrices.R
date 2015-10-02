@@ -12,18 +12,12 @@ update_matrices <- function(epimodel, subject, irm = TRUE, emission = TRUE, fb =
           # check to see if any additional irms are needed.
           # if so, check_irm will instatiate the required
           # matrices and their eigen decompositions
-          if(irm) check_irm(epimodel)
-          
-          # get indices of tpms that need to be rebuilt
-          epimodel$.tpms_to_build <- get_tpms_to_build(epimodel, subject = .subjects[j])
-          
-          # update the transition probability matrix sequences
-          build_tpm_seqs(epimodel)
+          check_irm(epimodel)
           
           # update the emission probability matrix
-          if(emission) build_emission_mat(epimodel)
+          build_emission_mat(epimodel)
           
           # construct the forward-backward matrices
-          if(fb) build_fb_mats(epimodel)
+          build_fb_mats(epimodel)
           
 }
