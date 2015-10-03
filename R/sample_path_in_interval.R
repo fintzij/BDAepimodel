@@ -47,7 +47,7 @@ sample_path_in_interval <- function(epimodel, subject, subj_ID, interval) {
                     # increment epimodel$.subj_row_ind 
                     epimodel$.subj_row_ind <- epimodel$.subj_row_ind + 1
                     
-                    if(!.next_state %in% epimodel$absorbing_states) {
+                    if(!.init_state %in% epimodel$absorbing_states) {
                               # sample forward to complete the path
                               sample_forward(epimodel = epimodel, 
                                              subject = subject, 

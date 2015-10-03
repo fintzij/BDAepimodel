@@ -1,3 +1,8 @@
+10/2/2015
+================================
+- Consider how to standardize the initial distribution arguments. No need to provide general functionality here.
+- Write function to implement direct sampling and counter for forward-sampling failure.
+
 10/1/2015
 ================================
 - Write M-H acceptance function for trajecs, as well as function to resolve the decision and re-insert the old trajectory

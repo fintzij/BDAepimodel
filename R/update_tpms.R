@@ -15,7 +15,7 @@ update_tpms <- function(epimodel, subject, direction) {
           .subj_inds <- which(epimodel$config_mat[,"ID"] == subject)
           
           if(direction == "removal") {
-                    
+          
                     # re-order the .tpms and .tpm_products objects
                     .tpm_order <- c(setdiff(1:length(epimodel$.tpms), .subj_inds), .subj_inds)
                     
@@ -32,6 +32,7 @@ update_tpms <- function(epimodel, subject, direction) {
                     
                     # update the transition probability matrix sequences
                     build_tpm_seqs(epimodel)
+          
                     
           } else if(direction == "insertion") {
                     
@@ -47,7 +48,6 @@ update_tpms <- function(epimodel, subject, direction) {
                     
                     # update the transition probability matrix sequences
                     build_tpm_seqs(epimodel)
-                    
-          }
           
+          }
 }

@@ -2,25 +2,16 @@
 % Please edit documentation in R/update_matrices.R
 \name{update_matrices}
 \alias{update_matrices}
-\title{Instatiate missing IRMs, and update TPMS, TPM products, and FB matrices
-before drawing a new subject path.}
+\title{Update tpms, tpm products, emission matrices, and FB matrices before drawing
+a new subject path.}
 \usage{
-update_matrices(epimodel, subject, irm = TRUE, emission = TRUE, fb = TRUE)
-}
-\arguments{
-\item{epimodel}{list of bookkeeping and model objects, or an analagous
-environment. If not supplied, the list will be generated. The epimodel list
-is coerced into an environment, .epimodel, for internal use.}
-
-\item{emission}{TRUE/FALSE for whether to construct the emission matrices}
-
-\item{fb}{TRUE/FALSE for whether to construct the FB matrices}
+update_matrices(epimodel, subject)
 }
 \value{
 updated matrices within the epimodel environment.
 }
 \description{
-Instatiate missing IRMs, and update TPMS, TPM products, and FB matrices
-before drawing a new subject path.
+Update tpms, tpm products, emission matrices, and FB matrices before drawing
+a new subject path.
 }
 

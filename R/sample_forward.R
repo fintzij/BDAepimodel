@@ -23,7 +23,20 @@ sample_forward <- function(epimodel, subject, subj_ID, init_time, final_time, in
                     
                     while(.keep_going == TRUE) {
                               
-                              if(.cur_state %in% epimodel$absorbing_states) break
+                              if(.cur_state %in% epimodel$absorbing_states) {
+                                        
+                                        # stop forward sampling
+                                        .keep_going = FALSE
+                                        
+                                        # determine if the path is valid. 
+                                        if(.cur_state == final_state) {
+                                                  .valid_path <- TRUE
+                                                  epimodel$.subj_row_ind <- .ind_cur
+                                                  
+                                        } 
+                                        
+                                        break
+                              } 
                               
                               # sample the next transition time
                               .t <- .t + rexp(1, rate = abs(epimodel$.irm[[irm_key]][.cur_state, .cur_state]))

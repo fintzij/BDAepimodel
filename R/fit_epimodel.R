@@ -96,15 +96,10 @@ fit_epimodel <- function(epimodel) {
                     # recomputed every time parameters are updated.
                     build_irm(.epimodel)
                     
-                    # reset the vector of tpms to build (set all to false at the end of the build), then build the tpm
-                    # sequences
-                    .epimodel$.tpms_to_build <- get_tpms_to_build(.epimodel)
-                    build_tpm_seqs(.epimodel)
-
                     # re-compute the population level likelihood, measurement
                     # process likelihood, and complete data log-likelihood
-                    epimodel$likelihoods$pop_likelihood_cur <- calc_pop_likelihood(epimodel = .epimodel, log = TRUE)
-                    epimodel$likelihoods$obs_likelihood_cur <- calc_obs_likelihood(epimodel = .epimodel, log = TRUE)
+                    .epimodel$likelihoods$pop_likelihood_cur <- calc_pop_likelihood(epimodel = .epimodel, log = TRUE)
+                    .epimodel$likelihoods$obs_likelihood_cur <- calc_obs_likelihood(epimodel = .epimodel, log = TRUE)
 
                     # choose which subjects should be redrawn
                     .subjects <- sample.int(n = .epimodel$popsize, size = .configs_to_redraw, replace = .config_replacement)
@@ -112,30 +107,23 @@ fit_epimodel <- function(epimodel) {
                     # cycle through subject-level trajectories to be re-drawn
                     for(j in 1:.configs_to_redraw) {
                               
-                              # update_tpms to reflect removal of subject from
-                              # the configuration
-                              update_tpms(.epimodel, subject = .subjects[j], direction = "removal")
+                              # check to see if any additional irms are needed.
+                              # if so, check_irm will instatiate the required
+                              # matrices and their eigen decompositions
+                              check_irm(.epimodel)
                               
                               # remove trajectory from the counts in config_mat 
                               # and obs_mat, and update the tpm sequences to 
                               # reflect the removal. 
                               remove_trajectory(.epimodel, subject = .subjects[j])
                               
-                              # update instatiate missing IRMs, update the
-                              # emission probability and FB matrices.
+                              # update instatiate missing IRMs, update the tpms 
+                              # and tpm products, the emission probability mtx,
+                              # and the FB matrices.
                               update_matrices(.epimodel, subject = .subjects[j])
                               
                               # draw a new subject level trajectory
                               draw_trajec(.epimodel, subject = .subjects[j])
-                              
-                              # check the irms to ensure that no additional
-                              # matrices and decompositions are required
-                              check_irm(.epimodel)
-                              
-                              # update the tpms to reflect the insertion of a
-                              # subject-level trajectory into the configuration
-                              update_tpms(.epimodel, subject = .subjects[j], direction = "insertion")
-                              
                     }
                     
           }

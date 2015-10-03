@@ -5,15 +5,12 @@
 \title{Calculate likelihood for the population level trajectory and the measurement
 process.}
 \usage{
-calc_obs_likelihood(epimodel, epimodel_envir = FALSE, log = FALSE)
+calc_obs_likelihood(epimodel, log = FALSE)
 }
 \arguments{
 \item{epimodel}{list of bookkeeping and model objects, or an analagous
 environment. If not supplied, the list will be generated. The epimodel list
 is coerced into an environment, .epimodel, for internal use.}
-
-\item{epimodel_envir}{TRUE/FALSE for whether to modify the epimodel
-environment}
 
 \item{log}{TRUE/FALSE for whether to return the log-likelihood or likelihood.}
 }

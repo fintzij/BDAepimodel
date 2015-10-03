@@ -26,8 +26,8 @@ draw_trajec <- function(epimodel, subject) {
           sample_path(epimodel, subject = subject, subj_ID = .subj_ID)
 
           # insert trajectory back into the configuration matrix 
-          insert_trajectory(epimodel, subject, .subj_ID)
+          insert_trajectory(epimodel, subject = subject, subj_ID = .subj_ID)
           
           # accept or reject the proposed path via metropolis-hastings
-          MH_accept_reject(epimodel, subject)
+          MH_accept_reject(epimodel, subject = subject, subj_ID = .subj_ID)
 }

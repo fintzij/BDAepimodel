@@ -16,17 +16,25 @@ insert_trajectory <- function(epimodel, subject, subj_ID) {
                     # reorder the matrix
                     epimodel$config_mat[1:(epimodel$.subj_row_ind - 1),] <- epimodel$config_mat[order(epimodel$config_mat[1:(epimodel$.subj_row_ind - 1), "time"]), ]
                     
-                    # copy the states from the previous event times
-                    epimodel$config_mat[which(epimodel$config_mat[,"ID"] == subject), epimodel$states] <- epimodel$config_mat[which(epimodel$config_mat[,"ID"] == subject) - 1, epimodel$states]
+                    # get the subject indices
+                    .subj_inds <- which(epimodel$config_mat[,"ID"] == subject)
                     
-                    # copy the configurations from the previous event times
-                    epimodel$config_mat[which(epimodel$config_mat[,"ID"] == subject), epimodel$.config_inds[-subject]] <- epimodel$config_mat[which(epimodel$config_mat[,"ID"] == subject) - 1, epimodel$.config_inds[-subject]] 
+                    for(k in seq_along(.subj_inds)) {
+                              
+                              # # copy the states from the previous event times
+                              epimodel$config_mat[.subj_inds[k], epimodel$states] <- epimodel$config_mat[.subj_inds[k] - 1, epimodel$states]
+                              
+                              # copy the configurations from the previous event times
+                              epimodel$config_mat[.subj_inds[k], epimodel$.config_inds[-subject]] <- epimodel$config_mat[.subj_inds[k] - 1, epimodel$.config_inds[-subject]] 
+                              
+                    }
                     
                     # update index for the final configuration
                     epimodel$.ind_final_config <- epimodel$.subj_row_ind - 1
                     
                     # set the vector of observation time indices
                     epimodel$.obs_time_inds <- which(epimodel$config_mat[,"ID"] == 0)
+                    
           }
           
           # compute the likelihood of the subject's trajectory from a
@@ -38,4 +46,6 @@ insert_trajectory <- function(epimodel, subject, subj_ID) {
           
           epimodel$config_mat[, epimodel$states][cbind(.rows_to_update, epimodel$config_mat[, subj_ID][.rows_to_update])] <-epimodel$config_mat[,epimodel$states][cbind(.rows_to_update, epimodel$config_mat[, subj_ID][.rows_to_update])] + 1
           
+          # compute the likelihood for the new population-level trajectory
+          epimodel$likelihoods$pop_likelihood_new <- calc_pop_likelihood(epimodel, log = TRUE)
 }
