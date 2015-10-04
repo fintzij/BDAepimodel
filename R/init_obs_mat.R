@@ -2,7 +2,8 @@
 #'
 #' @param epimodel bookkeeping object. 
 #'
-#' @return Bookkeeping object for observed and true counts at observation times. 
+#' @return Bookkeeping object for observed and true counts at observation times.
+#' @export 
 #' 
 init_obs_mat <- function(epimodel){
           

@@ -13,6 +13,8 @@
 #'   
 #' @return objects in the epimodel environment: absorbing states (or FALSE if 
 #'   none), and with TRUE/FALSE for whether the model is progressive.
+#' @export  
+#'   
 
 detect_structure <- function(epimodel) {
           

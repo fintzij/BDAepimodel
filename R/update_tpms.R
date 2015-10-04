@@ -8,6 +8,8 @@
 #' @param direction "removal" or "insertion"
 #'   
 #' @return updated lists of tpms within the .epimodel environment
+#' 
+#' @export
 
 update_tpms <- function(epimodel, subject, direction) {
           

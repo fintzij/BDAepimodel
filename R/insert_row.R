@@ -4,7 +4,8 @@
 #' @param row_num row number for insertion; row currently at that number is pushed down.
 #' @param vec vector to be inserted
 #'
-#' @return matrix with the inserted row. 
+#' @return matrix with the inserted row.
+#' @export 
 #'
 #' @examples x <- matrix(1:9, nrow = 3)
 #' insert_row(x, 2, c(5, 27, 87))

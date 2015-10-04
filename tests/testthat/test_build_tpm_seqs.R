@@ -252,7 +252,7 @@ test_that("The sequence of tpm products is computed correctly when a trajectory 
           
           build_tpm_seqs(.epimodel)
           
-          remove_trajectory(.epimodel, 1)
+          remove_trajectory(.epimodel, 1, save_path = TRUE)
           
           # check to see if any additional irms are needed.
           # if so, check_irm will instatiate the required
@@ -396,7 +396,7 @@ test_that("tpms are computed correctly following multiple removals and re-insert
                               # remove trajectory from the counts in config_mat 
                               # and obs_mat, and update the tpm sequences to 
                               # reflect the removal. 
-                              remove_trajectory(.epimodel, subject = .subjects[j])
+                              remove_trajectory(.epimodel, subject = .subjects[j], save_path = TRUE)
                               
                               # update instatiate missing IRMs, update the tpms 
                               # and tpm products, the emission probability mtx,

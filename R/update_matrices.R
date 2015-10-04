@@ -4,6 +4,8 @@
 #' @inheritParams draw_trajec
 #'   
 #' @return updated matrices within the epimodel environment.
+#' 
+#' @export
 
 update_matrices <- function(epimodel, subject) {
           

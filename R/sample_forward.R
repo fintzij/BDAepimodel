@@ -9,6 +9,8 @@
 #'   
 #' @return updated configuration matrix with a valid path (no update if constant
 #'   path)
+#'   
+#' @export
 
 sample_forward <- function(epimodel, subject, subj_ID, init_time, final_time, init_state, final_state, irm_key) {
           

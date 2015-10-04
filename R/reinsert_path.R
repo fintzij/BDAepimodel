@@ -6,6 +6,8 @@
 #' @inheritParams draw_trajec
 #'   
 #' @return updated configuration matrix
+#' 
+#' @export
 
 reinsert_path <- function(epimodel, subject, subj_ID) {
           
@@ -21,11 +23,12 @@ reinsert_path <- function(epimodel, subject, subj_ID) {
                     
                     epimodel$config_mat[(epimodel$.ind_final_config + 1) : ((epimodel$.ind_final_config + nrow(epimodel$.path_cur) - 2)), c("time", "ID", "Event", subj_ID)] <- epimodel$.path_cur[2:(nrow(epimodel$.path_cur) - 1), ]
                     
-                    # set the final index of the subject path in the config_mat
-                    epimodel$.subj_row_ind <- epimodel$.ind_final_config + nrow(epimodel$.path_cur) - 1
-                    
-                    # insert_trajectory will insert the transitions and reorder the matrix
-                    insert_trajectory(epimodel, subject = subject, subj_ID = subj_ID)
-                    
           }
+          
+          # set the final index of the subject path in the config_mat
+          # .ind_final_config + 1 + (nrow(.path_cur) - 2)
+          epimodel$.subj_row_ind <- epimodel$.ind_final_config + nrow(epimodel$.path_cur) - 1
+          
+          # insert_trajectory will insert the transitions and reorder the matrix
+          insert_trajectory(epimodel, subject = subject, subj_ID = subj_ID, reinsertion = TRUE) 
 }

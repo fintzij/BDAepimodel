@@ -5,7 +5,7 @@
 \title{Remove the contribution of a subject from the compartment counts in the
 \code{config_mat} and \code{obs_mat} objects.}
 \usage{
-remove_trajectory(epimodel, subject)
+remove_trajectory(epimodel, subject, save_path)
 }
 \arguments{
 \item{epimodel}{list of bookkeeping and model objects, or an analagous
@@ -13,6 +13,8 @@ environment. If not supplied, the list will be generated. The epimodel list
 is coerced into an environment, .epimodel, for internal use.}
 
 \item{subject}{ID for subject to be removed}
+
+\item{save_path}{TRUE/FALSE for whether to save the current path in epimodel}
 }
 \value{
 \code{config_mat} and \code{obs_mat} objects within the .epimodel

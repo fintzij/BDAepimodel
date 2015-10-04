@@ -4,6 +4,7 @@
 #' @param inds optional vector with row numbers for which keys are desired.
 #'
 #' @return character vector of keys
+#' @export
 
 generate_keys <- function(epimodel, inds = NULL) {
           

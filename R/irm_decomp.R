@@ -6,6 +6,7 @@
 #'   
 #' @return list containing the unordered eigenvalues, the matrix of
 #'   eigenvectors, and the inverse of the eigenvector matrix
+#' @export
 
 irm_decomp <- function(irm, env = NULL, key = NULL, update = TRUE) {
           

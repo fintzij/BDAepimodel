@@ -8,6 +8,7 @@
 #'   instatiate a new one
 #'   
 #' @return rate matrix of dimension \code{num_states x num_states}
+#' @export
 
 build_rate_mat <- function(rates, state, params, flow, env = NULL, key = NULL, update = TRUE) {
           

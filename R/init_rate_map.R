@@ -1,11 +1,13 @@
 #' Construct an index matrix identifying with which states each rate varies.
 #' 
-#' Called internally before rates are parsed when an epimodel object is
+#' Called internally before rates are parsed when an epimodel object is 
 #' initialized.
 #' 
 #' @inheritParams init_epimodel
-#' 
-#' @return binary index matrix indicating which changes in each compartment affect c3
+#'   
+#' @return binary index matrix indicating which changes in each compartment
+#'   affect each rate
+#' @export
 
 init_rate_map <- function(rates, states) {
           

@@ -95,7 +95,7 @@
 # 
 # kernel <- list(beta_mu_kernel, rho_p0_kernel)
 # 
-# config_resample_prop <- 10
+# configs_to_redraw <- 10
 #  
 # # save new parameters every iteration
 # # save every tenth configuration matrix
@@ -107,12 +107,12 @@
 #                  kernel = kernel,
 #                  configs_to_redraw = 10)
 #' 
-init_settings <- function(epimodel, niter, burnin, params_every = 1, configs_every = floor(niter / 100), kernel, cov_mtx = NULL, configs_to_redraw, to_estimation_scale = NULL, from_estimation_scale = NULL) {
+init_settings <- function(epimodel, niter, burnin = NULL, params_every = 1, configs_every = floor(niter / 100), kernel, cov_mtx = NULL, configs_to_redraw, to_estimation_scale = NULL, from_estimation_scale = NULL) {
           
           # check that the appropriate argumentsare provided as integers
-          if(!all(c(niter, burnin, params_every, configs_every, config_resample_prop) == floor(c(niter, burnin, params_every, configs_every, config_resample_prop)))) {
-                    which_not_int <- which(c(niter, burnin, params_every, configs_every, config_resample_prop) != floor(c(niter, burnin, params_every, configs_every, config_resample_prop)))
-                    stop(paste(c(niter, burnin, params_every, configs_every, config_resample_prop)[which_not_int], collapse = ", "), "must be integer valued.")
+          if(!all(c(niter, burnin, params_every, configs_every, configs_to_redraw) == floor(c(niter, burnin, params_every, configs_every, configs_to_redraw)))) {
+                    which_not_int <- which(c(niter, burnin, params_every, configs_every, configs_to_redraw) != floor(c(niter, burnin, params_every, configs_every, configs_to_redraw)))
+                    stop(paste(c(niter, burnin, params_every, configs_every, configs_to_redraw)[which_not_int], collapse = ", "), "must be integer valued.")
           }
           
           # check that if the one of the transformation arguments was provided,

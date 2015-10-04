@@ -2,12 +2,6 @@
 
 library(BDAepimodel)
 library(mcmc)
-library(GillespieSSA)
-library(doParallel)
-library(doMC)
-library(itertools)
-library(foreach)
-library(iterators)
 library(ggplot2)
 library(reshape2)
 library(batch)
@@ -20,7 +14,7 @@ parseCommandArgs()
 # are not necessary for the package to work.
 set.seed(52787)
 
-popsize <- 10
+popsize <- 20
 
 r_meas_process <- function(state, meas_vars, params){
           rbinom(n = nrow(state), size = state[,meas_vars], prob = params["rho"])
@@ -48,7 +42,7 @@ r_initdist <- function(params) {
 epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.1),
                           popsize = popsize,
                           states = c("S", "I", "R"), 
-                          params = c(beta = rnorm(1, 0.5, 1e-6), mu = rnorm(1, 1, 1e-6), rho = 0.5, p0 = 0.2), 
+                          params = c(beta = rnorm(1, 0.25, 1e-6), mu = rnorm(1, 1, 1e-6), rho = 0.5, p0 = 0.2), 
                           rates = c("beta * I", "mu"), 
                           flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                           meas_vars = "I",
@@ -58,6 +52,7 @@ epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.1),
                           r_initdist = r_initdist)
 
 epimodel <- simulate_epimodel(epimodel = epimodel, lump = TRUE, trim = FALSE)
+epimodel_gillespie <- epimodel
 
 
 to_estimation_scale <- list(function(params, popsize) {log(params["beta"] * popsize/params["mu"])}, 
@@ -124,10 +119,11 @@ config_resample_prop <- 10
 # save new parameters every iteration
 # save every tenth configuration matrix
 # resample 10 subject-level trajectories in between parameter updates
-epimodel$sim_settings <- init_settings(niter = 100000,
-                                       burnin <- 0,
-                                       params_every <- 1, 
-                                       configs_every <- 1,
+epimodel$sim_settings <- init_settings(epimodel = epimodel,
+                                       niter = 50,
+                                       burnin = 0,
+                                       params_every = 1, 
+                                       configs_every = 1, 
                                        kernel = kernel,
                                        cov_mtx = cov_mtx,
                                        configs_to_redraw = 10,
@@ -138,6 +134,7 @@ epimodel$sim_settings <- init_settings(niter = 100000,
 # objects to store results
 BDAepimodel_results <- matrix(0, nrow = length(epimodel$obstimes), ncol = epimodel$sim_settings$niter)
 Gillespie_results <- matrix(0, nrow = length(epimodel$obstimes), ncol = epimodel$sim_settings$niter)
+log_likelihoods <- rep(0, length = epimodel$sim_settings$niter)
 
 # convert epimodel list to environment to enable multiple assignment
 .epimodel <- list2env(epimodel, parent = emptyenv(), hash = TRUE)
@@ -216,7 +213,7 @@ for(k in 1:.niter) {
           
           # re-compute the population level likelihood, measurement
           # process likelihood, and complete data log-likelihood
-          # .epimodel$likelihoods$pop_likelihood_cur <- calc_pop_likelihood(epimodel = .epimodel, log = TRUE)
+#           .epimodel$likelihoods$pop_likelihood_cur <- calc_pop_likelihood(epimodel = .epimodel, log = TRUE)
           # .epimodel$likelihoods$obs_likelihood_cur <- calc_obs_likelihood(epimodel = .epimodel, log = TRUE)
           
           # choose which subjects should be redrawn
@@ -224,8 +221,8 @@ for(k in 1:.niter) {
 
           # cycle through subject-level trajectories to be re-drawn
           for(j in 1:.configs_to_redraw) {
-                    
-                    # check to see if any additional irms are needed.
+                   
+                   # check to see if any additional irms are needed.
                     # if so, check_irm will instatiate the required
                     # matrices and their eigen decompositions
                     check_irm(.epimodel)
@@ -233,7 +230,7 @@ for(k in 1:.niter) {
                     # remove trajectory from the counts in config_mat 
                     # and obs_mat, and update the tpm sequences to 
                     # reflect the removal. 
-                    remove_trajectory(.epimodel, subject = .subjects[j])
+                    remove_trajectory(.epimodel, subject = .subjects[j], save_path = TRUE)
                     
                     # update instatiate missing IRMs, update the tpms 
                     # and tpm products, the emission probability mtx,
@@ -243,15 +240,20 @@ for(k in 1:.niter) {
                     # draw a new subject level trajectory
                     draw_trajec(.epimodel, subject = .subjects[j])
                     
-                    
           }
           
           BDAepimodel_results[,k] <- .epimodel$obs_mat[,"I_augmented"]
           
+          Gillespie_results[,k] <- simulate_epimodel(epimodel_gillespie, return_config = FALSE, trim = FALSE)$obs_mat[,"I_augmented"]
+          
           .epimodel$obs_mat[,"I_observed"] <- rbinom(n = .epimodel$nobs, .epimodel$obs_mat[,"I_augmented"], .epimodel$params["rho"])
-          
-          Gillespie_results[,k] <- simulate_epimodel(epimodel, return_config = FALSE, trim = FALSE)$obs_mat[,"I_augmented"]
-          
+          if(all(.epimodel$obs_mat[,"I_observed"]==0)) {
+                    while(all(.epimodel$obs_mat[,"I_observed"]==0)) {
+                              .epimodel$obs_mat[,"I_observed"] <- rbinom(n = .epimodel$nobs, .epimodel$obs_mat[,"I_augmented"], .epimodel$params["rho"])
+                    }  
+          }
+     
+          log_likelihoods[k] <- .epimodel$likelihoods$pop_likelihood_cur     
 }
 end.time <- Sys.time()
 

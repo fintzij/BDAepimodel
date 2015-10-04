@@ -3,8 +3,9 @@
 #'
 #' @inheritParams simulate_epimodel 
 #' 
-#' @return data matrix for compartment
-# counts at observation times. 
+#' @return data matrix for compartment counts at observation times.
+#'
+#' @export
 #'
 traj_to_obs <- function(epimodel = NULL) {
           

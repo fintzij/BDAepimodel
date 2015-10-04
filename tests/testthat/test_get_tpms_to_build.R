@@ -53,7 +53,7 @@ test_that("The correct indices for tpms to be rebuilt are retrieved", {
           
           build_irm(.epimodel)
           
-          remove_trajectory(.epimodel, 1)
+          remove_trajectory(.epimodel, 1, save_path = TRUE)
           
           # check to see if any additional irms are needed.
           # if so, check_irm will instatiate the required

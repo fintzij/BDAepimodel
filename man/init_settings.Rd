@@ -4,7 +4,7 @@
 \alias{init_settings}
 \title{Initialize a bookkeeping list of MCMC settings.}
 \usage{
-init_settings(epimodel, niter, burnin, params_every = 1,
+init_settings(epimodel, niter, burnin = NULL, params_every = 1,
   configs_every = floor(niter/100), kernel, cov_mtx = NULL,
   configs_to_redraw, to_estimation_scale = NULL,
   from_estimation_scale = NULL)

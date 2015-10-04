@@ -14,7 +14,8 @@ is coerced into an environment, .epimodel, for internal use.}
 \item{sim_settings}{bookkeeping list of simulation settings}
 }
 \value{
-list containing the matrix of posterior parameter draws, configurations, log-likelihoods, total simulation time, and seed.
+list containing the matrix of posterior parameter draws,
+  configurations, log-likelihoods, total simulation time, and seed.
 }
 \description{
 Initialize list for storing results

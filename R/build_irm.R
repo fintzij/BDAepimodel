@@ -6,6 +6,7 @@
 #' @inheritParams simulate_epimodel
 #'   
 #' @return environment with rate matrices
+#' @export  
 #'   
 build_irm <- function(epimodel) {
           

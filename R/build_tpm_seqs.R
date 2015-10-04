@@ -9,6 +9,8 @@
 #'   
 #' @return modify the .tpms and .tpm_products lists in the .epimodel environment
 #'   and reset the .tpms_to_build vector
+#' @export  
+#' 
 
 build_tpm_seqs <- function(epimodel) {
           

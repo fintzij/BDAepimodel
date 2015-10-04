@@ -3,6 +3,7 @@
 #' @inheritParams simulate_epimodel 
 #'
 #' @return character vector for mapping state codes to compartment names.
+#' @export
 
 init_state_lookup <- function(epimodel) {
           

@@ -3,6 +3,7 @@
 #' @param epimodel 
 #'
 #' @return updated matrix of emission probabilities
+#' @export
 
 build_emission_mat <- function(epimodel) {
           

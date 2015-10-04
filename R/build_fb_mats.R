@@ -1,3 +1,11 @@
+#' Construct the forward-backward matrices in the forward pass of the FB
+#' algorithm.
+#' 
+#' @param epimodel
+#'   
+#' @return list containing the FB matrices for the stochastic FB algorithm.
+#' @export
+
 build_fb_mats <- function(epimodel) {
           
           # calculate the emission probability-weighted initial distribution

@@ -13,6 +13,8 @@
 #'   
 #' @return new configuration matrix and index for the last row in the expanded
 #'   configuration matrix (corresponding to the configuration at tmax)
+#' @export  
+#'   
 
 expand_config_mat <- function(epimodel, buffer_size = NULL) {
           

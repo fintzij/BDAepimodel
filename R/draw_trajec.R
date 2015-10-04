@@ -10,11 +10,15 @@
 #'   
 #' @return updated configuration matrix and observation matrix objects in the
 #'   epimodel environment.
+#' @export
 
 draw_trajec <- function(epimodel, subject) {
           
           # generate subject ID
           .subj_ID <- paste0(".X", subject)
+          
+          # set variable for where to start storing additional state changes
+          epimodel$.subj_row_ind <- epimodel$.ind_final_config + 1
           
           # sample status at observation times
           sample_at_obs_times(epimodel, subject = subject, subj_ID = .subj_ID)
@@ -26,7 +30,7 @@ draw_trajec <- function(epimodel, subject) {
           sample_path(epimodel, subject = subject, subj_ID = .subj_ID)
 
           # insert trajectory back into the configuration matrix 
-          insert_trajectory(epimodel, subject = subject, subj_ID = .subj_ID)
+          insert_trajectory(epimodel, subject = subject, subj_ID = .subj_ID, reinsertion = FALSE)
           
           # accept or reject the proposed path via metropolis-hastings
           MH_accept_reject(epimodel, subject = subject, subj_ID = .subj_ID)

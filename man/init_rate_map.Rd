@@ -16,7 +16,8 @@ implemented).}
 exactly to the names of compartments used in the \code{*_rates} arguments.}
 }
 \value{
-binary index matrix indicating which changes in each compartment affect c3
+binary index matrix indicating which changes in each compartment
+  affect each rate
 }
 \description{
 Called internally before rates are parsed when an epimodel object is

@@ -5,6 +5,9 @@
 #'   
 #' @return updated configuration matrix with subject path (excluding at time 0
 #'   and tmax) at the end
+#'   
+#' @export
+#' 
 
 sample_path_in_interval <- function(epimodel, subject, subj_ID, interval) {
           

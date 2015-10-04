@@ -4,12 +4,11 @@
 #' @param subj_ID character string for subject ID code
 #'
 #' @return updated configuration matrix within the epimodel environment. 
+#' 
+#' @export
 
 sample_path <- function(epimodel, subject, subj_ID) {
          
-          # set variable for where to start storing additional state changes
-          epimodel$.subj_row_ind <- epimodel$.ind_final_config + 1
-          
           # expand the configuration matrix if the buffer is less than 10% of
           # the size of the current configuration
           if((nrow(epimodel$config_mat) - epimodel$.ind_final_config) < ceiling(0.1 * epimodel$.ind_final_config)){

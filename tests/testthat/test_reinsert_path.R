@@ -109,7 +109,7 @@ test_that("The original configuration matrix is restored when a path is re-inser
           
           j = 1
           
-          update_tpms(.epimodel, subject = .subjects[j], direction = "removal")
+          build_tpm_seqs(.epimodel)
           
           # save current config_mat
           config_mat <- .epimodel$config_mat
@@ -117,7 +117,7 @@ test_that("The original configuration matrix is restored when a path is re-inser
           # remove trajectory from the counts in config_mat 
           # and obs_mat, and update the tpm sequences to 
           # reflect the removal. 
-          remove_trajectory(.epimodel, subject = .subjects[j])
+          remove_trajectory(.epimodel, subject = .subjects[j], save_path = TRUE)
           
           # re-insert the trajectory
           reinsert_path(.epimodel, subject = .subjects[j], subj_ID = paste0(".X", .subjects[j]))

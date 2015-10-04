@@ -9,6 +9,8 @@
 #'   endpoints of the observation interval
 #'   
 #' @return updated configuration matrix
+#' 
+#' @export
 #'   
 sample_DT_skeleton <- function(epimodel, subj_ID, init_ind, final_ind) {
           

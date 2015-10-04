@@ -4,10 +4,11 @@
 #' @inheritParams draw_trajec
 #'   
 #' @return updated epimodel environment
+#' @export
 
 MH_accept_reject <- function(epimodel, subject, subj_ID) {
           
-          if((epimodel$likelihoods$pop_likelihood_new == -Inf ) | (epimodel$likelihoods$subj_likelihood_new == -Inf)) {
+          if((epimodel$likelihoods$pop_likelihood_new == -Inf ) & (epimodel$likelihoods$subj_likelihood_new == -Inf)) {
                     
                     acceptance_prob <- -Inf
                     
@@ -21,21 +22,18 @@ MH_accept_reject <- function(epimodel, subject, subj_ID) {
           # and set population likelihood to new value
           if(acceptance_prob > 0 || acceptance_prob > log(runif(1))) {
                     
-                    # update observation matrix to reflect new trajectory
-                    epimodel$obs_mat[,paste0(epimodel$meas_vars, "_augmented")] <- epimodel$config_mat[epimodel$.obs_time_inds, epimodel$meas_vars]
-                    
                     # set population level likelihood to the new value
                     epimodel$likelihoods$pop_likelihood_cur <- epimodel$likelihoods$pop_likelihood_new
                     
                     
           } else {
-                    # remove the new trajectory
-                    remove_trajectory(epimodel, subject = subject)
+                    # the rejected path is being re-inserted into the config mat since it is stored in remove trajectory. need to save it separately first
                     
+                    # remove the proposed path, not overwriting the current path
+                    remove_trajectory(epimodel, subject = subject, save_path = FALSE)
+                    
+                    # reinsert the previous path
                     reinsert_path(epimodel, subject = subject, subj_ID = subj_ID)
-                    
-                    # update the observation matrix
-                    epimodel$obs_mat[,paste0(epimodel$meas_vars, "_augmented")] <- epimodel$config_mat[epimodel$.obs_time_inds, epimodel$meas_vars]
-                    
+                          
           }
 }

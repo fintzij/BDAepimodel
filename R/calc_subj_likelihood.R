@@ -5,6 +5,7 @@
 #' @param subj_ID string for subject ID
 #'   
 #' @return likelihood or log-likelihood
+#' @export
 
 calc_subj_likelihood <- function(epimodel, subject, subj_ID, log = TRUE) {
           

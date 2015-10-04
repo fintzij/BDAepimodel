@@ -1,10 +1,12 @@
 #' Initialize list for storing results
-#'
+#' 
 #' @inheritParams simulate_epimodel
 #' @param sim_settings bookkeeping list of simulation settings
-#'
-#' @return list containing the matrix of posterior parameter draws, configurations, log-likelihoods, total simulation time, and seed. 
-#'
+#'   
+#' @return list containing the matrix of posterior parameter draws,
+#'   configurations, log-likelihoods, total simulation time, and seed.
+#' @export
+#' 
 init_results <- function(epimodel) {
           
           sim_settings <- epimodel$sim_settings

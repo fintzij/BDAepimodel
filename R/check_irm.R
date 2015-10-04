@@ -5,6 +5,7 @@
 #'   
 #' @return Instatiated rate matrix in the .irm environment and its eigen
 #'   decomposition in the .eigen environment
+#' @export
 
 check_irm <- function(epimodel) {
           

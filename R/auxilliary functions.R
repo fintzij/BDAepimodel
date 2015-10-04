@@ -5,6 +5,7 @@
 #' @param x 
 #'
 #' @return logit of x
+#' @export
 #'
 logit <- function(x) {
           log(x/(1-x))
@@ -17,6 +18,7 @@ logit <- function(x) {
 #' @param x 
 #'
 #' @return expit of x
+#' @export
 #' 
 expit <- function(x) {
           1/(1 + exp(x))
@@ -29,6 +31,7 @@ expit <- function(x) {
 #' @param x 
 #'
 #' @return normalized object
+#' @export
 
 normalize <- function(x) {
           x/sum(x)

@@ -12,7 +12,7 @@ environment. If not supplied, the list will be generated. The epimodel list
 is coerced into an environment, .epimodel, for internal use.}
 }
 \value{
-data matrix for compartment
+data matrix for compartment counts at observation times.
 }
 \description{
 Instatiates a data matrix based on a configuration matrix. The code in this

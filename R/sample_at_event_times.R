@@ -3,6 +3,8 @@
 #' @inheritParams draw_trajec
 #'
 #' @return updated configuration matrix of subject level trajectories
+#' 
+#' @export
 
 sample_at_event_times <- function(epimodel, subject, subj_ID) {
           

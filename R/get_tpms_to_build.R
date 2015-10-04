@@ -4,6 +4,7 @@
 #' @param subject_ID string ID for subject to be removed
 #'
 #' @return vector of indices
+#' @export
 
 get_tpms_to_build <- function(epimodel, subject = NULL) {
           

@@ -10,7 +10,9 @@
 #' @inheritParams simulate_epimodel
 #'   
 #' @return updated config_list
-#'   
+#' 
+#' @export  
+#'
 
 sim_one_event <- function(config_list, epimodel, lump) {
           

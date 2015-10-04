@@ -3,6 +3,8 @@
 #' @inheritParams draw_trajec
 #'
 #' @return updated configuration matrix
+#' 
+#' @export
 
 sample_at_obs_times <- function(epimodel, subject, subj_ID) {
           

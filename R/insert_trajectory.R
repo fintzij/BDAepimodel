@@ -1,13 +1,16 @@
-#' Insert a newly sampled subject-level trajectory so its contribution is
+#' Insert a newly sampled subject-level trajectory so its contribution is 
 #' reflected in the configuration matrix.
 #' 
 #' This function also updates several bookkeeping objects - .ind_final_config
 #' 
 #' @inheritParams sample_path
+#' @param reinsertion TRUE/FALSE for whether the trajectory is to be be
+#'   reinserted following a MH rejection
 #'   
 #' @return updated configuration matrix in the epimodel environment
+#' @export
 
-insert_trajectory <- function(epimodel, subject, subj_ID) {
+insert_trajectory <- function(epimodel, subject, subj_ID, reinsertion) {
           
           # first re-order the configuration matrix if needed, then copy the
           # preceding rows for the new trajectory
@@ -37,15 +40,29 @@ insert_trajectory <- function(epimodel, subject, subj_ID) {
                     
           }
           
-          # compute the likelihood of the subject's trajectory from a
-          # time-inhomogeneous CTMC
-          epimodel$likelihoods$subj_likelihood_new <- calc_subj_likelihood(epimodel = epimodel, subject = subject, subj_ID = subj_ID, log = TRUE) 
+          # compute the likelihood of the subject's trajectory from a 
+          # time-inhomogeneous CTMC - only when it is not a reinsertion
+          # following a MH rejection
+          if(!reinsertion) {
+                    
+                    epimodel$likelihoods$subj_likelihood_new <- calc_subj_likelihood(epimodel = epimodel, subject = subject, subj_ID = subj_ID, log = TRUE)
+                    
+          }
+           
           
           # add the subject's contribution back into the compartment counts
           .rows_to_update <- 1:epimodel$.ind_final_config
           
           epimodel$config_mat[, epimodel$states][cbind(.rows_to_update, epimodel$config_mat[, subj_ID][.rows_to_update])] <-epimodel$config_mat[,epimodel$states][cbind(.rows_to_update, epimodel$config_mat[, subj_ID][.rows_to_update])] + 1
           
-          # compute the likelihood for the new population-level trajectory
-          epimodel$likelihoods$pop_likelihood_new <- calc_pop_likelihood(epimodel, log = TRUE)
+          # update the compartment counts in the observation matrix
+          epimodel$obs_mat[, paste0(epimodel$meas_vars, "_augmented")] <- epimodel$config_mat[epimodel$.obs_time_inds, epimodel$meas_vars]
+          
+          # compute the likelihood for the new population-level trajectory -
+          # only when not a reinsertion following a MH rejection
+          if(!reinsertion) {
+                    
+                    epimodel$likelihoods$pop_likelihood_new <- calc_pop_likelihood(epimodel, log = TRUE)
+                    
+          }
 }

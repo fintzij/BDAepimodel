@@ -10,6 +10,7 @@
 #' @param t1 right endpoint of the interval
 #'   
 #' @return transition probability matrix
+#' @export
 
 build_tpm <- function(values, vectors, inv_vectors, t0, t1) {
           

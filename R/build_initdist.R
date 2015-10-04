@@ -4,6 +4,7 @@
 #' @inheritParams simulate_epimodel
 #'   
 #' @return vector of initial state probabilities for a single subject
+#' @export
 
 build_initdist <- function(epimodel) {
           
