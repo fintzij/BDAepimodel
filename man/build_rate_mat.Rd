@@ -12,7 +12,12 @@ build_rate_mat(rates, state, params, flow, env = NULL, key = NULL,
 
 \item{params}{numeric vector of process parameters with element names
 corresponding exactly to names of parameters used in the \code{rates}
-arguments.}
+arguments. The params vector must contain a number of parameters equal to
+the number of states for the categorical distribution for the state of a
+subject at t0. The names of these parameters must end in 0 - e.g. for the
+SIR model: S0, I0, R0. A value of zero for one of the initial distribution
+parameters will be interpretted as a model assumption that subjects cannot
+occupy that state at time t0.}
 
 \item{flow}{numeric matrix of dimension \code{number of transitions \emph{x}
 number of compartments}. Each row corresponds to a possible transition, and

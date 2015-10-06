@@ -79,16 +79,12 @@ simulate_epimodel <- function(epimodel, obstimes = NULL, init_state = NULL, meas
                     stop("Either the initial state vector or a function to simulate it must be supplied within the epimodel object along with the population size.")
           }
           
-          if(!is.null(init_state) & !is.null(epimodel$r_initdist)) {
-                    stop("Only one of the initial state vector and an initialization function may be specified.")
-          }
-          
           if(is.null(epimodel$meas_vars) && is.null(meas_vars)){
                     stop(sQuote("meas_vars"), "must be specified either within the epimodel list or as an argument to the simulation function.")
           }
           
-          if(!is.null(epimodel$r_initdist) & is.null(epimodel$popsize)) {
-                    stop("If a function for simulating the initial state of subjects is provided, the population size must be specified as well.")
+          if(is.null(init_state) & is.null(epimodel$popsize)) {
+                    stop("If an initial state vector is not provided, the population size must be specified.")
           }
           
           if(is.null(epimodel$r_meas_process) && is.null(r_meas_process)){
@@ -98,9 +94,9 @@ simulate_epimodel <- function(epimodel, obstimes = NULL, init_state = NULL, meas
           if(is.null(epimodel$obstimes) && is.null(obstimes)) {
                     stop("The observation times must be supplied, either within the epimodel list or as an argument to the simulation function.")
           }
-          # generate initial state vector if initialization function is supplied
-          if(!is.null(epimodel$r_initdist)){
-                    init_config <- replicate(n = epimodel$popsize, expr = epimodel$r_initdist(epimodel$params))
+          # generate initial state vector if initial distribution is not supplied
+          if(is.null(init_state)) {
+                    init_config <- replicate(n = epimodel$popsize, expr = epimodel$r_initdist(epimodel))
                     init_state <- numeric(length = length(epimodel$states)); names(init_state) <- epimodel$states
                     for(k in 1:length(init_state)) {
                               init_state[k] <- sum(init_config == k)

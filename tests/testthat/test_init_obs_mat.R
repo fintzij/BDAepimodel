@@ -10,7 +10,7 @@ test_that("The compartment counts at observation times are correct", {
           
           epimodel <- init_epimodel(obstimes = 0:10,
                                     states = c("S", "I", "R"), 
-                                    params = c(beta = 0.5, mu = 1, rho = 0.5, p0 = 0.05), 
+                                    params = c(beta = 0.5, mu = 1, rho = 0.5, S0 = 0.95, I0 = 0.05, R0 = 0), 
                                     rates = c("beta * I", "mu"), 
                                     flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                                     meas_vars = "I",

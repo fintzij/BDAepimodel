@@ -10,35 +10,21 @@ r_meas_process <- function(state, meas_vars, params){
 }
 
 d_meas_process <- function(state, meas_vars, params, log = TRUE) {
-          dbinom(x = state[, paste(meas_vars, "_observed", sep="")], size = state[, paste(meas_vars, "_augmented", sep = "")], prob = params["rho"], log = log) 
+          dbinom(x = state[, paste0(meas_vars, "_observed")], size = state[, paste0(meas_vars, "_augmented")], prob = params["rho"], log = log) 
 }
 
-# evaluates initial distribution for a single subject
-d_initdist <- function(state, params, log = TRUE) {
-          if(log == TRUE) {
-                    (state == 2)* log(params["p0"]) + (state == 1) * log(1-params["p0"]) + ifelse(state == 3, log(0), 0)
-          } else {
-                    (params["p0"] ^ (state == 2)) * ((1-params["p0"])^(state == 1)) * (0^(state == 3))
-          }
-}
 
-# subject level simulation of initial state at time t0
-r_initdist <- function(params) {
-          sample.int(3, 1, prob = c(1-params["p0"], params["p0"], 0))
-          }
 
 # R0 = 4, mu = 1, rho = 0.5, p0 = 0.05
 epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.5),
                           popsize = popsize,
                           states = c("S", "I", "R"), 
-                          params = c(beta = rnorm(1, 0.5, 1e-6), mu = rnorm(1, 1, 1e-6), rho = 0.5, p0 = 0.2), 
+                          params = c(beta = rnorm(1, 0.5, 1e-6), mu = rnorm(1, 1, 1e-6), rho = 0.5, S0 = 0.7, I0 = 0.2, R0 = 0.1), 
                           rates = c("beta * I", "mu"), 
                           flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                           meas_vars = "I",
                           r_meas_process = r_meas_process,
-                          d_meas_process = d_meas_process,
-                          d_initdist = d_initdist,
-                          r_initdist = r_initdist)
+                          d_meas_process = d_meas_process)
 
 epimodel <- simulate_epimodel(epimodel = epimodel, lump = TRUE, trim = FALSE)
 
@@ -50,29 +36,23 @@ from_estimation_scale <- list(function(params_est, popsize) {exp(params_est["mu"
                               function(params_est) {exp(params_est["mu"])})
 
 
-beta_mu_kernel <- function(epimodel, cov_mtx, log_likelihood_cur, 
-                           prior_prob_cur, dprior, to_estimation_scale, from_estimation_scale) {
+beta_mu_kernel <- function(epimodel) {
           
           # four vectors - existing parameters on natural and estimation scale, 
           # and new parameters on natural and estimation scale. 
           params_est <- epimodel$params
-          params_est[c("beta","mu")] <- to_estimation_scale(params_est[c("beta",
-                                                                         "mu")], epimodel$popsize) 
+          params_est[c("beta","mu")] <- to_estimation_scale(params_est[c("beta", "mu")], epimodel$popsize) 
           
           proposal_est <- proposal <- params_est
           
           # make proposal
-          proposal_est[c("beta", "mu")] <- mvrnorm(n = 1, mu = params[c("beta", 
-                                                                        "mu")], Sigma = cov_mtx)
+          proposal_est[c("beta", "mu")] <- mvrnorm(n = 1, mu = params[c("beta", "mu")], Sigma = cov_mtx)
           
-          proposal[c("beta","mu")]<-from_estimation_scale(proposal_est[c("beta",
-                                                                         "mu")], epimodel$popsize)
+          proposal[c("beta","mu")]<-from_estimation_scale(proposal_est[c("beta", "mu")], epimodel$popsize)
           
           # update prior probability on estimation scale
-          prior_prob_new <- update_prior_probs(params_new = proposal_est, 
-                                               params_cur = params_est, dprior = dprior, log = TRUE)
-          log_likelihood_new <- calc_log_likelihood(epimodel = epimodel, params 
-                                                    = proposal)
+          prior_prob_new      <- update_prior_probs(epimodel, params_new = proposal_est, dprior = dprior, log = TRUE)
+          log_likelihood_new  <- calc_log_likelihood(epimodel = epimodel, params = proposal)
           
           # compute the acceptance probability and accept or reject proposal
           accept_prob <- log_likelihood_new - log_likelihood_cur + 
@@ -87,22 +67,14 @@ beta_mu_kernel <- function(epimodel, cov_mtx, log_likelihood_cur,
           return(params_new)        
 }
 
-rho_p0_kernel <- function(epimodel) {
+rho_kernel <- function(epimodel) {
           
-          # Gibbs updates for rho and p0 - beta(1, 1) prior for each
-          params_new <- epimodel$params
-          params_new["rho"] <- rbeta(1, shape1 = 1 + sum(epimodel$obs_mat
-                                                         [,"I_observed"]), shape2 = 1 + sum(epimodel$obs_mat[,"I_augmented"] - 
-                                                                                                      epimodel$obs_mat[,"I_observed"]))
-          params_new["p0"] <- rbeta(1, shape1 = 1 + epimodel$config_mat[1, "I"],
-                                    shape2 = 1 + epimodel$popsize - epimodel$config_mat[1, "I"])
+          # Gibbs updates for rho - beta(1, 1) prior
+          params_new          <- epimodel$params
+          params_new["rho"]   <- rbeta(1, shape1 = 1 + sum(epimodel$obs_mat[,"I_observed"]), shape2 = 1 + sum(epimodel$obs_mat[,"I_augmented"] - epimodel$obs_mat[,"I_observed"]))
           
           return(params_new)        
 }
-
-kernel <- list(beta_mu_kernel, rho_p0_kernel)
-cov_mtx <- diag(c(0.005, 0.1), nrow = 2, ncol = 2)
-config_resample_prop <- 10
 
 # save new parameters every iteration
 # save every tenth configuration matrix
@@ -111,8 +83,8 @@ epimodel$sim_settings <- init_settings(niter = 1000,
                 burnin <- 200,
                 params_every <- 1, 
                 configs_every <- 10,
-                kernel = kernel,
-                cov_mtx = cov_mtx,
+                kernel = list(beta_mu_kernel, rho_kernel),
+                cov_mtx = diag(c(0.005, 0.1), nrow = 2, ncol = 2),
                 configs_to_redraw = 5,
                 to_estimation_scale = to_estimation_scale,
                 from_estimation_scale = from_estimation_scale)

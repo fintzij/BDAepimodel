@@ -24,7 +24,7 @@ remove_trajectory <- function(epimodel, subject, save_path) {
           # remove the contribution to the compartment counts in the configuration matrix
           .rows_to_update <- 1:epimodel$.ind_final_config
           
-          epimodel$config_mat[, epimodel$states][cbind(.rows_to_update, epimodel$config_mat[, .subj_ID][.rows_to_update])]<-epimodel$config_mat[,epimodel$states][cbind(.rows_to_update, epimodel$config_mat[, .subj_ID][.rows_to_update])]- 1
+          epimodel$config_mat[, epimodel$states][cbind(.rows_to_update, epimodel$config_mat[.rows_to_update, .subj_ID])]<-epimodel$config_mat[,epimodel$states][cbind(.rows_to_update, epimodel$config_mat[.rows_to_update, .subj_ID])]- 1
           
           # compute the likelihood of the subject's trajectory from a
           # time-inhomogeneous CTMC - only computed when current path is saved
@@ -41,13 +41,12 @@ remove_trajectory <- function(epimodel, subject, save_path) {
                     
                     # set the index of the final configuration
                     epimodel$.ind_final_config <- epimodel$.ind_final_config - length(.subj_inds)
-                    
-                    # set the vector of observation time indices
-                    epimodel$.obs_time_inds <- which(epimodel$config_mat[,"ID"] == 0)
+                   
                     
           }
           
-          # update the compartment counts in the observation matrix
-          epimodel$obs_mat[, paste0(epimodel$meas_vars, "_augmented")] <- epimodel$config_mat[epimodel$.obs_time_inds, epimodel$meas_vars]
+          # update the compartment counts in the observation matrix and the
+          # indices for observation times in the configuration matrix
+          update_obs_mat(epimodel)
           
 }

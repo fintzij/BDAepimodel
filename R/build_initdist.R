@@ -8,7 +8,7 @@
 
 build_initdist <- function(epimodel) {
           
-          initdist <- vapply(X = c(1,2,3), FUN = epimodel$d_initdist, FUN.VALUE = numeric(1), params = epimodel$params, log = FALSE)
+          initdist <- epimodel$params[epimodel$initdist_params]
           
           return(initdist)
 }

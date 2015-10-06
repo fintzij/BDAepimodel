@@ -27,6 +27,12 @@ Package: MASS
 Source: CRAN
 Version: 7.3-44
 
+Package: MCMCpack
+Source: CRAN
+Version: 1.3-3
+Hash: 8b0935ddb49066b0d8e014d093d84abd
+Requires: MASS, coda
+
 Package: R6
 Source: CRAN
 Version: 2.1.1
@@ -67,6 +73,11 @@ Package: brew
 Source: CRAN
 Version: 1.0-6
 Hash: 931f9972deae0f205e1c78a51f33149b
+
+Package: coda
+Source: CRAN
+Version: 0.17-1
+Hash: ce7fd1485db46e5474b8642533d5ba52
 
 Package: codetools
 Source: CRAN

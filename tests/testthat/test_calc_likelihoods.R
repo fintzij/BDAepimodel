@@ -16,32 +16,16 @@ test_that("The log-likelihoods are computed correctly", {
                     dbinom(x = state[, paste(meas_vars, "_observed", sep="")], size = state[, paste(meas_vars, "_augmented", sep = "")], prob = params["rho"], log = log) 
           }
           
-          # evaluates initial distribution for a single subject
-          d_initdist <- function(state, params, log = TRUE) {
-                    if(log == TRUE) {
-                              (state == 2)* log(params["p0"]) + (state == 1) * log(1-params["p0"]) + ifelse(state == 3, -Inf, 0)
-                    } else {
-                              (params["p0"] ^ (state == 2)) * ((1-params["p0"])^(state == 1)) * (0^(state == 3))
-                    }
-          }
-          
-          # subject level simulation of initial state at time t0
-          r_initdist <- function(params) {
-                    sample.int(3, 1, prob = c(1-params["p0"], params["p0"], 0))
-          }
-          
           # R0 = 4, mu = 1, rho = 0.5, p0 = 0.05
           epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.5),
                                     popsize = popsize,
                                     states = c("S", "I", "R"), 
-                                    params = c(beta = rnorm(1, 1, 1e-6), mu = rnorm(1,1,1e-6), rho = 0.5, p0 = 0.5), 
+                                    params =  c(beta = rnorm(1, 1, 1e-6), mu = rnorm(1, 1, 1e-6), rho = 0.5,  S0 = 0.5, I0 = 0.5, R0 = 0), 
                                     rates = c("beta * I", "mu"), 
                                     flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                                     meas_vars = "I",
                                     r_meas_process = r_meas_process,
-                                    d_meas_process = d_meas_process,
-                                    d_initdist = d_initdist,
-                                    r_initdist = r_initdist)
+                                    d_meas_process = d_meas_process)
           
           epimodel <- simulate_epimodel(epimodel = epimodel, lump = TRUE, trim = TRUE)
           
@@ -53,9 +37,12 @@ test_that("The log-likelihoods are computed correctly", {
           
           build_irm(.epimodel)
           
+          # initialize the vector of subject-level initial state probabilities
+          .epimodel$.initdist <- build_initdist(.epimodel)
+          
           config_mat <- .epimodel$config_mat[c(1, which(.epimodel$config_mat[,"ID"] != 0), .epimodel$.ind_final_config),]
           
-          pop_likelihood <- 2 * log(.epimodel$params["p0"]) + log( 1- .epimodel$params["p0"]) + 
+          pop_likelihood <- 2 * log(.epimodel$params["I0"]) + log( 1- .epimodel$params["I0"]) + 
                     log(2 * epimodel$params["beta"]) - (2 + 2)*(config_mat[2, "time"] - config_mat[1, "time"]) +
                     log(1) - (3)*(config_mat[3, "time"] - config_mat[2, "time"]) +
                     log(1) - (2)*(config_mat[4, "time"] - config_mat[3, "time"]) +
@@ -63,7 +50,7 @@ test_that("The log-likelihoods are computed correctly", {
           
           obs_likelihood <-sum(dbinom(.epimodel$obs_mat[,"I_observed"], .epimodel$obs_mat[,"I_augmented"], prob = .epimodel$params["rho"], log= TRUE))
           
-          subj1_likelihood <- log(1 - .epimodel$params["p0"]) + log(2*.epimodel$params["beta"]) - 2*.epimodel$params["beta"] * (config_mat[2,"time"] - config_mat[1,"time"]) + log(.epimodel$params["mu"])  - .epimodel$params["mu"] *(config_mat[3,"time"] - config_mat[2,"time"])
+          subj1_likelihood <- log(1 - .epimodel$params["I0"]) + log(2*.epimodel$params["beta"]) - 2*.epimodel$params["beta"] * (config_mat[2,"time"] - config_mat[1,"time"]) + log(.epimodel$params["mu"])  - .epimodel$params["mu"] *(config_mat[3,"time"] - config_mat[2,"time"])
           
           expect_equal(signif(calc_pop_likelihood(epimodel = .epimodel, log = TRUE), digits = 6), as.numeric(signif(pop_likelihood, digits = 6)))
           expect_equal(as.numeric(calc_obs_likelihood(epimodel = .epimodel, log = TRUE)), as.numeric(obs_likelihood))
@@ -90,32 +77,17 @@ test_that("population-level likelihoods are correctly computed within each itera
                     dbinom(x = state[, paste(meas_vars, "_observed", sep="")], size = state[, paste(meas_vars, "_augmented", sep = "")], prob = params["rho"], log = log) 
           }
           
-          # evaluates initial distribution for a single subject
-          d_initdist <- function(state, params, log = TRUE) {
-                    if(log == TRUE) {
-                              (state == 2)* log(params["p0"]) + (state == 1) * log(1-params["p0"]) + ifelse(state == 3, log(0), 0)
-                    } else {
-                              (params["p0"] ^ (state == 2)) * ((1-params["p0"])^(state == 1)) * (0^(state == 3))
-                    }
-          }
-          
-          # subject level simulation of initial state at time t0
-          r_initdist <- function(params) {
-                    sample.int(3, 1, prob = c(1-params["p0"], params["p0"], 0))
-          }
-          
+         
           # R0 = 4, mu = 1, rho = 0.5, p0 = 0.05
           epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.1),
                                     popsize = popsize,
                                     states = c("S", "I", "R"), 
-                                    params = c(beta = rnorm(1, 0.5, 1e-6), mu = rnorm(1, 1, 1e-6), rho = 0.5, p0 = 0.2), 
+                                    params = c(beta = rnorm(1, 0.5, 1e-6), mu = rnorm(1, 1, 1e-6), rho = 0.5,  S0 = 0.5, I0 = 0.5, R0 = 0), 
                                     rates = c("beta * I", "mu"), 
                                     flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                                     meas_vars = "I",
                                     r_meas_process = r_meas_process,
-                                    d_meas_process = d_meas_process,
-                                    d_initdist = d_initdist,
-                                    r_initdist = r_initdist)
+                                    d_meas_process = d_meas_process)
           
           epimodel <- simulate_epimodel(epimodel = epimodel, lump = TRUE, trim = FALSE)
           epimodel_gillespie <- epimodel
@@ -184,7 +156,7 @@ test_that("population-level likelihoods are correctly computed within each itera
           # save new parameters every iteration
           # save every tenth configuration matrix
           # resample 10 subject-level trajectories in between parameter updates
-          epimodel$sim_settings <- init_settings(niter = 5,
+          epimodel$sim_settings <- init_settings(niter = 3,
                                                  burnin <- 0,
                                                  params_every = 1, 
                                                  configs_every = 1,

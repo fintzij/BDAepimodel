@@ -13,6 +13,7 @@ external.packages:
     rmarkdown
     pryr
     coda
+    MCMCpack
 local.repos: 
 load.external.packages.on.startup: TRUE
 ignored.packages: 

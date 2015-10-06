@@ -6,9 +6,9 @@
 \usage{
 init_epimodel(states, params, rates, flow, dat = NULL, time_var = NULL,
   obstimes = NULL, popsize = NULL, config_mat = NULL, obs_mat = NULL,
-  r_initdist = NULL, d_initdist = NULL, meas_vars = NULL,
-  r_meas_process = NULL, d_meas_process = NULL, covar = NULL,
-  tcovar = NULL, rprior = NULL, dprior = NULL, sim_settings = NULL)
+  initdist_prior = NULL, meas_vars = NULL, r_meas_process = NULL,
+  d_meas_process = NULL, covar = NULL, tcovar = NULL, rprior = NULL,
+  dprior = NULL, sim_settings = NULL)
 }
 \arguments{
 \item{states}{character vector with names of compartments corresponding
@@ -16,7 +16,12 @@ exactly to the names of compartments used in the \code{*_rates} arguments.}
 
 \item{params}{numeric vector of process parameters with element names
 corresponding exactly to names of parameters used in the \code{rates}
-arguments.}
+arguments. The params vector must contain a number of parameters equal to
+the number of states for the categorical distribution for the state of a
+subject at t0. The names of these parameters must end in 0 - e.g. for the
+SIR model: S0, I0, R0. A value of zero for one of the initial distribution
+parameters will be interpretted as a model assumption that subjects cannot
+occupy that state at time t0.}
 
 \item{rates}{character vector with strings specifying the flow rates between
 compartments. Each variable in a rate must correspond to the name of one of
@@ -46,11 +51,9 @@ and the configuration of individuals at times of state transition.}
 \item{obs_mat}{population-level bookkeeping matrix for compartment counts at
 observation times.}
 
-\item{r_initdist}{function to simulate the subject-level initial distribution
-at time t0.}
-
-\item{d_initdist}{function to evaluate the subject-level distribution at time
-t0.}
+\item{initdist_prior}{vector of parameters for dirichlet prior for default
+categorical distribution over initial distribution at t0. Defaults to flat
+prior unless otherwise specified.}
 
 \item{meas_vars}{character vector specifying which compartments are measured.}
 

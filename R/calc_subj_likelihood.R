@@ -28,19 +28,21 @@ calc_subj_likelihood <- function(epimodel, subject, subj_ID, log = TRUE) {
           
           for(r in 1:length(.hazards)) {
                     
+                    .irm <- epimodel$.irm[[.irm_keys[r]]]
+                    
                     # get the hazard from the appropriate rate matrix
-                    .hazards[r] <- epimodel$.irm[[.irm_keys[r]]][.subj_path[r], .subj_path[r]]
+                    .hazards[r] <- .irm[.subj_path[r], .subj_path[r]]
                     
                     # check if the event corresponded to the subject. if so, get the event rate
                     if(epimodel$config_mat[.right_endpoints[r], "ID"] == subject) {
                               
-                              .event_rates[r] <- epimodel$.irm[[.irm_keys[r]]][.subj_path[r], .subj_path[r + 1]]
+                              .event_rates[r] <- .irm[.subj_path[r], .subj_path[r + 1]]
                                         
                     }
           }
           
           
-          subj_likelihood <- epimodel$d_initdist(state = .subj_path[1], params = epimodel$params, log = TRUE) + 
+          subj_likelihood <- epimodel$d_initdist(state = .subj_path[1], params = epimodel$params[epimodel$initdist_params], log = TRUE) + 
                     sum(ifelse(.event_rates == 0, .hazards * .time_diffs, log(.event_rates) + .hazards * .time_diffs))
           
           if(log == FALSE) {

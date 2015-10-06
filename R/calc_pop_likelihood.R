@@ -38,7 +38,7 @@ calc_pop_likelihood <- function(epimodel, log = FALSE) {
           
           # sum the log-likelihood for the initial configuration,
           # exponential waiting time densities, and tail probability
-          pop_likelihood <- sum(vapply(X = epimodel$config_mat[1,epimodel$.config_inds], FUN = epimodel$d_initdist, FUN.VALUE = numeric(1), params = epimodel$params, log = TRUE)) + sum(log(.event_rates)) - sum(.hazards * .time_diffs)
+          pop_likelihood <- sum(epimodel$config_mat[1,epimodel$states[epimodel$initdist_param_inds]] * log(epimodel$.initdist[epimodel$initdist_param_inds])) + sum(log(.event_rates)) - sum(.hazards * .time_diffs)
           
           if(log == FALSE) {
                     pop_likelihood <- exp(pop_likelihood)

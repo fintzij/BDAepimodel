@@ -48,12 +48,6 @@ fit_epimodel <- function(epimodel) {
                                        subj_likelihood_new = NULL,
                                        obs_likelihood  = NULL)
           
-          # identify the unmeasured compartments, constants for number of
-          # measured and unmeasured states
-          .epimodel$unmeasured_vars     <- setdiff(.epimodel$states, .epimodel$meas_vars)
-          .epimodel$num_unmeasured      <- length(.epimodel$unmeasured_vars)
-          .epimodel$num_measured        <- length(.epimodel$meas_vars)
-          .epimodel$num_states          <- length(.epimodel$states)
           
           # identify whether there is structure in the flow matrix that can be
           # leveraged when resampling subject-level trajectories
@@ -115,7 +109,7 @@ fit_epimodel <- function(epimodel) {
                               # remove trajectory from the counts in config_mat 
                               # and obs_mat, and update the tpm sequences to 
                               # reflect the removal. 
-                              remove_trajectory(.epimodel, subject = .subjects[j])
+                              remove_trajectory(.epimodel, subject = .subjects[j], save_path = TRUE)
                               
                               # update instatiate missing IRMs, update the tpms 
                               # and tpm products, the emission probability mtx,
@@ -125,6 +119,8 @@ fit_epimodel <- function(epimodel) {
                               # draw a new subject level trajectory
                               draw_trajec(.epimodel, subject = .subjects[j])
                     }
+                    
+                    for(s in 1:length(.epimodel$kernel))
                     
           }
           
