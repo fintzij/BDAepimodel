@@ -7,8 +7,8 @@
 init_epimodel(states, params, rates, flow, dat = NULL, time_var = NULL,
   obstimes = NULL, popsize = NULL, config_mat = NULL, obs_mat = NULL,
   initdist_prior = NULL, meas_vars = NULL, r_meas_process = NULL,
-  d_meas_process = NULL, covar = NULL, tcovar = NULL, rprior = NULL,
-  dprior = NULL, sim_settings = NULL)
+  d_meas_process = NULL, covar = NULL, tcovar = NULL,
+  sim_settings = NULL)
 }
 \arguments{
 \item{states}{character vector with names of compartments corresponding
@@ -75,14 +75,6 @@ not working).}
 
 \item{tcovar}{numeric vector of times for time-varying covariates (currently
 not working).}
-
-\item{rprior}{list of functions for simulating from the prior distributions
-of model parameters. List element names should correspond to exactly to the
-parameter names given in \code{params}.}
-
-\item{dprior}{list of functions for evaluating the prior densities of model
-parameters. List element names should correspond to exactly to the
-parameter names given in \code{params}.}
 
 \item{sim_settings}{bookkeeping list for simulation settings.}
 }

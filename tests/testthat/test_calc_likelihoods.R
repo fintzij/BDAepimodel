@@ -158,8 +158,8 @@ test_that("population-level likelihoods are correctly computed within each itera
           # resample 10 subject-level trajectories in between parameter updates
           epimodel$sim_settings <- init_settings(niter = 3,
                                                  burnin <- 0,
-                                                 params_every = 1, 
-                                                 configs_every = 1,
+                                                 save_params_every = 1, 
+                                                 save_configs_every = 1,
                                                  kernel = kernel,
                                                  cov_mtx = cov_mtx,
                                                  configs_to_redraw = 10,
@@ -173,8 +173,8 @@ test_that("population-level likelihoods are correctly computed within each itera
           # move simulation settings to internal objects
           .niter              <- .epimodel$sim_settings$niter
           .burnin             <- .epimodel$sim_settings$burnin
-          .params_every       <- .epimodel$sim_settings$params_every
-          .configs_every      <- .epimodel$sim_settings$configs_every
+          .save_params_every  <- .epimodel$sim_settings$save_params_every
+          .save_configs_every <- .epimodel$sim_settings$save_configs_every
           .kernel             <- .epimodel$sim_settings$kernel
           .cov_mtx            <- .epimodel$sim_settings$cov_mtx
           .configs_to_redraw  <- .epimodel$sim_settings$configs_to_redraw

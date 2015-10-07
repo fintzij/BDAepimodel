@@ -1,12 +1,17 @@
-#' Main wrapper to fit a stochastic epimodel using the Bayesian data
+#' Main wrapper to fit a stochastic epimodel using the Bayesian data 
 #' augmentation algorithm.
 #' 
 #' @inheritParams simulate_epimodel
+#' @param monitor TRUE/FALSE for whether to print the iteration number and
+#'   produce a log-likelihood plot every time a trajectory is saved.
 #'   
-#' @return list containing the epimodel object and a results list. 
+#' @return list containing the epimodel object and a results list.
 #' @export
 #' 
-fit_epimodel <- function(epimodel) {
+fit_epimodel <- function(epimodel, monitor = FALSE) {
+          
+          require(MASS, quietly = TRUE)
+          require(MCMCpack, quietly = TRUE)
           
           # check that the simulation settings have been set
           if(is.null(epimodel$sim_settings)) {
@@ -29,17 +34,17 @@ fit_epimodel <- function(epimodel) {
           .epimodel <- list2env(epimodel, parent = emptyenv(), hash = TRUE)
           
           # move simulation settings to internal objects
-          .niter              <- .epimodel$sim_settings$niter
-          .burnin             <- .epimodel$sim_settings$burnin
-          .params_every       <- .epimodel$sim_settings$params_every
-          .configs_every      <- .epimodel$sim_settings$configs_every
-          .kernel             <- .epimodel$sim_settings$kernel
-          .cov_mtx            <- .epimodel$sim_settings$cov_mtx
-          .configs_to_redraw  <- .epimodel$sim_settings$configs_to_redraw
-          .config_replacement <- ifelse(.configs_to_redraw > .epimodel$popsize, TRUE, FALSE)
-          .parallelize        <- .epimodel$sim_settings$parallelize
-          .to_estimation_scale <- .epimodel$sim_settings$to_estimation_scale
-          .from_estimation_scale <- .epimodel$sim_settings$from_estimation_scale
+          niter               <- .epimodel$sim_settings$niter
+          burnin              <- .epimodel$sim_settings$burnin
+          save_params_every   <- .epimodel$sim_settings$save_params_every
+          save_configs_every  <- .epimodel$sim_settings$save_configs_every
+          kernel              <- .epimodel$sim_settings$kernel
+          cov_mtx             <- .epimodel$sim_settings$cov_mtx
+          configs_to_redraw   <- .epimodel$sim_settings$configs_to_redraw
+          config_replacement  <- ifelse(configs_to_redraw > .epimodel$popsize, TRUE, FALSE)
+          to_estimation_scale <- .epimodel$sim_settings$to_estimation_scale
+          from_estimation_scale <- .epimodel$sim_settings$from_estimation_scale
+          seed                <- .epimodel$sim_settings$seed
           
           # initialize the list of log-likelihoods
           epimodel$likelihoods <- list(pop_likelihood_cur = NULL,
@@ -52,9 +57,6 @@ fit_epimodel <- function(epimodel) {
           # identify whether there is structure in the flow matrix that can be
           # leveraged when resampling subject-level trajectories
           detect_structure(.epimodel)
-          
-          # initialize list for storing results
-          .results <- init_results(.epimodel)
           
           # add buffer to the configuration matrix, also adds configurations at
           # observation times and instatiates .epimodel$.ind_final_config
@@ -83,23 +85,35 @@ fit_epimodel <- function(epimodel) {
           # get indices for the subject configuration portion of the configuration matrix
           .epimodel$.config_inds <- which(grepl(".X", colnames(.epimodel$config_mat)))
           
+          # compute the population level likelihood, and the measurement
+          # process likelihood
+          .epimodel$likelihoods$pop_likelihood_cur <- calc_pop_likelihood(epimodel = .epimodel, log = TRUE)
+          .epimodel$likelihoods$obs_likelihood <- calc_obs_likelihood(.epimodel, log = TRUE)
+          
+          # initialize list for storing results
+          results <- init_results(.epimodel)
+          
+          # set seed
+          results$seed <- seed
+          set.seed(seed)
+          
+          # store the initial values in the results matrix
+          results$params[1, ] <- .epimodel$params
+          results$log_likelihood[1] <- .epimodel$likelihoods$obs_likelihood + .epimodel$likelihoods$pop_likelihood_cur
+          
+          start.time = Sys.time()
           # generate .niter parameter samples
-          for(k in 1:.niter) {
+          for(k in 2:niter) {
                     
                     # re-compute the array of rate matrices - only needs to be
                     # recomputed every time parameters are updated.
                     build_irm(.epimodel)
-                    
-                    # re-compute the population level likelihood, measurement
-                    # process likelihood, and complete data log-likelihood
-                    .epimodel$likelihoods$pop_likelihood_cur <- calc_pop_likelihood(epimodel = .epimodel, log = TRUE)
-                    .epimodel$likelihoods$obs_likelihood_cur <- calc_obs_likelihood(epimodel = .epimodel, log = TRUE)
 
                     # choose which subjects should be redrawn
-                    .subjects <- sample.int(n = .epimodel$popsize, size = .configs_to_redraw, replace = .config_replacement)
+                    .subjects <- sample.int(n = .epimodel$popsize, size = configs_to_redraw, replace = config_replacement)
 
                     # cycle through subject-level trajectories to be re-drawn
-                    for(j in 1:.configs_to_redraw) {
+                    for(j in 1:configs_to_redraw) {
                               
                               # check to see if any additional irms are needed.
                               # if so, check_irm will instatiate the required
@@ -120,9 +134,53 @@ fit_epimodel <- function(epimodel) {
                               draw_trajec(.epimodel, subject = .subjects[j])
                     }
                     
-                    for(s in 1:length(.epimodel$kernel))
+                    # update the measurement process likelihood
+                    .epimodel$likelihoods$obs_likelihood <- calc_obs_likelihood(.epimodel, log = TRUE)
                     
+                    # sample new parameters
+                    for(t in 1:length(kernel)) {
+                              kernel[[t]](.epimodel)
+                    }
+                    
+                    # sample new values for the initial distribution parameters
+                    .epimodel$initdist_kernel(.epimodel)
+                    
+                    # save parameter values and log-likelihood
+                    if(k %% save_params_every == 0) {
+                              
+                              results$params[(k %/% save_params_every) + 1, ] <- .epimodel$params
+                              results$log_likelihood[(k %/% save_params_every) + 1] <- sum(.epimodel$likelihoods$obs_likelihood, .epimodel$likelihoods$pop_likelihood_cur)
+                              
+                    }
+                    
+                    # save the configuration matrix
+                    if(k %% save_configs_every == 0) {
+                              
+                              results$configs[[(k %/% save_configs_every) + 1]] <- .epimodel$config_mat[complete.cases(.epimodel$config_mat)]
+                    }
+                    
+                    if(monitor && (k%%save_configs_every) == 0) {
+                              print(k)
+                              ts.plot(results$log_likelihood, xlab = "Iteration", ylab = "log-likelihood")
+                    }
           }
           
-          results <- init_results(epimodel)
+          end.time <- Sys.time()
+          
+          results$time <- difftime(end.time, start.time, units = "hours")
+          
+          epimodel <- list(model = list(dat = epimodel$dat,
+                                        time_var = epimodel$time_var,
+                                        obstimes = epimodel$obstimes,
+                                        popsize = epimodel$popsize,
+                                        states = epimodel$states,
+                                        params = apply(results$params, 2, median)),
+                           settings = .epimodel$sim_settings,
+                           results = results)
+          
+          # clean up internal objects
+          rm(.epimodel)
+          gc()
+          
+          return(epimodel)
 }

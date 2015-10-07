@@ -1,6 +1,8 @@
 #' Calculate likelihood for the population level trajectory
 #' 
 #' @inheritParams simulate_epimodel
+#' @param params optional vector of parameters if values other than the current
+#'   values should be used (e.g. in a transition kernel)
 #' @param log TRUE/FALSE for whether to return the log-likelihood or likelihood.
 #'   
 #' @return vector with log-likelihood of the population level trajectory and 
@@ -9,7 +11,7 @@
 #' @export
 #' 
 
-calc_pop_likelihood <- function(epimodel, log = FALSE) {
+calc_pop_likelihood <- function(epimodel, params = NULL, log = FALSE) {
 
           if(is.null(epimodel$.ind_final_config)) {
                     epimodel$.ind_final_config <- which(epimodel$config_mat[,"time"] == max(epimodel$obstimes))
@@ -23,7 +25,15 @@ calc_pop_likelihood <- function(epimodel, log = FALSE) {
           # the observed events
           
           # calculate the rate for each type of transition on the subject level
-          .all_rates          <- do.call(cbind, sapply(epimodel$rates, do.call, list(state = epimodel$config_mat[.left_endpoints,], params = epimodel$params)))
+          if(is.null(params)) {
+                    
+                    .all_rates <- do.call(cbind, sapply(epimodel$rates, do.call, list(state = epimodel$config_mat[.left_endpoints,], params = epimodel$params)))  
+                    
+          } else {
+                    
+                    .all_rates<- do.call(cbind, sapply(epimodel$rates, do.call, list(state = epimodel$config_mat[.left_endpoints,], params = params)))
+                    
+          }
           
           # extract the appropriate subject level rate for each transition event
           .event_rates        <- .all_rates[cbind(1:(length(.left_endpoints)-1), epimodel$config_mat[.right_endpoints[-length(.right_endpoints)], "Event"])]

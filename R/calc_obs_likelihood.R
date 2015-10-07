@@ -8,9 +8,15 @@
 #' 
 #' @export
 #' 
-calc_obs_likelihood <- function(epimodel, log = FALSE) {
+calc_obs_likelihood <- function(epimodel, params = NULL, log = FALSE) {
           
-          obs_likelihood <- sum(epimodel$d_meas_process(state = epimodel$obs_mat, meas_vars = epimodel$meas_vars, params = epimodel$params, log = TRUE))
+          if(is.null(params)) {
+                    obs_likelihood <- sum(epimodel$d_meas_process(state = epimodel$obs_mat, meas_vars = epimodel$meas_vars, params = epimodel$params, log = TRUE))  
+                    
+          } else {
+                    obs_likelihood <- sum(epimodel$d_meas_process(state = epimodel$obs_mat, meas_vars = epimodel$meas_vars, params = params, log = TRUE))
+          }
+
                     
           if(log == FALSE) {
                     obs_likelihood <- exp(obs_likelihood)

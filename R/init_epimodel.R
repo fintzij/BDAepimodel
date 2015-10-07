@@ -56,12 +56,6 @@
 #'   not working).
 #' @param tcovar numeric vector of times for time-varying covariates (currently 
 #'   not working).
-#' @param rprior list of functions for simulating from the prior distributions 
-#'   of model parameters. List element names should correspond to exactly to the
-#'   parameter names given in \code{params}.
-#' @param dprior list of functions for evaluating the prior densities of model 
-#'   parameters. List element names should correspond to exactly to the 
-#'   parameter names given in \code{params}.
 #' @param sim_settings bookkeeping list for simulation settings.
 #'   
 #' @return list containing bookkeeping objects and model configuration objects.
@@ -72,7 +66,7 @@
 #' rates = c("beta * I", "mu", "gamma"),
 #' flow = matrix(c(-1, 1, 0, 0, -1, 1, 1, 0, -1), ncol = 3, byrow = T))
 #' 
-init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NULL, obstimes = NULL, popsize = NULL, config_mat = NULL, obs_mat = NULL, initdist_prior = NULL, meas_vars = NULL, r_meas_process = NULL, d_meas_process = NULL, covar = NULL, tcovar = NULL, rprior = NULL, dprior = NULL, sim_settings = NULL) {
+init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NULL, obstimes = NULL, popsize = NULL, config_mat = NULL, obs_mat = NULL, initdist_prior = NULL, meas_vars = NULL, r_meas_process = NULL, d_meas_process = NULL, covar = NULL, tcovar = NULL, sim_settings = NULL) {
           
           
           # user must specify states, parameters, flow, and rates at a minimum. 
@@ -170,16 +164,12 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
           # set up the transition kernel for parameters of the initial distribution
           initdist_kernel <- function(epimodel) {
                     
-                    # get current parameter values
-                    params_new <- epimodel$params
-                    
                     # calculate parameters of posterior
                     posterior_params <- epimodel$initdist_prior + epimodel$config_mat[1, epimodel$states[epimodel$initdist_param_inds]]
                     
                     # sample new parameter values
-                    params_new[epimodel$initdist_params[epimodel$initdist_param_inds]] <- rdirichlet(1, alpha = posterior_params)
+                    epimodel$params[epimodel$initdist_params[epimodel$initdist_param_inds]] <- MCMCpack::rdirichlet(1, alpha = posterior_params)
                     
-                    return(params_new)
           }
           
                     
@@ -205,9 +195,8 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
                            r_meas_process = r_meas_process,
                            d_meas_process = d_meas_process,
                            covar = covar,
-                           tcovar = tcovar,
-                           rprior = rprior,
-                           dprior = dprior), class = "epimodel")
+                           tcovar = tcovar, 
+                           sim_settings = sim_settings), class = "epimodel")
           
           # lookup table for mapping states codes to rates, and vector of states
           # that index the rates

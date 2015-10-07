@@ -12,14 +12,14 @@ init_results <- function(epimodel) {
           sim_settings <- epimodel$sim_settings
           
           # vector for storing log-likelihood
-          log_likelihood <- rep(0, floor(sim_settings$niter / sim_settings$params_every))
+          log_likelihood <- rep(0, (epimodel$sim_settings$niter %/% epimodel$sim_settings$save_params_every) + 1)
           
           # matrix for storing parameter updates
-          params <- matrix(0, nrow = floor(sim_settings$niter / sim_settings$params_every), ncol = length(epimodel$params))
+          params <- matrix(0, nrow = (epimodel$sim_settings$niter %/% epimodel$sim_settings$save_params_every) + 1, ncol = length(epimodel$params))
           colnames(params) <- names(epimodel$params)
           
           # list for storing configurations
-          configs <- vector(mode = "list", length = floor(sim_settings$niter / sim_settings$configs_every))
+          configs <- vector(mode = "list", length = (epimodel$sim_settings$niter %/% epimodel$sim_settings$save_configs_every) + 1)
           
           results <- list(time = NULL, seed = NULL, log_likelihood = log_likelihood, params = params, configs = configs)
 }

@@ -14,6 +14,7 @@ external.packages:
     pryr
     coda
     MCMCpack
+    MASS
 local.repos: 
 load.external.packages.on.startup: TRUE
 ignored.packages: 

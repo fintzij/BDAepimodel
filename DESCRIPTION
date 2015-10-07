@@ -12,7 +12,8 @@ Imports:  ggplot2,
           doParallel,
           foreach,
           pryr,
-          MCMCpack
+          MCMCpack,
+          MASS
 Suggests: formatR,
 	knitr,
           testthat

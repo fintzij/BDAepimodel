@@ -5,12 +5,15 @@
 \title{Main wrapper to fit a stochastic epimodel using the Bayesian data
 augmentation algorithm.}
 \usage{
-fit_epimodel(epimodel)
+fit_epimodel(epimodel, monitor = FALSE)
 }
 \arguments{
 \item{epimodel}{list of bookkeeping and model objects, or an analagous
 environment. If not supplied, the list will be generated. The epimodel list
 is coerced into an environment, .epimodel, for internal use.}
+
+\item{monitor}{TRUE/FALSE for whether to print the iteration number and
+  produce a log-likelihood plot every time a trajectory is saved.}
 }
 \value{
 list containing the epimodel object and a results list.
