@@ -12,106 +12,132 @@ parseCommandArgs()
 
 # this file contains pieces of code that are used in developing the package but
 # are not necessary for the package to work.
-set.seed(52787)
+# this file contains pieces of code that are used in developing the package but
+# are not necessary for the package to work.
 
-popsize <- 20
+
+# Initialize epimodel -----------------------------------------------------
+
+set.seed(52787)
+require(BDAepimodel)
+
+popsize <- 10
 
 r_meas_process <- function(state, meas_vars, params){
           rbinom(n = nrow(state), size = state[,meas_vars], prob = params["rho"])
 }
 
 d_meas_process <- function(state, meas_vars, params, log = TRUE) {
-          dbinom(x = state[, paste(meas_vars, "_observed", sep="")], size = state[, paste(meas_vars, "_augmented", sep = "")], prob = params["rho"], log = log) 
+          dbinom(x = state[, paste0(meas_vars, "_observed")], size = state[, paste0(meas_vars, "_augmented")], prob = params["rho"], log = log) 
 }
 
-epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.1),
+
+
+epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.5),
                           popsize = popsize,
                           states = c("S", "I", "R"), 
-                          params = c(beta = rnorm(1, 0.25, 1e-6), mu = rnorm(1, 1, 1e-6), rho = 0.5, S0 = 0.8, I0 = 0.2, R0 = 0), 
+                          params = c(beta = rnorm(1, 0.5, 1e-5), mu = rnorm(1, 1, 1e-5), rho = 0.5, S0 = 0.7, I0 = 0.2, R0 = 0.1), 
                           rates = c("beta * I", "mu"), 
                           flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                           meas_vars = "I",
                           r_meas_process = r_meas_process,
                           d_meas_process = d_meas_process)
 
+
+# Simulate the epidemic ---------------------------------------------------
+
 epimodel <- simulate_epimodel(epimodel = epimodel, lump = TRUE, trim = FALSE)
-epimodel_gillespie <- epimodel
 
 
-to_estimation_scale <- list(function(params, popsize) {log(params["beta"] * popsize/params["mu"])}, 
-                            function(params) {log(epimodel$params["mu"])})
+# Set the MCMC settings ---------------------------------------------------
 
-from_estimation_scale <- list(function(params_est, popsize) {exp(params_est["mu"])/popsize * exp(params_est["beta"])},
-                              function(params_est) {exp(params_est["mu"])})
-
-
-beta_mu_kernel <- function(epimodel, cov_mtx, log_likelihood_cur, 
-                           prior_prob_cur, dprior, to_estimation_scale, from_estimation_scale) {
+to_estimation_scale <- function(params, epimodel) {
           
-          # four vectors - existing parameters on natural and estimation scale, 
-          # and new parameters on natural and estimation scale. 
-          params_est <- epimodel$params
-          params_est[c("beta","mu")] <- to_estimation_scale(params_est[c("beta",
-                                                                         "mu")], epimodel$popsize) 
+          params_est          <- params
           
-          proposal_est <- proposal <- params_est
+          params_est["beta"]  <- log(params["beta"] * epimodel$popsize/params["mu"])
+          
+          params_est["mu"]    <- log(params["mu"])
+          
+          return(params_est)
+}
+
+from_estimation_scale <- function(params_est, epimodel) {
+          
+          params              <- params_est
+          
+          params["beta"]      <- exp(params_est["mu"])/epimodel$popsize * exp(params_est["beta"])
+          
+          params["mu"]        <- exp(params_est["mu"])
+          
+          return(params)
+}
+
+
+beta_mu_kernel <- function(epimodel) {
+          
+          # get existing parameter values 
+          proposal <- epimodel$params
+          
+          # get prior likelihood and complete data log likelihood for current parameters
+          prior_prob_cur <- c(dnorm(epimodel$params["beta"], mean = log(1), sd = 1.8, log = TRUE),
+                              dnorm(epimodel$params["mu"], mean = log(1), sd = 3, log = TRUE)) 
+          
+          log_likelihood_cur <- epimodel$likelihoods$pop_likelihood_cur + epimodel$likelihoods$obs_likelihood
+          
+          # transform to estimation scale
+          proposal[c("beta", "mu")] <- epimodel$sim_settings$to_estimation_scale(proposal[c("beta", "mu")], epimodel)
           
           # make proposal
-          proposal_est[c("beta", "mu")] <- mvrnorm(n = 1, mu = params[c("beta", 
-                                                                        "mu")], Sigma = cov_mtx)
+          proposal[c("beta", "mu")] <- mvrnorm(n = 1, mu = proposal[c("beta", "mu")], Sigma = epimodel$sim_settings$cov_mtx)
           
-          proposal[c("beta","mu")]<-from_estimation_scale(proposal_est[c("beta",
-                                                                         "mu")], epimodel$popsize)
+          # get prior likelihood for proposed parameters
+          prior_prob_new <- c(dnorm(proposal[[1]], mean = log(1), sd = 1.8, log = TRUE),
+                              dnorm(proposal[[2]], mean = log(1), sd = 3, log = TRUE))
           
-          # update prior probability on estimation scale
-          prior_prob_new <- update_prior_probs(params_new = proposal_est, 
-                                               params_cur = params_est, dprior = dprior, log = TRUE)
-          log_likelihood_new <- calc_log_likelihood(epimodel = epimodel, params 
-                                                    = proposal)
+          # transform back to the model scale
+          proposal[c("beta","mu")] <- epimodel$sim_settings$from_estimation_scale(proposal[c("beta", "mu")], epimodel)
+          
+          
+          # get population level complete data likelihood for the new parameters
+          pop_likelihood_new  <- calc_pop_likelihood(epimodel = epimodel, params = proposal, log = TRUE) 
+          log_likelihood_new  <- pop_likelihood_new + epimodel$likelihoods$obs_likelihood
           
           # compute the acceptance probability and accept or reject proposal
           accept_prob <- log_likelihood_new - log_likelihood_cur + 
                     prior_prob_new - prior_prob_cur
           
           if(accept_prob >= 0 || accept_prob >= log(runif(1))) {
-                    params_new <- proposal
-          } else {
-                    params_new <- epimodel$params
-          }
-          
-          return(params_new)        
+                    update_params(epimodel, params = proposal, pop_likelihood = pop_likelihood_new)
+                    
+          } 
 }
 
-rho_p0_kernel <- function(epimodel) {
+rho_kernel <- function(epimodel) {
           
-          # Gibbs updates for rho and p0 - beta(1, 1) prior for each
-          params_new <- epimodel$params
-          params_new["rho"] <- rbeta(1, shape1 = 1 + sum(epimodel$obs_mat
-                                                         [,"I_observed"]), shape2 = 1 + sum(epimodel$obs_mat[,"I_augmented"] - 
-                                                                                                      epimodel$obs_mat[,"I_observed"]))
-          params_new["p0"] <- rbeta(1, shape1 = 1 + epimodel$config_mat[1, "I"],
-                                    shape2 = 1 + epimodel$popsize - epimodel$config_mat[1, "I"])
+          # Gibbs updates for rho - beta(1, 1) prior
+          params_new          <- epimodel$params
+          params_new["rho"]   <- rbeta(1, shape1 = 1 + sum(epimodel$obs_mat[,"I_observed"]), shape2 = 1 + sum(epimodel$obs_mat[,"I_augmented"] - epimodel$obs_mat[,"I_observed"]))
           
-          return(params_new)        
+          obs_likelihood_new <- calc_obs_likelihood(epimodel, params = params_new, log = TRUE)
+          
+          update_params(epimodel, params = params_new, obs_likelihood = obs_likelihood_new)
+          
 }
-
-kernel <- list(beta_mu_kernel, rho_p0_kernel)
-cov_mtx <- diag(c(0.005, 0.1), nrow = 2, ncol = 2)
-config_resample_prop <- 10
 
 # save new parameters every iteration
 # save every tenth configuration matrix
 # resample 10 subject-level trajectories in between parameter updates
-epimodel$sim_settings <- init_settings(epimodel = epimodel,
-                                       niter = 100000,
-                                       burnin = 0,
-                                       params_every = 1, 
-                                       configs_every = 1, 
-                                       kernel = kernel,
-                                       cov_mtx = cov_mtx,
-                                       configs_to_redraw = 10,
+epimodel$sim_settings <- init_settings(niter = 100000,
+                                       save_params_every = 1, 
+                                       save_configs_every = 10,
+                                       kernel = list(beta_mu_kernel, rho_kernel),
+                                       cov_mtx = diag(c(0.005, 0.1), nrow = 2, ncol = 2),
+                                       configs_to_redraw = 5,
                                        to_estimation_scale = to_estimation_scale,
                                        from_estimation_scale = from_estimation_scale)
+
+
 
 
 # objects to store results

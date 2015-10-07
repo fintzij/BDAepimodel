@@ -7,7 +7,7 @@
 set.seed(52787)
 require(BDAepimodel)
 
-popsize <- 10
+popsize <- 200
 
 r_meas_process <- function(state, meas_vars, params){
           rbinom(n = nrow(state), size = state[,meas_vars], prob = params["rho"])
@@ -22,7 +22,7 @@ d_meas_process <- function(state, meas_vars, params, log = TRUE) {
 epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.5),
                           popsize = popsize,
                           states = c("S", "I", "R"), 
-                          params = c(beta = rnorm(1, 0.5, 1e-5), mu = rnorm(1, 1, 1e-5), rho = 0.5, S0 = 0.7, I0 = 0.2, R0 = 0.1), 
+                          params = c(beta = rnorm(1, 0.02, 1e-5), mu = rnorm(1, 1, 1e-5), rho = 0.5, S0 = 0.7, I0 = 0.2, R0 = 0.1), 
                           rates = c("beta * I", "mu"), 
                           flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                           meas_vars = "I",
@@ -114,12 +114,12 @@ rho_kernel <- function(epimodel) {
 # save new parameters every iteration
 # save every tenth configuration matrix
 # resample 10 subject-level trajectories in between parameter updates
-epimodel$sim_settings <- init_settings(niter = 1000,
+epimodel$sim_settings <- init_settings(niter = 10000,
                                        save_params_every = 1, 
-                                       save_configs_every = 10,
+                                       save_configs_every = 50,
                                        kernel = list(beta_mu_kernel, rho_kernel),
                                        cov_mtx = diag(c(0.005, 0.1), nrow = 2, ncol = 2),
-                                       configs_to_redraw = 5,
+                                       configs_to_redraw = 30,
                                        to_estimation_scale = to_estimation_scale,
                                        from_estimation_scale = from_estimation_scale)
 

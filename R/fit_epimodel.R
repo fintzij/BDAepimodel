@@ -10,8 +10,8 @@
 #' 
 fit_epimodel <- function(epimodel, monitor = FALSE) {
           
-          require(MASS, quietly = TRUE)
-          require(MCMCpack, quietly = TRUE)
+          suppressMessages(require(MASS, quietly = TRUE))
+          suppressMessages(require(MCMCpack, quietly = TRUE))
           
           # check that the simulation settings have been set
           if(is.null(epimodel$sim_settings)) {
@@ -101,6 +101,8 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
           results$params[1, ] <- .epimodel$params
           results$log_likelihood[1] <- .epimodel$likelihoods$obs_likelihood + .epimodel$likelihoods$pop_likelihood_cur
           
+          results$configs[[1]] <- .epimodel$config_mat[complete.cases(.epimodel$config_mat),]
+          
           start.time = Sys.time()
           # generate .niter parameter samples
           for(k in 2:niter) {
@@ -156,7 +158,7 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                     # save the configuration matrix
                     if(k %% save_configs_every == 0) {
                               
-                              results$configs[[(k %/% save_configs_every) + 1]] <- .epimodel$config_mat[complete.cases(.epimodel$config_mat)]
+                              results$configs[[(k %/% save_configs_every) + 1]] <- .epimodel$config_mat[complete.cases(.epimodel$config_mat),]
                     }
                     
                     if(monitor && (k%%save_configs_every) == 0) {
@@ -171,6 +173,7 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
           
           epimodel <- list(model = list(dat = epimodel$dat,
                                         time_var = epimodel$time_var,
+                                        meas_vars = epimodel$meas_vars,
                                         obstimes = epimodel$obstimes,
                                         popsize = epimodel$popsize,
                                         states = epimodel$states,
