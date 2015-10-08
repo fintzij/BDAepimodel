@@ -4,7 +4,7 @@
 \alias{generate_keys}
 \title{Generate the keys for indexing into the .irm and .eigen environments.}
 \usage{
-generate_keys(epimodel, inds = NULL)
+generate_keys(epimodel, inds = NULL, lookup = TRUE)
 }
 \arguments{
 \item{epimodel}{list of bookkeeping and model objects, or an analagous
@@ -12,6 +12,9 @@ environment. If not supplied, the list will be generated. The epimodel list
 is coerced into an environment, .epimodel, for internal use.}
 
 \item{inds}{optional vector with row numbers for which keys are desired.}
+
+\item{lookup}{logical indicating whether to look up the keys in the
+  .irm_key_lookup object}
 }
 \value{
 character vector of keys

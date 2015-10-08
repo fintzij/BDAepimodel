@@ -12,6 +12,9 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
           
           suppressMessages(require(MASS, quietly = TRUE))
           suppressMessages(require(MCMCpack, quietly = TRUE))
+          suppressMessages(require(compiler, quietly = TRUE))
+          
+          enableJIT(3)
           
           # check that the simulation settings have been set
           if(is.null(epimodel$sim_settings)) {
@@ -106,7 +109,7 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
           start.time = Sys.time()
           # generate .niter parameter samples
           for(k in 2:niter) {
-                    
+                    if(k%%5 == 0) print(k)
                     # re-compute the array of rate matrices - only needs to be
                     # recomputed every time parameters are updated.
                     build_irm(.epimodel)
@@ -116,7 +119,7 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
 
                     # cycle through subject-level trajectories to be re-drawn
                     for(j in 1:configs_to_redraw) {
-                              
+
                               # check to see if any additional irms are needed.
                               # if so, check_irm will instatiate the required
                               # matrices and their eigen decompositions
@@ -150,15 +153,15 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                     # save parameter values and log-likelihood
                     if(k %% save_params_every == 0) {
                               
-                              results$params[(k %/% save_params_every) + 1, ] <- .epimodel$params
-                              results$log_likelihood[(k %/% save_params_every) + 1] <- sum(.epimodel$likelihoods$obs_likelihood, .epimodel$likelihoods$pop_likelihood_cur)
+                              results$params[k %/% save_params_every, ] <- .epimodel$params
+                              results$log_likelihood[k %/% save_params_every] <- sum(.epimodel$likelihoods$obs_likelihood, .epimodel$likelihoods$pop_likelihood_cur)
                               
                     }
                     
                     # save the configuration matrix
                     if(k %% save_configs_every == 0) {
                               
-                              results$configs[[(k %/% save_configs_every) + 1]] <- .epimodel$config_mat[complete.cases(.epimodel$config_mat),]
+                              results$configs[[k %/% save_configs_every]] <- .epimodel$config_mat[complete.cases(.epimodel$config_mat),]
                     }
                     
                     if(monitor && (k%%save_configs_every) == 0) {
@@ -184,6 +187,7 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
           # clean up internal objects
           rm(.epimodel)
           gc()
+          enableJIT(0)
           
           return(epimodel)
 }

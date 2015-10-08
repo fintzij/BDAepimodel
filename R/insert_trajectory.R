@@ -17,10 +17,10 @@ insert_trajectory <- function(epimodel, subject, subj_ID, reinsertion) {
           if(epimodel$.ind_final_config != (epimodel$.subj_row_ind - 1)) {
                     
                     # reorder the matrix
-                    epimodel$config_mat[1:(epimodel$.subj_row_ind - 1),] <- epimodel$config_mat[order(epimodel$config_mat[1:(epimodel$.subj_row_ind - 1), "time"]), ]
-                    
+                    epimodel$config_mat[1:(epimodel$.subj_row_ind - 1),] <- epimodel$config_mat[.Internal(order(TRUE, FALSE, epimodel$config_mat[1:(epimodel$.subj_row_ind - 1), "time"])), ]
+                              
                     # get the subject indices
-                    .subj_inds <- which(epimodel$config_mat[,"ID"] == subject)
+                    .subj_inds <- .Internal(which(epimodel$config_mat[,"ID"] == subject))
                     
                     for(k in seq_along(.subj_inds)) {
                               

@@ -15,7 +15,7 @@
 build_tpm_seqs <- function(epimodel) {
           
           # get the keys for the tpms that need rebuilding
-          .keys <- generate_keys(epimodel, inds = 1:(epimodel$.ind_final_config - 1))
+          .keys <- generate_keys(epimodel, inds = 1:(epimodel$.ind_final_config - 1), lookup = TRUE)
           
           # construct the tpms for all indices in the .tpms_to_build vector
           for(k in seq_along(.keys)) {
@@ -36,7 +36,7 @@ build_tpm_seqs <- function(epimodel) {
                     .left_endpoint      <- epimodel$obstimes[k]
                     .right_endpoint     <- epimodel$obstimes[k+1]
                     
-                    .subseq_inds <- which((epimodel$config_mat[1:(epimodel$.ind_final_config-1),"time"] < .right_endpoint) & (epimodel$config_mat[1:(epimodel$.ind_final_config-1),"time"] >= .left_endpoint))
+                    .subseq_inds <- .Internal(which((epimodel$config_mat[1:(epimodel$.ind_final_config-1),"time"] < .right_endpoint) & (epimodel$config_mat[1:(epimodel$.ind_final_config-1),"time"] >= .left_endpoint)))
                     
                     # Successive multiplication beginning with the rightmost matrix
                     epimodel$.tpm_products[.subseq_inds] <- Reduce("%*%", epimodel$.tpms[.subseq_inds], accumulate = TRUE, right = TRUE)

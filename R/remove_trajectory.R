@@ -14,7 +14,7 @@ remove_trajectory <- function(epimodel, subject, save_path) {
           
           # extract the current trajectory
           .subj_ID            <- paste0(".X", subject)
-          .subj_inds          <- which(epimodel$config_mat[,"ID"] == subject)
+          .subj_inds          <- .Internal(which(epimodel$config_mat[,"ID"] == subject))
           
           # save the current path if not removing it b/c of a M-H rejection
           if(save_path) {

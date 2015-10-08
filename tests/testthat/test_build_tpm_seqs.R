@@ -185,6 +185,8 @@ test_that("The sequence of tpm products is computed correctly when a trajectory 
           
           build_tpm_seqs(.epimodel)
           
+          .epimodel$.initdist <- build_initdist(.epimodel)
+          
           remove_trajectory(.epimodel, 1, save_path = TRUE)
           
           # check to see if any additional irms are needed.

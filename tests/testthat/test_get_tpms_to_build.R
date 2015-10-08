@@ -37,6 +37,8 @@ test_that("The correct indices for tpms to be rebuilt are retrieved", {
           
           build_irm(.epimodel)
           
+          .epimodel$.initdist <- build_initdist(.epimodel)
+          
           remove_trajectory(.epimodel, 1, save_path = TRUE)
           
           # check to see if any additional irms are needed.

@@ -18,7 +18,7 @@ sample_path_in_interval <- function(epimodel, subject, subj_ID, interval) {
           .init_time          <- epimodel$config_mat[interval, "time"]
           .final_time         <- epimodel$config_mat[interval + 1, "time"]
           
-          .irm_key            <- generate_keys(epimodel, inds = interval)
+          .irm_key            <- generate_keys(epimodel, inds = interval, lookup = TRUE)
           
           # if the endpoints are the same, use the forward sampling
           # algorithm until an appropriate path is generated.
@@ -41,7 +41,7 @@ sample_path_in_interval <- function(epimodel, subject, subj_ID, interval) {
                     .next_state <- sample.int(epimodel$num_states, 1, prob = pmax(epimodel$.irm[[.irm_key]][.init_state,], 0))
                     
                     # identify the event and reset the initial state
-                    .event <- which((epimodel$flow[, .init_state] == -1) & (epimodel$flow[, .next_state] == 1))
+                    .event <- .Internal(which((epimodel$flow[, .init_state] == -1) & (epimodel$flow[, .next_state] == 1)))
                     .init_state <- .next_state
                     
                     # update the configuration matrix

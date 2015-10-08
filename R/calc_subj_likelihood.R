@@ -10,19 +10,20 @@
 calc_subj_likelihood <- function(epimodel, subject, subj_ID, log = TRUE) {
           
           # get the appropriate indices to exclude the intermediate observation time rows
-          .left_endpoints     <- c(1, which(epimodel$config_mat[,"ID"] != 0))
+          .left_endpoints     <- c(1, .Internal(which(epimodel$config_mat[,"ID"] != 0)))
           .right_endpoints    <- c(.left_endpoints[-1], epimodel$.ind_final_config)
           
           # get the subject_path
-          .subj_path <- epimodel$config_mat[c(1, .right_endpoints), subj_ID]
+          .subj_path          <- epimodel$config_mat[c(1, .right_endpoints), subj_ID]
+          .path_length        <- length(.subj_path)
           
           # compute the time diffs
           .time_diffs <- epimodel$config_mat[.right_endpoints, "time"] - epimodel$config_mat[.left_endpoints, "time"]
           
           # get irm keys
-          .irm_keys <- generate_keys(epimodel, inds = .left_endpoints)
+          .irm_keys <- generate_keys(epimodel, inds = .left_endpoints, lookup = TRUE)
           
-          # get hazards
+          # get hazards and event rates
           .hazards            <- rep(0, length(.left_endpoints))
           .event_rates        <- rep(0, length(.left_endpoints))
           
@@ -41,9 +42,10 @@ calc_subj_likelihood <- function(epimodel, subject, subj_ID, log = TRUE) {
                     }
           }
           
+          # calculate subject level likelihood
+          subj_likelihood <- log(epimodel$.initdist[.subj_path[1]]) + sum(log(.event_rates[.event_rates != 0])) + sum(.hazards * .time_diffs)
           
-          subj_likelihood <- epimodel$d_initdist(state = .subj_path[1], params = epimodel$params[epimodel$initdist_params], log = TRUE) + sum(ifelse(.event_rates == 0, .hazards * .time_diffs, log(.event_rates) + .hazards * .time_diffs))
-          
+          # exponentiate if desired
           if(log == FALSE) {
                     subj_likelihood <- exp(subj_likelihood)
           }

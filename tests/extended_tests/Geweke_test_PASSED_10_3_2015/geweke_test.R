@@ -130,36 +130,35 @@ rho_kernel <- function(epimodel) {
 # resample 10 subject-level trajectories in between parameter updates
 epimodel$sim_settings <- init_settings(niter = 100000,
                                        save_params_every = 1, 
-                                       save_configs_every = 10,
+                                       save_configs_every = 1,
                                        kernel = list(beta_mu_kernel, rho_kernel),
                                        cov_mtx = diag(c(0.005, 0.1), nrow = 2, ncol = 2),
-                                       configs_to_redraw = 5,
+                                       configs_to_redraw = 10,
                                        to_estimation_scale = to_estimation_scale,
                                        from_estimation_scale = from_estimation_scale)
-
-
-
 
 # objects to store results
 BDAepimodel_results <- matrix(0, nrow = length(epimodel$obstimes), ncol = epimodel$sim_settings$niter)
 Gillespie_results <- matrix(0, nrow = length(epimodel$obstimes), ncol = epimodel$sim_settings$niter)
 log_likelihoods <- rep(0, length = epimodel$sim_settings$niter)
 
+epimodel_gillespie <- epimodel
+
 # convert epimodel list to environment to enable multiple assignment
 .epimodel <- list2env(epimodel, parent = emptyenv(), hash = TRUE)
 
 # move simulation settings to internal objects
-.niter              <- .epimodel$sim_settings$niter
-.burnin             <- .epimodel$sim_settings$burnin
-.params_every       <- .epimodel$sim_settings$params_every
-.configs_every      <- .epimodel$sim_settings$configs_every
-.kernel             <- .epimodel$sim_settings$kernel
-.cov_mtx            <- .epimodel$sim_settings$cov_mtx
-.configs_to_redraw  <- .epimodel$sim_settings$configs_to_redraw
-.config_replacement <- ifelse(.configs_to_redraw > .epimodel$popsize, TRUE, FALSE)
-.parallelize        <- .epimodel$sim_settings$parallelize
-.to_estimation_scale <- .epimodel$sim_settings$to_estimation_scale
-.from_estimation_scale <- .epimodel$sim_settings$from_estimation_scale
+niter               <- .epimodel$sim_settings$niter
+burnin              <- .epimodel$sim_settings$burnin
+save_params_every   <- .epimodel$sim_settings$save_params_every
+save_configs_every  <- .epimodel$sim_settings$save_configs_every
+kernel              <- .epimodel$sim_settings$kernel
+cov_mtx             <- .epimodel$sim_settings$cov_mtx
+configs_to_redraw   <- .epimodel$sim_settings$configs_to_redraw
+config_replacement  <- ifelse(configs_to_redraw > .epimodel$popsize, TRUE, FALSE)
+to_estimation_scale <- .epimodel$sim_settings$to_estimation_scale
+from_estimation_scale <- .epimodel$sim_settings$from_estimation_scale
+seed                <- .epimodel$sim_settings$seed
 
 # initialize the list of log-likelihoods
 epimodel$likelihoods <- list(pop_likelihood_cur = NULL,
@@ -168,24 +167,10 @@ epimodel$likelihoods <- list(pop_likelihood_cur = NULL,
                              subj_likelihood_new = NULL,
                              obs_likelihood  = NULL)
 
-# identify the unmeasured compartments, constants for number of
-# measured and unmeasured states
-.epimodel$unmeasured_vars     <- setdiff(.epimodel$states, .epimodel$meas_vars)
-.epimodel$num_unmeasured      <- length(.epimodel$unmeasured_vars)
-.epimodel$num_measured        <- length(.epimodel$meas_vars)
-.epimodel$num_states          <- length(.epimodel$states)
-
-# set the indexing for the observed and measured variables in the
-# observation matrix
-.epimodel$meas_vars_aug       <- paste0(.epimodel$meas_vars, "_augmented")
-.epimodel$meas_vars_obs       <- paste0(.epimodel$meas_vars, "_observed")
 
 # identify whether there is structure in the flow matrix that can be
 # leveraged when resampling subject-level trajectories
 detect_structure(.epimodel)
-
-# initialize list for storing results
-.results <- init_results(.epimodel)
 
 # add buffer to the configuration matrix, also adds configurations at
 # observation times and instatiates .epimodel$.ind_final_config
@@ -214,11 +199,15 @@ detect_structure(.epimodel)
 # get indices for the subject configuration portion of the configuration matrix
 .epimodel$.config_inds <- which(grepl(".X", colnames(.epimodel$config_mat)))
 
-build_irm(.epimodel)
+# compute the population level likelihood, and the measurement
+# process likelihood
 .epimodel$likelihoods$pop_likelihood_cur <- calc_pop_likelihood(epimodel = .epimodel, log = TRUE)
 
+log_likelihoods <- rep(0, niter)
+log_likelihoods[1] <- .epimodel$likelihoods$pop_likelihood_cur 
+
 start.time <- Sys.time()
-for(k in 1:.niter) {
+for(k in 1:niter) {
           
           if(k%%500 == 0) print(k)
           
@@ -231,10 +220,10 @@ for(k in 1:.niter) {
           # .epimodel$likelihoods$obs_likelihood_cur <- calc_obs_likelihood(epimodel = .epimodel, log = TRUE)
           
           # choose which subjects should be redrawn
-          .subjects <- sample.int(n = .epimodel$popsize, size = .configs_to_redraw, replace = .config_replacement)
+          .subjects <- sample.int(n = .epimodel$popsize, size = configs_to_redraw, replace = config_replacement)
 
           # cycle through subject-level trajectories to be re-drawn
-          for(j in 1:.configs_to_redraw) {
+          for(j in 1:configs_to_redraw) {
                    
                    # check to see if any additional irms are needed.
                     # if so, check_irm will instatiate the required

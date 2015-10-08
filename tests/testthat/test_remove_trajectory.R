@@ -36,6 +36,8 @@ test_that("The updated counts are correct in the configuration matrix", {
           
           build_irm(.epimodel)
           
+          .epimodel$.initdist <- build_initdist(.epimodel)
+          
           remove_trajectory(.epimodel, 2, save_path = TRUE)
           
           # subject 2 is susceptible in the interval [0, 1.8705), infected in
@@ -82,6 +84,8 @@ test_that("The observation matrix is updated correctly when a trajectory is remo
           
           build_irm(.epimodel)
           
+          .epimodel$.initdist <- build_initdist(.epimodel)
+          
           remove_trajectory(.epimodel, 1, save_path = TRUE)
           
           # subject 1 is susceptible in the interval [0, 0.4167), infected in
@@ -123,6 +127,8 @@ test_that("The correct rows corresponding to a trajectory are removed",{
           expand_config_mat(.epimodel)
           
           build_irm(.epimodel)
+          
+          .epimodel$.initdist <- build_initdist(.epimodel)
           
           remove_trajectory(.epimodel, 2, save_path = TRUE)
           

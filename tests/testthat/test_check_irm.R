@@ -90,8 +90,9 @@ test_that("Missing rate matrices and eigen decompositions are instatiated", {
           
           # remove the rate matrix and decompositions for keys 0 and 3
           .epimodel$.irm_keys <- .epimodel$.irm_keys[-charmatch(c(0, 3), .epimodel$.irm_keys)] 
-          rm(list = c("0", "3"), envir = .epimodel$.irm)
-          rm(list = c("0", "3"), envir = .epimodel$.eigen)
+          .epimodel$.irm_key_lookup <- .epimodel$.irm_key_lookup[- which(rownames(.epimodel$.irm_key_lookup) %in% c("0","3")), , drop = FALSE] 
+          rm(list = c("0", "3"), envir = .epimodel$.irm) 
+          rm(list = c("0", "3"), envir = .epimodel$.eigen) 
           
           # run check_irm to re-instatiate the required objects
           check_irm(.epimodel)

@@ -23,7 +23,7 @@ sample_at_event_times <- function(epimodel, subject, subj_ID) {
                                         # sample the discrete time skeleton at event times
                                         if(diff(epimodel$.obs_time_inds[t:(t+1)], lag = 1) != 1) {
                                                   
-                                                  sample_DT_skeleton(epimodel, subj_ID = subj_ID, init_ind = epimodel$.obs_time_inds[t], final_ind= epimodel$.obs_time_inds[t+1]) 
+                                                  sample_DT_skeleton(epimodel, subj_ID = subj_ID, init_ind = epimodel$.obs_time_inds[t], final_ind = epimodel$.obs_time_inds[t+1]) 
                                                   
                                         }
                                         

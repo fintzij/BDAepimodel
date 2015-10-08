@@ -14,11 +14,11 @@
 calc_pop_likelihood <- function(epimodel, params = NULL, log = FALSE) {
 
           if(is.null(epimodel$.ind_final_config)) {
-                    epimodel$.ind_final_config <- which(epimodel$config_mat[,"time"] == max(epimodel$obstimes))
+                    epimodel$.ind_final_config <- .Internal(which(epimodel$config_mat[,"time"] == max(epimodel$obstimes)))
           }
           
           # get the appropriate indices to exclude the intermediate observation time rows
-          .left_endpoints     <- c(1, which(epimodel$config_mat[,"ID"] != 0))
+          .left_endpoints     <- c(1, .Internal(which(epimodel$config_mat[,"ID"] != 0)))
           .right_endpoints    <- c(.left_endpoints[-1], epimodel$.ind_final_config)
           
           # compute all rates, event specific rates, and hazards for
@@ -27,11 +27,11 @@ calc_pop_likelihood <- function(epimodel, params = NULL, log = FALSE) {
           # calculate the rate for each type of transition on the subject level
           if(is.null(params)) {
                     
-                    .all_rates <- do.call(cbind, sapply(epimodel$rates, do.call, list(state = epimodel$config_mat[.left_endpoints,], params = epimodel$params)))  
+                    .all_rates <- do.call(cbind, lapply(epimodel$rates, do.call, list(state = epimodel$config_mat[.left_endpoints, epimodel$states], params = epimodel$params)))  
                     
           } else {
                     
-                    .all_rates<- do.call(cbind, sapply(epimodel$rates, do.call, list(state = epimodel$config_mat[.left_endpoints,], params = params)))
+                    .all_rates<- do.call(cbind, lapply(epimodel$rates, do.call, list(state = epimodel$config_mat[.left_endpoints, epimodel$states], params = params)))
                     
           }
           

@@ -12,7 +12,7 @@
 
 build_rate_mat <- function(rates, state, params, flow, env = NULL, key = NULL, update = TRUE) {
           
-          .rates <- sapply(rates, do.call, list(state = state, params = params))
+          .rates <- lapply(rates, do.call, list(state = state, params = params))
           
           # if no key is provided, a rate matrix must be instatiated, otherwise
           # modifications occur in-place
@@ -21,8 +21,8 @@ build_rate_mat <- function(rates, state, params, flow, env = NULL, key = NULL, u
                     .rate_mat <- matrix(0, nrow = ncol(flow), ncol = ncol(flow))
                     
                     for(k in 1:nrow(flow)) {
-                              .rate_mat[flow[k,] == -1, flow[k,] == 1] <- .rate_mat[flow[k,] == -1, flow[k,] == 1] + .rates[k]
-                              .rate_mat[flow[k,] == -1, flow[k,] == -1] <- .rate_mat[flow[k,] == -1, flow[k,] == -1] - .rates[k]
+                              .rate_mat[flow[k,] == -1, flow[k,] == 1] <- .rate_mat[flow[k,] == -1, flow[k,] == 1] + .rates[[k]]
+                              .rate_mat[flow[k,] == -1, flow[k,] == -1] <- .rate_mat[flow[k,] == -1, flow[k,] == -1] - .rates[[k]]
                     }
                     
                     return(.rate_mat)
@@ -31,8 +31,8 @@ build_rate_mat <- function(rates, state, params, flow, env = NULL, key = NULL, u
                     env[[key]][1:ncol(flow), 1:ncol(flow)] <- 0
                     
                     for(k in 1:nrow(flow)) {
-                              env[[key]][flow[k,] == -1, flow[k,] == 1] <- env[[key]][flow[k,] == -1, flow[k,] == 1] + .rates[k]
-                              env[[key]][flow[k,] == -1, flow[k,] == -1] <- env[[key]][flow[k,] == -1, flow[k,] == -1] - .rates[k]
+                              env[[key]][flow[k,] == -1, flow[k,] == 1] <- env[[key]][flow[k,] == -1, flow[k,] == 1] + .rates[[k]]
+                              env[[key]][flow[k,] == -1, flow[k,] == -1] <- env[[key]][flow[k,] == -1, flow[k,] == -1] - .rates[[k]]
                     }
           }
           
