@@ -10,7 +10,7 @@
 calc_subj_likelihood <- function(epimodel, subject, subj_ID, log = TRUE) {
           
           # get the appropriate indices to exclude the intermediate observation time rows
-          .left_endpoints     <- c(1, .Internal(which(epimodel$config_mat[,"ID"] != 0)))
+          .left_endpoints     <- c(1, which(epimodel$config_mat[,"ID"] != 0))
           .right_endpoints    <- c(.left_endpoints[-1], epimodel$.ind_final_config)
           
           # get the subject_path

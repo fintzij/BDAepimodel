@@ -41,7 +41,7 @@ sample_path_in_interval <- function(epimodel, subject, subj_ID, interval) {
                     .next_state <- sample.int(epimodel$num_states, 1, prob = pmax(epimodel$.irm[[.irm_key]][.init_state,], 0))
                     
                     # identify the event and reset the initial state
-                    .event <- .Internal(which((epimodel$flow[, .init_state] == -1) & (epimodel$flow[, .next_state] == 1)))
+                    .event <- which((epimodel$flow[, .init_state] == -1) & (epimodel$flow[, .next_state] == 1))
                     .init_state <- .next_state
                     
                     # update the configuration matrix

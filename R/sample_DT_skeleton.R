@@ -38,7 +38,7 @@ sample_DT_skeleton <- function(epimodel, subj_ID, init_ind, final_ind) {
                     # replace NaN values arising from 0/0 divisions
                     .state_probs <- replace(.state_probs, is.nan(.state_probs), 0)
                     
-                    .subseq_vec[.ind] <- .cur_state <- .Internal(sample(n = epimodel$num_states, size = 1, replace = FALSE, prob = .state_probs))
+                    .subseq_vec[.ind] <- .cur_state <- sample.int(n = epimodel$num_states, size = 1, replace = FALSE, prob = .state_probs)
           }
           
           epimodel$config_mat[init_ind:final_ind, subj_ID] <- .subseq_vec

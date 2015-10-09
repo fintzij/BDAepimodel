@@ -14,7 +14,7 @@
 match_row <- function(x, table, return_value) {
           
           if(length(x) == 1L) {
-                    .inds <- .Internal(which(table[, 1, drop = FALSE] == as.numeric(x)))
+                    .inds <- which(table[, 1, drop = FALSE] == as.numeric(x))
                     
           } else {
                     # initialize vector of TRUE values

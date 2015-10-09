@@ -65,30 +65,20 @@ We must bear in mind a couple of important points regarding how to specify the i
 To simulate from our SIRS model, we will re-initialize the `epimodel` list with all of the arguments required for the simulation. 
 
 ```{r}
-          # Set up initialization funtion (specified on the level of a single subject as r_initdist) and measurement process function
-
-          # subject level simulation of initial state at time t0
-          r_initdist <- function(params) {
-                    sample.int(3, 1, prob = c(1-params["p0"], params["p0"], 0))
-                    }
-
-          
+ 
           r_meas_process <- function(state, meas_vars, params){
-                    obs_vec <- rbinom(n = nrow(state), size = state[,meas_vars, drop = FALSE], prob = params["rho"])
-                    names(obs_vec) <- meas_vars
-                    return(obs_vec)
+                    rbinom(n = nrow(state), size = state[,meas_vars], prob = params["rho"])
           }
           
           # initialize epimodel
           epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.5),
                                     popsize = 200,
                                     states = c("S", "I", "R"), 
-                                    params = c(beta = 0.02, mu = 1, rho = 0.5, p0 = 0.05), 
+                                    params = c(beta = rnorm(1,0.02,1e-6), mu = rnorm(1,0.02,1e-6), rho = 0.5, S0 = 0.95, I0 = 0.05, R0 = 0), 
                                     rates = c("beta * I", "mu"), 
                                     flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                                     meas_vars = "I",
-                                    r_meas_process = r_meas_process,
-                                    r_initdist = r_initdist)
+                                    r_meas_process = r_meas_process)
           
 ```
 

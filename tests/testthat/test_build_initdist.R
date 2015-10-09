@@ -21,7 +21,7 @@ test_that("The vector of subject-level initial state probabilities is correct",{
           epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.5),
                                     popsize = popsize,
                                     states = c("S", "I", "R"), 
-                                    params = c(beta = rnorm(1, 0.5, 1e-6), mu = rnorm(1, 1, 1e-6), rho = 0.5,  S0 = 0.5, I0 = 0.5, R0 = 0), 
+                                    params = c(beta = rnorm(1, 0.5, 1e-6), mu = rnorm(1, 1, 1e-6), rho = 0.5,  S0 = 0.7, I0 = 0.2, R0 = 0.1), 
                                     rates = c("beta * I", "mu"), 
                                     flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                                     meas_vars = "I",
@@ -38,6 +38,6 @@ test_that("The vector of subject-level initial state probabilities is correct",{
           
           .epimodel$num_states          <- length(.epimodel$states)
           
-          expect_equal(unname(build_initdist(.epimodel)), c(0.5, 0.5, 0))
+          expect_equal(unname(build_initdist(.epimodel)), c(0.7, 0.2, 0.1))
           
 })

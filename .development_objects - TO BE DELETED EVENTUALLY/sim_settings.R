@@ -7,7 +7,7 @@
 set.seed(52787)
 require(BDAepimodel)
 
-popsize <- 200
+popsize <- 10
 
 r_meas_process <- function(state, meas_vars, params){
           rbinom(n = nrow(state), size = state[,meas_vars], prob = params["rho"])
@@ -132,4 +132,4 @@ Rprof()
 summaryRprof(prof)
 
 require(proftools)
-plotProfileCallGraph(readProfileData(prof), score = "total")
+plotProfileCallGraph(readProfileData(prof), score = "self")

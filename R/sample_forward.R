@@ -35,7 +35,10 @@ sample_forward <- function(epimodel, subject, subj_ID, init_time, final_time, in
                                                   .valid_path <- TRUE
                                                   epimodel$.subj_row_ind <- .ind_cur
                                                   
-                                        } 
+                                        } else {
+                                                  .valid_path <- FALSE
+                                                  epimodel$config_mat[epimodel$.subj_row_ind : .ind_cur, ] <- NA
+                                        }
                                         
                                         break
                               } 
@@ -57,7 +60,10 @@ sample_forward <- function(epimodel, subject, subj_ID, init_time, final_time, in
                                         if(.cur_state == final_state) {
                                                   .valid_path <- TRUE
                                                   epimodel$.subj_row_ind <- .ind_cur
-                                        } 
+                                        } else {
+                                                  .valid_path <- FALSE
+                                                  epimodel$config_mat[epimodel$.subj_row_ind : .ind_cur, ] <- NA
+                                        }
                                         
                               # if .t <= final_time, sample the next state and 
                               # create an updated row in the config matrix

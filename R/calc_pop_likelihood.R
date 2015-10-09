@@ -14,11 +14,11 @@
 calc_pop_likelihood <- function(epimodel, params = NULL, log = FALSE) {
 
           if(is.null(epimodel$.ind_final_config)) {
-                    epimodel$.ind_final_config <- .Internal(which(epimodel$config_mat[,"time"] == max(epimodel$obstimes)))
+                    epimodel$.ind_final_config <- which(epimodel$config_mat[,"time"] == max(epimodel$obstimes))
           }
           
           # get the appropriate indices to exclude the intermediate observation time rows
-          .left_endpoints     <- c(1, .Internal(which(epimodel$config_mat[,"ID"] != 0)))
+          .left_endpoints     <- c(1, which(epimodel$config_mat[,"ID"] != 0))
           .right_endpoints    <- c(.left_endpoints[-1], epimodel$.ind_final_config)
           
           # compute all rates, event specific rates, and hazards for
@@ -48,7 +48,7 @@ calc_pop_likelihood <- function(epimodel, params = NULL, log = FALSE) {
           
           # sum the log-likelihood for the initial configuration,
           # exponential waiting time densities, and tail probability
-          pop_likelihood <- sum(epimodel$config_mat[1,epimodel$states[epimodel$initdist_param_inds]] * log(epimodel$.initdist[epimodel$initdist_param_inds])) + sum(log(.event_rates)) - sum(.hazards * .time_diffs)
+          pop_likelihood <- sum(epimodel$config_mat[1, epimodel$states[epimodel$initdist_param_inds]] * log(epimodel$.initdist[epimodel$initdist_param_inds])) + sum(log(.event_rates)) - sum(.hazards * .time_diffs)
           
           if(log == FALSE) {
                     pop_likelihood <- exp(pop_likelihood)

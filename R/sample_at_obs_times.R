@@ -30,7 +30,7 @@ sample_at_obs_times <- function(epimodel, subject, subj_ID) {
                     # identify the first observation time when the subject is in
                     # the absorbing state, possibly never
                     if(any(.state_vec %in% epimodel$absorbing_states)) {
-                              .absorb_ind <- .Internal(which(.state_vec %in% epimodel$absorbing_states))[1]
+                              .absorb_ind <- which(.state_vec %in% epimodel$absorbing_states)[1]
                               
                               epimodel$config_mat[epimodel$.obs_time_inds[.absorb_ind] : epimodel$.ind_final_config, subj_ID] <- .state_vec[.absorb_ind]
                     }

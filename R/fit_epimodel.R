@@ -14,6 +14,7 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
           suppressMessages(require(MCMCpack, quietly = TRUE))
           suppressMessages(require(compiler, quietly = TRUE))
           
+          compilePKGS(enable=TRUE)
           enableJIT(3)
           
           # check that the simulation settings have been set
@@ -50,7 +51,7 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
           seed                <- .epimodel$sim_settings$seed
           
           # initialize the list of log-likelihoods
-          epimodel$likelihoods <- list(pop_likelihood_cur = NULL,
+          .epimodel$likelihoods <- list(pop_likelihood_cur = NULL,
                                        pop_likelihood_new = NULL,
                                        subj_likelihood_cur = NULL,
                                        subj_likelihood_new = NULL,
