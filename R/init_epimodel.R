@@ -221,6 +221,8 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
           epimodel$num_measured        <- length(epimodel$meas_vars)
           epimodel$num_states          <- length(epimodel$states)
           
+          # default the tuning to FALSE. 
+          epimodel$tune <- FALSE
           
           # return bookkeeping list
           return(epimodel)

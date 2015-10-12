@@ -1,4 +1,39 @@
 
+# Arrays vs. lists --------------------------------------------------------
+
+x <- array(rnorm(1:100000), dim = c(10, 10, 1000))
+
+y <- lapply(seq(dim(x)[3]), function(z) x[,,z])
+
+row.inds <- sample.int(10, 1000, replace = T)
+col.inds <- sample.int(10, 1000, replace = T)
+
+
+mat <- matrix(1:100, nrow = 10)
+
+system.time(replicate(1000, {
+          
+          # assignment
+          x[,,1:dim(x)[3]] <- mat
+          
+          #retrieval
+          x[cbind(row.inds, col.inds, 1:dim(x)[3])]
+          
+}))
+
+system.time(replicate(1000, {
+          
+          # assignment
+          y[1:dim(x)[3]] <- list(mat)
+          
+          #retrieval
+          z <- array(unlist(y), dim = c(10, 10, length(y)))
+          # mapply("[", y, row.inds, col.inds)
+          z[cbind(row.inds, col.inds, 1:dim(z)[3])]
+          
+}))
+
+
 # Fun with environments ---------------------------------------------------
 
 e <- new.env()

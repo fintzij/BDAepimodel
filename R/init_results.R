@@ -18,8 +18,12 @@ init_results <- function(epimodel) {
           params <- matrix(0, nrow = epimodel$sim_settings$niter %/% epimodel$sim_settings$save_params_every, ncol = length(epimodel$params))
           colnames(params) <- names(epimodel$params)
           
+          # matrix for storing acceptance rates
+          accepts <- matrix(0, nrow = epimodel$sim_settings$niter - 1, ncol = length(epimodel$params) + 1)
+          colnames(accepts) <- c("paths", names(epimodel$params))
+          
           # list for storing configurations
           configs <- vector(mode = "list", length = epimodel$sim_settings$niter %/% epimodel$sim_settings$save_configs_every)
           
-          results <- list(time = NULL, seed = NULL, log_likelihood = log_likelihood, params = params, configs = configs)
+          results <- list(time = NULL, seed = NULL, log_likelihood = log_likelihood, params = params, accepts = accepts, configs = configs)
 }

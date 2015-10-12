@@ -4,7 +4,10 @@
 \alias{draw_trajec}
 \title{Sample a subject-level trajectory.}
 \usage{
-draw_trajec(epimodel, subject)
+draw_trajec(epimodel, subject, iter)
+}
+\arguments{
+\item{iter}{iteration number}
 }
 \value{
 updated configuration matrix and observation matrix objects in the

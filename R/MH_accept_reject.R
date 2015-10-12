@@ -6,7 +6,7 @@
 #' @return updated epimodel environment
 #' @export
 
-MH_accept_reject <- function(epimodel, subject, subj_ID) {
+MH_accept_reject <- function(epimodel, subject, subj_ID, iter) {
           
           if((epimodel$likelihoods$pop_likelihood_new == -Inf ) & (epimodel$likelihoods$subj_likelihood_new == -Inf)) {
                     
@@ -29,6 +29,7 @@ MH_accept_reject <- function(epimodel, subject, subj_ID) {
                     # time indices
                     update_obs_mat(epimodel)
                     
+                    epimodel$.path_accept_vec[iter] <- 1
                     
           } else {
                     # the rejected path is being re-inserted into the config mat since it is stored in remove trajectory. need to save it separately first
@@ -42,6 +43,8 @@ MH_accept_reject <- function(epimodel, subject, subj_ID) {
                     # update the observation matrix and vector of observation
                     # time indices
                     update_obs_mat(epimodel)
+                    
+                    epimodel$.path_accept_vec[iter] <- 0
                           
           }
 }

@@ -10,9 +10,6 @@
 #'
 plot_epimodel <- function(epimodel, obs = TRUE, config = TRUE, which_compartments = NULL) {
           
-          require(ggplot2)
-          require(reshape2)
-          
           # if which_compartments is not NULL, ensure trajec is TRUE
           if(!is.null(which_compartments)) {
                     config <- TRUE
@@ -23,10 +20,10 @@ plot_epimodel <- function(epimodel, obs = TRUE, config = TRUE, which_compartment
           }
           
           if(obs & config) {
-                    config_melt <- melt(as.data.frame(epimodel$config_mat[complete.cases(epimodel$config_mat),c("time", which_compartments)]), id.vars = "time")
-                    obs_melt <- melt(as.data.frame(epimodel$dat[,c("time", epimodel$meas_vars)]), id.vars = epimodel$time_var)
+                    config_melt <- reshape2::melt(as.data.frame(epimodel$config_mat[complete.cases(epimodel$config_mat),c("time", which_compartments)]), id.vars = "time")
+                    obs_melt <- reshape2::melt(as.data.frame(epimodel$dat[,c("time", epimodel$meas_vars)]), id.vars = epimodel$time_var)
                     
-                    epiplot <- ggplot(config_melt, aes(x = time, y = value, colour = variable)) + geom_step() + theme_bw() + labs(x = "Time", y = "Count") + scale_colour_discrete(guide = guide_legend(title = "True compartment count")) + geom_point(data = obs_melt, aes(x = time, y = value, colour = variable, shape = variable)) + scale_shape_discrete(guide = guide_legend(title = "Observed count"))
+                    epiplot <- ggplot2::ggplot(config_melt, aes(x = time, y = value, colour = variable)) + ggplot2::geom_step() + ggplot2::theme_bw() + ggplot2::labs(x = "Time", y = "Count") + ggplot2::scale_colour_discrete(guide = guide_legend(title = "True compartment count")) + ggplot2::geom_point(data = obs_melt, aes(x = time, y = value, colour = variable, shape = variable)) + ggplot2::scale_shape_discrete(guide = guide_legend(title = "Observed count"))
           }
           
           if(obs & !config) {

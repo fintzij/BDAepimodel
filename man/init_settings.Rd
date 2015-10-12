@@ -4,26 +4,33 @@
 \alias{init_settings}
 \title{Initialize a bookkeeping list of MCMC settings.}
 \usage{
-init_settings(niter, save_params_every = 1,
+init_settings(epimodel, niter, configs_to_redraw, save_params_every = 1,
   save_configs_every = niter\%/\%100, kernel, cov_mtx = NULL,
-  configs_to_redraw, to_estimation_scale = NULL,
-  from_estimation_scale = NULL, seed = NULL)
+  to_estimation_scale = NULL, from_estimation_scale = NULL, seed = NULL)
 }
 \arguments{
+\item{epimodel}{epimodel object}
+
 \item{niter}{number of iterations/parameter updates for which to run the
 sampler.}
+
+\item{configs_to_redraw}{number of subject level trajectories to sample
+between parameter updates.}
+
+\item{save_params_every}{thin parameter updates by saving every k-th draw,
+defaults to 1.}
+
+\item{save_configs_every}{thin configurations by saving the current
+configuration after every k-th parameter update.}
 
 \item{kernel}{transition kernel for parameters, provided as a list of
 transition functions. Each function should take as an argument only the
 epimodel list. The kernels should be self-contained, in particular making
 any necessary transformations of parameters and calculating prior
 probabilities as needed. Each kernel function should include a call to
-\code{update_params} at the end}
+\code{update_params} at the end.}
 
-\item{cov_mtx}{covariance matrix for parameters to be used in M-H updates.}
-
-\item{configs_to_redraw}{number of subject level trajectories to sample
-between parameter updates.}
+\item{cov_mtx}{covariance matrix to be used in the transition kernels.}
 
 \item{to_estimation_scale}{list of functions for transforming model
 parameters to the scale on which new parameters should be proposed. List
@@ -36,12 +43,7 @@ scale used to evaluate the process likelihood. List element names should
 correspond to exactly to the parameter names given in \code{params}.}
 
 \item{seed}{optional seed value. A random seed is generated and saved if none
- is supplied.}
-
-\item{params_every}{thin parameter updates by saving every k-th draw.}
-
-\item{configs_every}{thin configurations by saving the current configuration
-after every k-th parameter update.}
+  is supplied.}
 }
 \value{
 bookkeeping list

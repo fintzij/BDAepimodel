@@ -9,9 +9,6 @@
 #' 
 plot_latent_posterior <- function(epimodel, states, times) {
           
-          require(mcmc)
-          require(ggplot2)
-          
           if(missing(states)) states <- epimodel$model$meas_vars
           if(missing(times)) times <- seq(min(epimodel$model$obstimes), max(epimodel$model$obstimes), length = 100)
           
@@ -30,9 +27,9 @@ plot_latent_posterior <- function(epimodel, states, times) {
           
           trajecs_dist <- data.frame(time = rep(times, length(states)), state = rep(states, length(times)), mean = 0, lower = 0, upper = 0)
           trajecs_dist$mean <- rowMeans(counts) 
-          trajecs_se <- sqrt(sapply(apply(counts, 1, initseq), "[[", "var.pos") / ncol(counts))
+          trajecs_se <- sqrt(sapply(apply(counts, 1, mcmc::initseq), "[[", "var.pos") / ncol(counts))
           trajecs_dist$lower <- trajecs_dist$mean - 1.96*trajecs_se
           trajecs_dist$upper <- trajecs_dist$mean + 1.96*trajecs_se
           
-          return(print(ggplot(trajecs_dist, aes(x = time, y = mean, colour = state)) + geom_ribbon(aes(ymin = lower, ymax = upper, fill = state), alpha = 0.2) + geom_line() + theme_bw() + labs(title = "Posterior distribution of latent process", x = "Count", y = "Time")))
+          return(print(ggplot2::ggplot(trajecs_dist, aes(x = time, y = mean, colour = state)) + ggplot2::geom_ribbon(aes(ymin = lower, ymax = upper, fill = state), alpha = 0.2) + ggplot2::geom_line() + ggplot2::theme_bw() + ggplot2::labs(title = "Posterior distribution of latent process", x = "Count", y = "Time")))
 }

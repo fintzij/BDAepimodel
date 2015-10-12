@@ -7,12 +7,13 @@
 #' trajectory via Metropolis-Hastings.
 #' 
 #' @inheritParams get_tpms_to_build
+#' @param iter iteration number
 #'   
 #' @return updated configuration matrix and observation matrix objects in the
 #'   epimodel environment.
 #' @export
 
-draw_trajec <- function(epimodel, subject) {
+draw_trajec <- function(epimodel, subject, iter) {
           
           # generate subject ID
           .subj_ID <- paste0(".X", subject)
@@ -33,5 +34,5 @@ draw_trajec <- function(epimodel, subject) {
           insert_trajectory(epimodel, subject = subject, subj_ID = .subj_ID, reinsertion = FALSE)
           
           # accept or reject the proposed path via metropolis-hastings
-          MH_accept_reject(epimodel, subject = subject, subj_ID = .subj_ID)
+          MH_accept_reject(epimodel, subject = subject, subj_ID = .subj_ID, iter = iter)
 }
