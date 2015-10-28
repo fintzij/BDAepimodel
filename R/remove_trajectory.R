@@ -29,6 +29,12 @@ remove_trajectory <- function(epimodel, subject, save_path) {
           # compute the likelihood of the subject's trajectory from a
           # time-inhomogeneous CTMC - only computed when current path is saved
           if(save_path) {
+                    
+                    # check to see if any additional irms are needed.
+                    # if so, check_irm will instatiate the required
+                    # matrices and their eigen decompositions
+                    check_irm(epimodel)
+                    
                     epimodel$likelihoods$subj_likelihood_cur <- calc_subj_likelihood(epimodel = epimodel, subject = subject, subj_ID = .subj_ID, log = TRUE)
           }
           

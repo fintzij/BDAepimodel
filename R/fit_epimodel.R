@@ -24,25 +24,18 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
           
           if(is.null(epimodel$config_mat)) {
                     warning("An initial configuration was not provided so one has been generated.")
-                    #############################################
-                    ### NEED TO WRITE INITIALIZATION FUNCTION ###
-                    #############################################
-                    epimodel$config_mat
+                    epimodel <- init_augmentation(epimodel)
           }
           
           .epimodel <- prepare_epimodel(epimodel)
           
-          # move simulation settings to internal objects
+          # move some of the simulation settings to internal objects
           niter               <- .epimodel$sim_settings$niter
-          burnin              <- .epimodel$sim_settings$burnin
           save_params_every   <- .epimodel$sim_settings$save_params_every
           save_configs_every  <- .epimodel$sim_settings$save_configs_every
           kernel              <- .epimodel$sim_settings$kernel
-          cov_mtx             <- .epimodel$sim_settings$cov_mtx
           configs_to_redraw   <- .epimodel$sim_settings$configs_to_redraw
           config_replacement  <- .epimodel$sim_settings$config_replacement
-          to_estimation_scale <- .epimodel$sim_settings$to_estimation_scale
-          from_estimation_scale <- .epimodel$sim_settings$from_estimation_scale
 
           # initialize list for storing results
           results <- init_results(.epimodel)
@@ -62,7 +55,7 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
           
           # tune the covariance matrices if tuning was desired
           if(.epimodel$tune) {
-                    tune_proposal(.epimodel, epimodel_envir = TRUE)
+                    tune_proposal(epimodel = .epimodel, epimodel_envir = TRUE)
           }
           
           # get start time
@@ -80,11 +73,6 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
 
                     # cycle through subject-level trajectories to be re-drawn
                     for(j in 1:configs_to_redraw) {
-
-                              # check to see if any additional irms are needed.
-                              # if so, check_irm will instatiate the required
-                              # matrices and their eigen decompositions
-                              check_irm(.epimodel)
                               
                               # remove trajectory from the counts in config_mat 
                               # and obs_mat, and update the tpm sequences to 
@@ -119,7 +107,7 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                     .epimodel$initdist_kernel(.epimodel)
                     
                     # record acceptances/rejections for the parameter updates
-                    results$accepts[k - 1, names(.epimodel$params)] <- as.numeric(.epimodel$params == .params_cur)
+                    results$accepts[k - 1, names(.epimodel$params)] <- as.numeric(.epimodel$params != .params_cur)
                     
                     # save parameter values and log-likelihood
                     if(k %% save_params_every == 0) {
@@ -137,7 +125,7 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                     
                     if(monitor && (k%%save_configs_every) == 0) {
                               print(k)
-                              ts.plot(results$log_likelihood, xlab = "Iteration", ylab = "log-likelihood")
+                              # ts.plot(results$log_likelihood, xlab = "Iteration", ylab = "log-likelihood")
                     }
           }
           

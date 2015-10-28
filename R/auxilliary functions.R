@@ -21,7 +21,7 @@ logit <- function(x) {
 #' @export
 #' 
 expit <- function(x) {
-          1/(1 + exp(x))
+          1/(1 + exp(-x))
 }
 
 #' Normalize a vector or matrix. 

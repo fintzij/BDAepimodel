@@ -42,6 +42,11 @@ insert_trajectory <- function(epimodel, subject, subj_ID, reinsertion) {
           # following a MH rejection
           if(!reinsertion) {
                     
+                    # check to see if any additional irms are needed.
+                    # if so, check_irm will instatiate the required
+                    # matrices and their eigen decompositions
+                    check_irm(epimodel)
+                    
                     epimodel$likelihoods$subj_likelihood_new <- calc_subj_likelihood(epimodel = epimodel, subject = subject, subj_ID = subj_ID, log = TRUE)
                     
           }

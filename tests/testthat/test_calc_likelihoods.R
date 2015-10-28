@@ -156,15 +156,15 @@ test_that("population-level likelihoods are correctly computed within each itera
           # save new parameters every iteration
           # save every tenth configuration matrix
           # resample 10 subject-level trajectories in between parameter updates
-          epimodel$sim_settings <- init_settings(niter = 3,
-                                                 burnin <- 0,
-                                                 save_params_every = 1, 
-                                                 save_configs_every = 1,
-                                                 kernel = kernel,
-                                                 cov_mtx = cov_mtx,
-                                                 configs_to_redraw = 10,
-                                                 to_estimation_scale = to_estimation_scale,
-                                                 from_estimation_scale = from_estimation_scale)
+          epimodel <- init_settings(epimodel, 
+                                    niter = 3,
+                                    save_params_every = 1, 
+                                    save_configs_every = 1,
+                                    kernel = kernel,
+                                    cov_mtx = cov_mtx,
+                                    configs_to_redraw = 10,
+                                    to_estimation_scale = to_estimation_scale,
+                                    from_estimation_scale = from_estimation_scale)
           
           
           # convert epimodel list to environment to enable multiple assignment

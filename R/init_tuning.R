@@ -54,7 +54,7 @@ init_tuning <- function(epimodel, tune_params, cov_mtx = NULL, cov_scale = (2.38
           
           # set the covariance matrix if one is specified
           if(!is.null(cov_mtx)) {
-                    epimodel$sim_settings$cov_mtx <- cov_scale * cov_mtx
+                    epimodel$sim_settings$cov_mtx <- cov_scale^2 * cov_mtx
           }
           
           epimodel$tune_settings <- list(tune_params = tune_params,

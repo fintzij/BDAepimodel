@@ -1,20 +1,24 @@
 Package: BDAepimodel
 Type: Package
-Title: Fit stochastic epidemic models via Bayesian data augmentation
+Title: Fit Stochastic Epidemic Models via Bayesian Data Augmentation
 Version: 0.2
-Date: 2015-05-23
+Date: 2015-10-18
 Author: Jon Fintzi, Jon Wakefield, Vladimir Minin
 Maintainer: Jon Fintzi <fintzij@uw.edu>
 Description: Tractable fitting of stochastic epidemic models via Bayesian data augmentation
 License: What license is it under? GPL-3
+LazyData: TRUE
 Imports:  ggplot2,
           reshape2,
           doParallel,
           foreach,
           pryr,
           MCMCpack,
-          MASS
+          MASS,
+          Rcpp (>= 0.12.1)
 Suggests: formatR,
 	knitr,
           testthat
+LinkingTo: 
+          Rcpp
 VignetteBuilder: knitr

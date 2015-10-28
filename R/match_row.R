@@ -13,14 +13,15 @@
 #' 
 match_row <- function(x, table, return_value) {
           
+          # if there is only one index compartment, no need to loop
           if(length(x) == 1L) {
                     .inds <- which(table[, 1, drop = FALSE] == as.numeric(x))
                     
           } else {
-                    # initialize vector of TRUE values
+                    # initialize vector of values to all rows
                     .inds <- 1:nrow(table)
                     
-                    # find matches
+                    # find matches, dropping indices for non-concordant rows 
                     for(j in 1:length(x)) {
                               .inds <- .inds[table[.inds, j, drop = FALSE] == x[j]]
                     }

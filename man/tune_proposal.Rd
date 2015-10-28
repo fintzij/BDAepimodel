@@ -17,6 +17,8 @@ updated covariance matrix and scale factor within the epimodel
   environment, or a list with tuning results
 }
 \description{
-Tune proposal distribution for randow walk M-H parameter proposals.
+The empirical covariance matrix is tuned either by taking weighted averages
+or by re-tuning the scale multiple until the acceptance rate is within the
+desired range.
 }
 
