@@ -7,7 +7,7 @@
 set.seed(52787)
 require(BDAepimodel)
 
-popsize <- 10
+popsize <- 5
 
 r_meas_process <- function(state, meas_vars, params){
           rbinom(n = nrow(state), size = state[,meas_vars], prob = params["rho"])
@@ -22,7 +22,7 @@ d_meas_process <- function(state, meas_vars, params, log = TRUE) {
 epimodel <- init_epimodel(obstimes = seq(0, 10, by = 1),
                           popsize = popsize,
                           states = c("S", "I", "R"), 
-                          params = c(beta = rnorm(1, 0.5, 1e-5), mu = rnorm(1, 1, 1e-5), rho = 0.5, S0 = 0.8, I0 = 0.2, R0 = 0), 
+                          params = c(beta = rnorm(1, 1, 1e-5), mu = rnorm(1, 1, 1e-5), rho = 0.5, S0 = 0.8, I0 = 0.2, R0 = 0), 
                           rates = c("beta * I", "mu"), 
                           flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                           meas_vars = "I",
@@ -32,7 +32,7 @@ epimodel <- init_epimodel(obstimes = seq(0, 10, by = 1),
 
 # Simulate the epidemic ---------------------------------------------------
 
-epimodel <- simulate_epimodel(epimodel = epimodel, lump = TRUE, trim = FALSE)
+epimodel <- simulate_epimodel(epimodel = epimodel, lump = TRUE, trim = TRUE)
 
 
 # Set the MCMC settings ---------------------------------------------------
@@ -197,17 +197,17 @@ epimodel <- init_settings(epimodel,
                           to_estimation_scale = to_estimation_scale,
                           from_estimation_scale = from_estimation_scale)
 
-epimodel <- init_tuning(epimodel,
-                        tune_params = c("beta", "mu", "rho"),
-                        cov_mtx = matrix(c(1, -0.865, -0.747, 
-                                           -0.865, 1, 0.831,
-                                           -0.747, 0.831, 1), nrow = 3),
-                        cov_scale = 0.02, 
-                        mintune = 20,
-                        maxtune = 50, 
-                        ntu = 5000,
-                        tunewt = 0.25,
-                        target_accept = c(0.15, 0.5))
+# epimodel <- init_tuning(epimodel,
+#                         tune_params = c("beta", "mu", "rho"),
+#                         cov_mtx = matrix(c(1, -0.865, -0.747, 
+#                                            -0.865, 1, 0.831,
+#                                            -0.747, 0.831, 1), nrow = 3),
+#                         cov_scale = 0.02, 
+#                         mintune = 20,
+#                         maxtune = 50, 
+#                         ntu = 5000,
+#                         tunewt = 0.25,
+#                         target_accept = c(0.15, 0.5))
 
 # fit the model -----------------------------------------------------------
 

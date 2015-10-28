@@ -105,9 +105,10 @@ tune_proposal <- function(epimodel, epimodel_envir) {
                               # tune the covariance matrix
                               epimodel$sim_settings$cov_mtx <- epimodel$sim_settings$cov_mtx * epimodel$tune_settings$cov_scale ^2 + diag(abs(rnorm(length(epimodel$tune_settings$tune_params), 0, 1e-5)))
                               
-                              if((findInterval(mean(accepts), epimodel$tune_settings$target_accept) != 1) & (p == epimodel$tune_settings$maxtune)) warning("Tuning failed to find an acceptable covariance matrix. Restart at a different point.")
-                              }
                     }
+                    
+                    if((findInterval(mean(accepts), epimodel$tune_settings$target_accept) != 1) & (p == epimodel$tune_settings$maxtune)) stop("Tuning failed to find an acceptable covariance matrix. Restart at a different point.")
+          }
           
           
           if(epimodel_envir) {

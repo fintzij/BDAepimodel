@@ -8,7 +8,7 @@ using namespace Rcpp;
 
 // buildEigenArray
 void buildEigenArray(arma::mat& eigenvals, Rcpp::NumericVector& eigenvecs, Rcpp::NumericVector& inversevecs, Rcpp::NumericVector& irm_array);
-RcppExport SEXP BDAstep_buildEigenArray(SEXP eigenvalsSEXP, SEXP eigenvecsSEXP, SEXP inversevecsSEXP, SEXP irm_arraySEXP) {
+RcppExport SEXP BDAepimodel_buildEigenArray(SEXP eigenvalsSEXP, SEXP eigenvecsSEXP, SEXP inversevecsSEXP, SEXP irm_arraySEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< arma::mat& >::type eigenvals(eigenvalsSEXP);
@@ -21,7 +21,7 @@ END_RCPP
 }
 // buildRateArray
 void buildRateArray(Rcpp::NumericVector& irm_array, const Rcpp::NumericMatrix& rates, const Rcpp::NumericMatrix& flow_inds);
-RcppExport SEXP BDAstep_buildRateArray(SEXP irm_arraySEXP, SEXP ratesSEXP, SEXP flow_indsSEXP) {
+RcppExport SEXP BDAepimodel_buildRateArray(SEXP irm_arraySEXP, SEXP ratesSEXP, SEXP flow_indsSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type irm_array(irm_arraySEXP);
@@ -31,9 +31,21 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// getObsTimeInds
+Rcpp::IntegerVector getObsTimeInds(const Rcpp::NumericMatrix& pop_mat, const Rcpp::NumericVector& obstimes);
+RcppExport SEXP BDAepimodel_getObsTimeInds(SEXP pop_matSEXP, SEXP obstimesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< const Rcpp::NumericMatrix& >::type pop_mat(pop_matSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type obstimes(obstimesSEXP);
+    __result = Rcpp::wrap(getObsTimeInds(pop_mat, obstimes));
+    return __result;
+END_RCPP
+}
 // joinCubes
 arma::cube joinCubes(Rcpp::NumericVector& firstcube, Rcpp::NumericVector& secondcube);
-RcppExport SEXP BDAstep_joinCubes(SEXP firstcubeSEXP, SEXP secondcubeSEXP) {
+RcppExport SEXP BDAepimodel_joinCubes(SEXP firstcubeSEXP, SEXP secondcubeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -45,7 +57,7 @@ END_RCPP
 }
 // removeSubjPath
 void removeSubjPath(Rcpp::NumericVector& pop_mat, Rcpp::NumericVector& config_mat, Rcpp::IntegerVector subj_inds);
-RcppExport SEXP BDAstep_removeSubjPath(SEXP pop_matSEXP, SEXP config_matSEXP, SEXP subj_indsSEXP) {
+RcppExport SEXP BDAepimodel_removeSubjPath(SEXP pop_matSEXP, SEXP config_matSEXP, SEXP subj_indsSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type pop_mat(pop_matSEXP);
@@ -55,9 +67,21 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// reorderMat
+arma::mat reorderMat(arma::mat& oldmtx, arma::uvec& ord);
+RcppExport SEXP BDAepimodel_reorderMat(SEXP oldmtxSEXP, SEXP ordSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::mat& >::type oldmtx(oldmtxSEXP);
+    Rcpp::traits::input_parameter< arma::uvec& >::type ord(ordSEXP);
+    __result = Rcpp::wrap(reorderMat(oldmtx, ord));
+    return __result;
+END_RCPP
+}
 // resolveSubjContrib
 void resolveSubjContrib(Rcpp::NumericVector& pop_mat, const Rcpp::IntegerVector row_inds, const Rcpp::IntegerVector col_inds, bool insertion);
-RcppExport SEXP BDAstep_resolveSubjContrib(SEXP pop_matSEXP, SEXP row_indsSEXP, SEXP col_indsSEXP, SEXP insertionSEXP) {
+RcppExport SEXP BDAepimodel_resolveSubjContrib(SEXP pop_matSEXP, SEXP row_indsSEXP, SEXP col_indsSEXP, SEXP insertionSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type pop_mat(pop_matSEXP);
@@ -70,7 +94,7 @@ END_RCPP
 }
 // retrieveKeys
 arma::vec retrieveKeys(Rcpp::IntegerVector inds, const arma::mat& irm_lookup, const arma::mat& pop_mat, const arma::vec& index_state_num);
-RcppExport SEXP BDAstep_retrieveKeys(SEXP indsSEXP, SEXP irm_lookupSEXP, SEXP pop_matSEXP, SEXP index_state_numSEXP) {
+RcppExport SEXP BDAepimodel_retrieveKeys(SEXP indsSEXP, SEXP irm_lookupSEXP, SEXP pop_matSEXP, SEXP index_state_numSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -80,5 +104,50 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type index_state_num(index_state_numSEXP);
     __result = Rcpp::wrap(retrieveKeys(inds, irm_lookup, pop_mat, index_state_num));
     return __result;
+END_RCPP
+}
+// subjectLikelihood
+double subjectLikelihood(const int subj_ID, const arma::mat& pop_mat, const arma::mat& config_mat, Rcpp::NumericVector& irm_array, const Rcpp::NumericVector& initdist, const arma::uvec& keys, const arma::uvec& inds, bool loglik);
+RcppExport SEXP BDAepimodel_subjectLikelihood(SEXP subj_IDSEXP, SEXP pop_matSEXP, SEXP config_matSEXP, SEXP irm_arraySEXP, SEXP initdistSEXP, SEXP keysSEXP, SEXP indsSEXP, SEXP loglikSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< const int >::type subj_ID(subj_IDSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type pop_mat(pop_matSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type config_mat(config_matSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type irm_array(irm_arraySEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type initdist(initdistSEXP);
+    Rcpp::traits::input_parameter< const arma::uvec& >::type keys(keysSEXP);
+    Rcpp::traits::input_parameter< const arma::uvec& >::type inds(indsSEXP);
+    Rcpp::traits::input_parameter< bool >::type loglik(loglikSEXP);
+    __result = Rcpp::wrap(subjectLikelihood(subj_ID, pop_mat, config_mat, irm_array, initdist, keys, inds, loglik));
+    return __result;
+END_RCPP
+}
+// tpmProdSeqs
+void tpmProdSeqs(Rcpp::NumericVector& tpm_prods, Rcpp::NumericVector& tpms, Rcpp::IntegerVector obs_time_inds);
+RcppExport SEXP BDAepimodel_tpmProdSeqs(SEXP tpm_prodsSEXP, SEXP tpmsSEXP, SEXP obs_time_indsSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type tpm_prods(tpm_prodsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type tpms(tpmsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type obs_time_inds(obs_time_indsSEXP);
+    tpmProdSeqs(tpm_prods, tpms, obs_time_inds);
+    return R_NilValue;
+END_RCPP
+}
+// tpmSeqs
+void tpmSeqs(Rcpp::NumericVector& tpms, arma::mat& pop_mat, arma::mat eigen_vals, Rcpp::NumericVector& eigen_vecs, Rcpp::NumericVector& inverse_vecs, Rcpp::IntegerVector& irm_keys);
+RcppExport SEXP BDAepimodel_tpmSeqs(SEXP tpmsSEXP, SEXP pop_matSEXP, SEXP eigen_valsSEXP, SEXP eigen_vecsSEXP, SEXP inverse_vecsSEXP, SEXP irm_keysSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type tpms(tpmsSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type pop_mat(pop_matSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type eigen_vals(eigen_valsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type eigen_vecs(eigen_vecsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type inverse_vecs(inverse_vecsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type irm_keys(irm_keysSEXP);
+    tpmSeqs(tpms, pop_mat, eigen_vals, eigen_vecs, inverse_vecs, irm_keys);
+    return R_NilValue;
 END_RCPP
 }

@@ -1,54 +1,54 @@
 #' Calculate the likelihood for a subject-level trajectory based on a
 #' time-inhomogeneous CTMC.
-#' 
+#'
 #' @inheritParams calc_pop_likelihood
 #' @param subj_ID string for subject ID
-#'   
+#'
 #' @return likelihood or log-likelihood
 #' @export
 
 calc_subj_likelihood <- function(epimodel, subject, subj_ID, log = TRUE) {
-          
-          # get the appropriate indices to exclude the intermediate observation time rows
-          .left_endpoints     <- c(1, which(epimodel$config_mat[,"ID"] != 0))
-          .right_endpoints    <- c(.left_endpoints[-1], epimodel$.ind_final_config)
-          
+
+        # get the appropriate indices to exclude the intermediate observation time rows
+        .left_endpoints     <- c(1, c(1:(epimodel$ind_final_config))[-epimodel$obs_time_inds])
+        .right_endpoints    <- c(.left_endpoints[-1], epimodel$ind_final_config)
+
           # get the subject_path
           .subj_path          <- epimodel$config_mat[c(1, .right_endpoints), subj_ID]
           .path_length        <- length(.subj_path)
-          
+
           # compute the time diffs
           .time_diffs <- epimodel$config_mat[.right_endpoints, "time"] - epimodel$config_mat[.left_endpoints, "time"]
-          
+
           # get irm keys
           .irm_keys <- generate_keys(epimodel, inds = .left_endpoints, lookup = TRUE)
-          
+
           # get hazards and event rates
           .hazards            <- rep(0, length(.left_endpoints))
           .event_rates        <- rep(0, length(.left_endpoints))
-          
+
           for(r in 1:length(.hazards)) {
-                    
-                    .irm <- epimodel$.irm[[.irm_keys[r]]]
-                    
+
+                    .irm <- epimodel$irm[[.irm_keys[r]]]
+
                     # get the hazard from the appropriate rate matrix
                     .hazards[r] <- .irm[.subj_path[r], .subj_path[r]]
-                    
+
                     # check if the event corresponded to the subject. if so, get the event rate
                     if(epimodel$config_mat[.right_endpoints[r], "ID"] == subject) {
-                              
+
                               .event_rates[r] <- .irm[.subj_path[r], .subj_path[r + 1]]
-                                        
+
                     }
           }
-          
+
           # calculate subject level likelihood
-          subj_likelihood <- log(epimodel$.initdist[.subj_path[1]]) + sum(log(.event_rates[.event_rates != 0])) + sum(.hazards * .time_diffs)
-          
+          subj_likelihood <- log(epimodel$initdist[.subj_path[1]]) + sum(log(.event_rates[.event_rates != 0])) + sum(.hazards * .time_diffs)
+
           # exponentiate if desired
           if(log == FALSE) {
                     subj_likelihood <- exp(subj_likelihood)
           }
-          
+
           return(subj_likelihood)
 }

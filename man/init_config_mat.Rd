@@ -4,9 +4,11 @@
 \alias{init_config_mat}
 \title{initializes the bookkeeping object for population level counts}
 \usage{
-init_config_mat(init_state, t0, tmax)
+init_config_mat(epimodel, init_state, t0, tmax)
 }
 \arguments{
+\item{epimodel}{an epimodel list}
+
 \item{t0}{the first observation time}
 
 \item{tmax}{the final observation time}

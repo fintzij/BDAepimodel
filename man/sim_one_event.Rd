@@ -7,9 +7,8 @@
 sim_one_event(config_list, epimodel, lump)
 }
 \arguments{
-\item{config_list}{list with three named elements - config, rate_mat, and
-dt_mat - where config should correspond to a row in
-\code{epimodel$config}.}
+\item{config_list}{list with three named elements - config_mat, pop_mat,
+rate_mat, and dt_mat.}
 
 \item{epimodel}{list of bookkeeping and model objects, or an analagous
 environment. If not supplied, the list will be generated. The epimodel list

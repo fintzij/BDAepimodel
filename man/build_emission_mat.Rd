@@ -4,9 +4,11 @@
 \alias{build_emission_mat}
 \title{Updates the matrix of emission probabilities}
 \usage{
-build_emission_mat(epimodel)
+build_emission_mat(emission_mat, epimodel)
 }
 \arguments{
+\item{emission_mat}{matrix of emission probabilities to be updated}
+
 \item{epimodel}{}
 }
 \value{

@@ -5,9 +5,11 @@
 \title{Construct the forward-backward matrices in the forward pass of the FB
 algorithm.}
 \usage{
-build_fb_mats(epimodel)
+build_fb_mats(fb_mats, epimodel)
 }
 \arguments{
+\item{fb_mats}{array of forward-backward matrices to be updated}
+
 \item{epimodel}{}
 }
 \value{
