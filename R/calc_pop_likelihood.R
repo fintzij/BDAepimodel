@@ -13,10 +13,6 @@
 
 calc_pop_likelihood <- function(epimodel, params = NULL, log = FALSE) {
 
-          if(is.null(epimodel$ind_final_config)) {
-                    epimodel$ind_final_config <- which(epimodel$pop_mat[,"time"] == max(epimodel$obstimes))
-          }
-
           # get the appropriate indices to exclude the intermediate observation time rows
           .left_endpoints     <- c(1, c(1:(epimodel$ind_final_config))[-epimodel$obs_time_inds])
           .right_endpoints    <- c(.left_endpoints[-1], epimodel$ind_final_config)

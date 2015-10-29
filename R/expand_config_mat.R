@@ -53,6 +53,17 @@ expand_config_mat <- function(epimodel, buffer_size = NULL) {
           # expand the configuration matrix
           epimodel$pop_mat <- rbind(epimodel$pop_mat, matrix(NA, nrow = buffer_size, ncol = ncol(epimodel$pop_mat)))
           epimodel$config_mat <- rbind(epimodel$config_mat, matrix(NA, nrow = buffer_size, ncol = ncol(epimodel$config_mat)))
+          
+          if(!is.null(epimodel$tpms)) {
+                    
+                    # create empty tpm matrices
+                    new_tpm_array  <- array(0, dim = c(length(epimodel$states), length(epimodel$states), buffer_size))
+                    new_prod_array <- array(0, dim = c(length(epimodel$states), length(epimodel$states), buffer_size))
+                    
+                    # append to existing tpm array
+                    epimodel$tpms <- joinCubes(epimodel$tpms, new_tpm_array)
+                    epimodel$tpm_products <- joinCubes(epimodel$tpm_products, new_prod_array)
+          }
 
           return(epimodel)
 }

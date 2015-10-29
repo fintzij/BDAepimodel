@@ -19,10 +19,10 @@ draw_trajec <- function(epimodel, subject, iter) {
           epimodel$subj_row_ind <- epimodel$ind_final_config + 1
           
           # sample status at observation times
-          sample_at_obs_times(epimodel, subject = subject, subj_ID = .subj_ID)
+          epimodel$config_mat <- sample_at_obs_times(config_mat = epimodel$config_mat, epimodel = epimodel, subject = subject)
           
           # sample status at event times
-          sample_at_event_times(epimodel, subject = subject, subj_ID = .subj_ID)
+          epimodel$config_mat <- sample_at_event_times(config_mat = epimodel$config_mat, epimodel = epimodel, subject = subject)
           
           # sample paths in inter-event intervals
           sample_path(epimodel, subject = subject, subj_ID = .subj_ID)
@@ -32,4 +32,6 @@ draw_trajec <- function(epimodel, subject, iter) {
           
           # accept or reject the proposed path via metropolis-hastings
           MH_accept_reject(epimodel, subject = subject, subj_ID = .subj_ID, iter = iter)
+          
+          return(epimodel)
 }

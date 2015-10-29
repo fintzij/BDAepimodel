@@ -43,14 +43,21 @@ prepare_epimodel <- function(epimodel) {
           # initialize the vector of subject-level initial state probabilities
           epimodel$initdist <- build_initdist(epimodel)
 
+          # initialize objects for storing rate matrices and eigen decompositions
+          epimodel <- init_irm(epimodel)
+          
+          # compute the rates
+          rates <- do.call(cbind, lapply(epimodel$rates, do.call, list(state = epimodel$irm_key_lookup, params = epimodel$params)))
+          
+          # update the rate matrices
+          buildRateArray(irm_array = epimodel$irm, rates = rates, flow_inds = epimodel$flow_inds)
+          
+          epimodel$keys <- retrieveKeys(1:epimodel$ind_final_config, epimodel$irm_key_lookup, epimodel$pop_mat, epimodel$index_state_num)
+          
           # compute the population level likelihood, and the measurement
           # process likelihood
           epimodel$likelihoods$pop_likelihood_cur <- calc_pop_likelihood(epimodel = epimodel, log = TRUE)
           epimodel$likelihoods$obs_likelihood <- calc_obs_likelihood(epimodel, log = TRUE)
-
-          # initialize objects for storing rate matrices and eigen decompositions
-          epimodel <- init_irm(epimodel)
-
 
           return(epimodel)
 }

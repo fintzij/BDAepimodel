@@ -232,9 +232,6 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
                   epimodel$flow_inds[j, ] <- c(which(epimodel$flow[j, ] == -1), which(epimodel$flow[j, ] == 1))
           }
 
-          # default the tuning to FALSE.
-          epimodel$tune <- FALSE
-
           # return bookkeeping list
           return(epimodel)
 }

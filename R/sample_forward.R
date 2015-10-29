@@ -12,75 +12,79 @@
 #'   
 #' @export
 
-sample_forward <- function(epimodel, subject, subj_ID, init_time, final_time, init_state, final_state, irm_key) {
+sample_forward <- function(epimodel, subject, init_time, final_time, init_state, final_state, irm_key) {
           
-          .valid_path         <- FALSE
+          valid_path         <- FALSE
           
-          while(.valid_path == FALSE) {
+          while(valid_path == FALSE) {
                     
-                    .keep_going         <- TRUE
-                    .t                  <- init_time
-                    .cur_state          <- init_state
-                    .ind_cur            <- epimodel$.subj_row_ind
+                    keep_going         <- TRUE
+                    t                  <- init_time
+                    cur_state          <- init_state
+                    ind_cur            <- epimodel$subj_row_ind
                     
-                    while(.keep_going == TRUE) {
+                    while(keep_going == TRUE) {
                               
-                              if(.cur_state %in% epimodel$absorbing_states) {
+                              if(cur_state %in% epimodel$absorbing_states) {
                                         
                                         # stop forward sampling
-                                        .keep_going = FALSE
+                                        keep_going = FALSE
                                         
-                                        # determine if the path is valid. 
-                                        if(.cur_state == final_state) {
-                                                  .valid_path <- TRUE
-                                                  epimodel$.subj_row_ind <- .ind_cur
+                                        # determine if the path is valid 
+                                        if(cur_state == final_state) {
+                                                  valid_path <- TRUE
+                                                  epimodel$subj_row_ind <- ind_cur
                                                   
                                         } else {
-                                                  .valid_path <- FALSE
-                                                  epimodel$config_mat[epimodel$.subj_row_ind : .ind_cur, ] <- NA
-                                        }
+                                                  valid_path <- FALSE
+                                                  epimodel$pop_mat[epimodel$subj_row_ind : ind_cur, ] <- NA
+                                                  epimodel$config_mat[epimodel$subj_row_ind : ind_cur, subject] <- NA                                        }
                                         
                                         break
                               } 
                               
                               # sample the next transition time
-                              .t <- .t + rexp(1, rate = abs(epimodel$.irm[[irm_key]][.cur_state, .cur_state]))
+                              t <- t + rexp(1, rate = abs(epimodel$irm[cur_state, cur_state, irm_key]))
                               
                               # if the next transition time is after the right endpoint, 
                               # stop sampling forward and determine if the path is valid
-                              if(.t > final_time) {
+                              if(t > final_time) {
                                         
                                         # stop forward sampling
-                                        .keep_going = FALSE
+                                        keep_going = FALSE
                                         
                                         # determine if the path is valid. If valid, keep 
-                                        # the extra rows and set epimodel$.subj_row_ind to 
-                                        # .ind_cur. otherwise, .ind_cur and .cur_state will be 
+                                        # the extra rows and set epimodel$subj_row_ind to 
+                                        # ind_cur. otherwise, ind_cur and cur_state will be 
                                         # reset in the next attempt
-                                        if(.cur_state == final_state) {
-                                                  .valid_path <- TRUE
-                                                  epimodel$.subj_row_ind <- .ind_cur
+                                        if(cur_state == final_state) {
+                                                  valid_path <- TRUE
+                                                  epimodel$subj_row_ind <- ind_cur
                                         } else {
-                                                  .valid_path <- FALSE
-                                                  epimodel$config_mat[epimodel$.subj_row_ind : .ind_cur, ] <- NA
+                                                  valid_path <- FALSE
+                                                  epimodel$pop_mat[epimodel$subj_row_ind : ind_cur, ] <- NA
+                                                  epimodel$config_mat[epimodel$subj_row_ind : ind_cur, subject] <- NA
                                         }
                                         
-                              # if .t <= final_time, sample the next state and 
+                              # if t <= final_time, sample the next state and 
                               # create an updated row in the config matrix
                               } else {
                                         # sample the next state
-                                        .next_state <- sample.int(epimodel$num_states, 1, prob = pmax(epimodel$.irm[[irm_key]][.cur_state,], 0))
+                                        next_state <- sample.int(epimodel$num_states, 1, prob = pmax(epimodel$irm[cur_state, , irm_key], 0))
                                         
                                         # identify the event
-                                        .event <- which((epimodel$flow[, .cur_state] == -1) & (epimodel$flow[, .next_state] == 1))
+                                        event <- which((epimodel$flow[, cur_state] == -1) & (epimodel$flow[, next_state] == 1))
                                         
                                         # update the configuration matrix
-                                        epimodel$config_mat[.ind_cur, c("time", "ID", "Event", subj_ID)] <- c(.t, subject, .event, .next_state)
+                                        epimodel$pop_mat[ind_cur, c("time", "ID", "Event")] <- c(t, subject, event)
+                                        epimodel$config_mat[ind_cur, subject] <- next_state
                                         
                                         # update the sampling object
-                                        .ind_cur            <- .ind_cur + 1
-                                        .cur_state          <- .next_state 
+                                        ind_cur            <- ind_cur + 1
+                                        cur_state          <- next_state 
                               }
                     }
           }
+          
+          return(epimodel)
 }

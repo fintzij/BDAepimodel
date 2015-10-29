@@ -5,16 +5,16 @@
 \title{Insert a newly sampled subject-level trajectory so its contribution is
 reflected in the configuration matrix.}
 \usage{
-insert_trajectory(epimodel, subject, subj_ID, reinsertion)
+insert_trajectory(epimodel, subject, reinsertion)
 }
 \arguments{
-\item{subj_ID}{character string for subject ID code}
+\item{subject}{character string for subject ID code}
 
 \item{reinsertion}{TRUE/FALSE for whether the trajectory is to be be
   reinserted following a MH rejection}
 }
 \value{
-updated configuration matrix in the epimodel environment
+updated epimodel object
 }
 \description{
 This function also updates several bookkeeping objects - .ind_final_config

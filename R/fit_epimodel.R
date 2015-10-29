@@ -58,91 +58,99 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
         
         # generate niter parameter samples
         for(k in 2:niter) {
-                
-                # re-compute the arrays of rate matrices and eigen
-                # decompositions - only needs to be recomputed every time
-                # parameters are updated.
-                
-                # compute the rates
-                rates <- do.call(cbind, lapply(epimodel$rates, do.call, list(state = epimodel$irm_key_lookup, params = epimodel$params)))
-                
-                # update the rate matrices
-                buildRateArray(irm_array = epimodel$irm, rates = rates, flow_inds = epimodel$flow_inds)
-                
-                # update the eigen decompositions
-                buildEigenArray(eigenvals = epimodel$eigen_values, eigenvecs = epimodel$eigen_vectors, inversevecs = epimodel$inv_eigen_vectors, irm_array = epimodel$irm)
-                
-                # choose which subjects should be redrawn
-                subjects <- sample.int(n = epimodel$popsize, size = configs_to_redraw, replace = config_replacement)
-                
-                # cycle through subject-level trajectories to be re-drawn
-                for(j in 1:configs_to_redraw) {
+
+                    # re-compute the arrays of rate matrices and eigen
+                    # decompositions - only needs to be recomputed every time
+                    # parameters are updated.
+                    
+                    # compute the rates
+                    rates <- do.call(cbind, lapply(epimodel$rates, do.call, list(state = epimodel$irm_key_lookup, params = epimodel$params)))
+                    
+                    # update the rate matrices
+                    buildRateArray(irm_array = epimodel$irm, rates = rates, flow_inds = epimodel$flow_inds)
+                    
+                    # update the eigen decompositions
+                    buildEigenArray(eigenvals = epimodel$eigen_values, eigenvecs = epimodel$eigen_vectors, inversevecs = epimodel$inv_eigen_vectors, irm_array = epimodel$irm)
+                    
+                    # choose which subjects should be redrawn
+                    subjects <- sample.int(n = epimodel$popsize, size = configs_to_redraw, replace = config_replacement)
+                    
+                    # cycle through subject-level trajectories to be re-drawn
+                    for(j in 1:configs_to_redraw) {
                         
-                        # remove trajectory from the counts in config_mat
-                        # and obs_mat, and update the tpm sequences to
-                        # reflect the removal.
-                        epimodel <- remove_trajectory(epimodel, subject = subjects[j], save_path = TRUE)
-                        
-                        # update instatiate missing IRMs, update the tpms
-                        # and tpm products, the emission probability mtx,
-                        # and the FB matrices.
-                        
-                        # TPM sequence
-                        tpmSeqs(tpms = epimodel$tpms, pop_mat = epimodel$pop_mat, eigen_vals = epimodel$eigen_values, eigen_vecs = epimodel$eigen_vectors, inverse_vecs = epimodel$inv_eigen_vectors, irm_keys = epimodel$keys)
-                        
-                        # TPM product subsequences
-                        tpmProdSeqs(tpm_prods = epimodel$tpm_products, tpms = epimodel$tpms, obs_time_inds = epimodel$obs_time_inds)
-                        
-                        # Emission matrix
-                        epimodel$emission_mat <- build_emission_mat(emission_mat = epimodel$emission_mat, epimodel = epimodel)
-                        
-                        # FB matrices
-                        epimodel$fb_mats <- build_fb_mats(fb_mats = epimodel$fb_mats, epimodel = epimodel)
-                        
-                        # draw a new subject level trajectory
-                        draw_trajec(epimodel, subject = subjects[j], iter = j)
-                        
-                }
-                
-                # record the acceptance rate for trajectories
-                results$accepts[k - 1,"paths"] <- mean(epimodel$path_accept_vec)
-                
-                # update the measurement process likelihood
-                epimodel$likelihoods$obs_likelihood <- calc_obs_likelihood(epimodel, log = TRUE)
-                
-                # get the current values of the parameters
-                .params_cur <- epimodel$params
-                
-                # sample new parameters
-                for(t in 1:length(kernel)) {
+                              # remove trajectory from the counts in config_mat
+                              # and obs_mat, and update the tpm sequences to
+                              # reflect the removal.
+                              epimodel <- remove_trajectory(epimodel, subject = subjects[j], save_path = TRUE)
+                              
+                              # update instatiate missing IRMs, update the tpms
+                              # and tpm products, the emission probability mtx,
+                              # and the FB matrices.
+                              
+                              # TPM sequence
+                              tpmSeqs(tpms = epimodel$tpms, pop_mat = epimodel$pop_mat, eigen_vals = epimodel$eigen_values, eigen_vecs = epimodel$eigen_vectors, inverse_vecs = epimodel$inv_eigen_vectors, irm_keys = epimodel$keys)
+                              
+                              # TPM product subsequences
+                              tpmProdSeqs(tpm_prods = epimodel$tpm_products, tpms = epimodel$tpms, obs_time_inds = epimodel$obs_time_inds)
+                              
+                              # Emission matrix
+                              epimodel$emission_mat <- build_emission_mat(emission_mat = epimodel$emission_mat, epimodel = epimodel)
+                              
+                              # FB matrices
+                              buildFBMats(epimodel$fb_mats, epimodel$tpm_products, epimodel$emission_mat, epimodel$initdist, epimodel$obs_time_inds)                        
+                              # set variable for where to start storing additional state changes
+                              epimodel$subj_row_ind <- epimodel$ind_final_config + 1
+                              
+                              # sample status at observation times
+                              epimodel$config_mat <- sample_at_obs_times(config_mat = epimodel$config_mat, epimodel = epimodel, subject = subject)
+                              # sample status at event times
+                              epimodel$config_mat <- sample_at_event_times(config_mat = epimodel$config_mat, epimodel = epimodel, subject = subject)
+                              # sample paths in inter-event intervals
+                              epimodel <- sample_path(epimodel = epimodel, subject = subject)
+                              
+                              # insert the proposed trajectory
+                              epimodel <- insert_trajectory(epimodel = epimodel, subject = subject, reinsertion = FALSE)
+                    }
+                    
+                    # record the acceptance rate for trajectories
+                    results$accepts[k - 1,"paths"] <- mean(epimodel$path_accept_vec)
+                    
+                    # update the measurement process likelihood
+                    epimodel$likelihoods$obs_likelihood <- calc_obs_likelihood(epimodel, log = TRUE)
+                    
+                    # get the current values of the parameters
+                    .params_cur <- epimodel$params
+                    
+                    # sample new parameters
+                    for(t in 1:length(kernel)) {
                         kernel[[t]](epimodel)
-                }
-                
-                # sample new values for the initial distribution parameters
-                epimodel$initdist_kernel(epimodel)
-                
-                # record acceptances/rejections for the parameter updates
-                results$accepts[k - 1, names(epimodel$params)] <- as.numeric(epimodel$params != .params_cur)
-                
-                # save parameter values and log-likelihood
-                if(k %% save_params_every == 0) {
+                    }
+                    
+                    # sample new values for the initial distribution parameters
+                    epimodel$initdist_kernel(epimodel)
+                    
+                    # record acceptances/rejections for the parameter updates
+                    results$accepts[k - 1, names(epimodel$params)] <- as.numeric(epimodel$params != .params_cur)
+                    
+                    # save parameter values and log-likelihood
+                    if(k %% save_params_every == 0) {
                         
                         results$params[k %/% save_params_every, ] <- epimodel$params
                         results$log_likelihood[k %/% save_params_every] <- sum(epimodel$likelihoods$obs_likelihood, epimodel$likelihoods$pop_likelihood_cur)
                         
-                }
-                
-                # save the configuration matrix
-                if(k %% save_configs_every == 0) {
+                    }
+                    
+                    # save the configuration matrix
+                    if(k %% save_configs_every == 0) {
                         
                         results$configs[[k %/% save_configs_every]] <- epimodel$config_mat[complete.cases(epimodel$config_mat),]
-                }
-                
-                if(monitor && (k%%save_configs_every) == 0) {
+                    }
+                    
+                    if(monitor && (k%%save_configs_every) == 0) {
                         print(k)
                         # ts.plot(results$log_likelihood, xlab = "Iteration", ylab = "log-likelihood")
-                }
-        }
+                    }
+          }
         
         end.time <- Sys.time()
         

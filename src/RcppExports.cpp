@@ -19,6 +19,20 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// buildFBMats
+void buildFBMats(Rcpp::NumericVector& fb_mats, Rcpp::NumericVector& tpm_prods, arma::mat& emit_mat, arma::vec& initdist, Rcpp::IntegerVector& obs_time_inds);
+RcppExport SEXP BDAepimodel_buildFBMats(SEXP fb_matsSEXP, SEXP tpm_prodsSEXP, SEXP emit_matSEXP, SEXP initdistSEXP, SEXP obs_time_indsSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type fb_mats(fb_matsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type tpm_prods(tpm_prodsSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type emit_mat(emit_matSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type initdist(initdistSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type obs_time_inds(obs_time_indsSEXP);
+    buildFBMats(fb_mats, tpm_prods, emit_mat, initdist, obs_time_inds);
+    return R_NilValue;
+END_RCPP
+}
 // buildRateArray
 void buildRateArray(Rcpp::NumericVector& irm_array, const Rcpp::NumericMatrix& rates, const Rcpp::NumericMatrix& flow_inds);
 RcppExport SEXP BDAepimodel_buildRateArray(SEXP irm_arraySEXP, SEXP ratesSEXP, SEXP flow_indsSEXP) {
@@ -52,6 +66,24 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type firstcube(firstcubeSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type secondcube(secondcubeSEXP);
     __result = Rcpp::wrap(joinCubes(firstcube, secondcube));
+    return __result;
+END_RCPP
+}
+// populationLikelihood
+double populationLikelihood(arma::mat& pop_mat, Rcpp::NumericVector& irm_array, const arma::vec& initdist, const arma::uvec& initdist_param_inds, arma::umat& flow_inds, const arma::uvec& keys, const arma::uvec& inds, bool loglik);
+RcppExport SEXP BDAepimodel_populationLikelihood(SEXP pop_matSEXP, SEXP irm_arraySEXP, SEXP initdistSEXP, SEXP initdist_param_indsSEXP, SEXP flow_indsSEXP, SEXP keysSEXP, SEXP indsSEXP, SEXP loglikSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::mat& >::type pop_mat(pop_matSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type irm_array(irm_arraySEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type initdist(initdistSEXP);
+    Rcpp::traits::input_parameter< const arma::uvec& >::type initdist_param_inds(initdist_param_indsSEXP);
+    Rcpp::traits::input_parameter< arma::umat& >::type flow_inds(flow_indsSEXP);
+    Rcpp::traits::input_parameter< const arma::uvec& >::type keys(keysSEXP);
+    Rcpp::traits::input_parameter< const arma::uvec& >::type inds(indsSEXP);
+    Rcpp::traits::input_parameter< bool >::type loglik(loglikSEXP);
+    __result = Rcpp::wrap(populationLikelihood(pop_mat, irm_array, initdist, initdist_param_inds, flow_inds, keys, inds, loglik));
     return __result;
 END_RCPP
 }

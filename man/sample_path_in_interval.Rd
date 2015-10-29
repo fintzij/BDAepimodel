@@ -4,7 +4,7 @@
 \alias{sample_path_in_interval}
 \title{Draw a path within an interval from an endpoint conditioned homogeneous CTMC.}
 \usage{
-sample_path_in_interval(epimodel, subject, subj_ID, interval)
+sample_path_in_interval(epimodel, subject, interval)
 }
 \arguments{
 \item{interval}{index for the interval within which path is to be drawn}

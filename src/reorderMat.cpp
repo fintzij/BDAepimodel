@@ -9,7 +9,7 @@ using namespace Rcpp;
 //' @param mtx matrix to be reordered
 //' @param ord row order
 //'
-//' @return new array joining cubes
+//' @return matrix with rows permuted according to ord
 // [[Rcpp::export]]
 arma::mat reorderMat(arma::mat& oldmtx, arma::uvec& ord) {
 

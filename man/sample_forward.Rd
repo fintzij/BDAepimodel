@@ -4,7 +4,7 @@
 \alias{sample_forward}
 \title{Forward path sampling.}
 \usage{
-sample_forward(epimodel, subject, subj_ID, init_time, final_time, init_state,
+sample_forward(epimodel, subject, init_time, final_time, init_state,
   final_state, irm_key)
 }
 \arguments{

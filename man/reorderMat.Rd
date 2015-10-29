@@ -12,7 +12,7 @@ reorderMat(oldmtx, ord)
 \item{mtx}{matrix to be reordered}
 }
 \value{
-new array joining cubes
+matrix with rows permuted according to ord
 }
 \description{
 Reorder the rows of a matrix

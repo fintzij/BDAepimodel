@@ -14,6 +14,19 @@ buildEigenArray <- function(eigenvals, eigenvecs, inversevecs, irm_array) {
     invisible(.Call('BDAepimodel_buildEigenArray', PACKAGE = 'BDAepimodel', eigenvals, eigenvecs, inversevecs, irm_array))
 }
 
+#' Construct forward-backward matrices
+#'
+#' @param fb_mats array of FB matrices to be updated
+#' @param tpm_prods array of tpm products
+#' @param emit_mat matrix of emission probabilities
+#' @param initdist vector of initial state probabilities
+#' @param obs_time_inds vector of observation time indices
+#'
+#' @return Updated array of FB matrices
+buildFBMats <- function(fb_mats, tpm_prods, emit_mat, initdist, obs_time_inds) {
+    invisible(.Call('BDAepimodel_buildFBMats', PACKAGE = 'BDAepimodel', fb_mats, tpm_prods, emit_mat, initdist, obs_time_inds))
+}
+
 #' Update an array of rate matrices with the current rates
 #'
 #' @param irm_array array of rate matrices to be updated
@@ -45,6 +58,24 @@ joinCubes <- function(firstcube, secondcube) {
     .Call('BDAepimodel_joinCubes', PACKAGE = 'BDAepimodel', firstcube, secondcube)
 }
 
+#' Get the irm keys for the compartment counts in a population level
+#' bookkeeping matrix
+#'
+#' @param pop_mat population level bookkeeping matrix
+#' @param irm_array array of rate matrices
+#' @param initdist vector of initial state probabilities
+#' @param initdist_param_inds vector of indices for admissible initial states
+#' @param flow_inds matrix of indices for locations in IRM for each event
+#' @param keys vector of irm keys
+#' @param inds indices relating to event times, along with t0 and tmax
+#' @param loglik boolean indicating whether to return the likelihood or
+#'     log-likelihood
+#'
+#' @return population level likelihood or log-likelihood
+populationLikelihood <- function(pop_mat, irm_array, initdist, initdist_param_inds, flow_inds, keys, inds, loglik) {
+    .Call('BDAepimodel_populationLikelihood', PACKAGE = 'BDAepimodel', pop_mat, irm_array, initdist, initdist_param_inds, flow_inds, keys, inds, loglik)
+}
+
 #' Add or remove the subject contribution from the compartment counts
 #'
 #' @param pop_mat population bookkeeping matrix in epimodel list
@@ -61,7 +92,7 @@ removeSubjPath <- function(pop_mat, config_mat, subj_inds) {
 #' @param mtx matrix to be reordered
 #' @param ord row order
 #'
-#' @return new array joining cubes
+#' @return matrix with rows permuted according to ord
 reorderMat <- function(oldmtx, ord) {
     .Call('BDAepimodel_reorderMat', PACKAGE = 'BDAepimodel', oldmtx, ord)
 }

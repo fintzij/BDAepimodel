@@ -4,10 +4,10 @@
 \alias{sample_path}
 \title{Wrapper for sampling the path within homogeneous intervals.}
 \usage{
-sample_path(epimodel, subject, subj_ID)
+sample_path(epimodel, subject)
 }
 \arguments{
-\item{subj_ID}{character string for subject ID code}
+\item{subject}{character string for subject ID code}
 }
 \value{
 updated configuration matrix within the epimodel environment.

@@ -18,11 +18,11 @@ arma::vec retrieveKeys(Rcpp::IntegerVector inds, const arma::mat& irm_lookup, co
 
         // ensure that inds starts at 0 so subtract 1
         inds = inds - 1;
-
+          
         // Get relevant dimensions
         int n_configs = inds.size(); // length of 1:ind_final_config
         int n_keys = irm_lookup.n_rows; // number of keys
-
+        
         // Initialize output vector
         arma::vec keys(n_configs, arma::fill::zeros);
 
@@ -47,19 +47,19 @@ arma::vec retrieveKeys(Rcpp::IntegerVector inds, const arma::mat& irm_lookup, co
 
                 // Get config in the lookup matrix
                 arma::rowvec l_conf = l_config.row(k);
-
+                  
                 // inner loop over unmatched indices in pop_mat
                 for(int j = 0; j < n_configs; ++j) {
-
+                          
                         // If the configuration has been matched
                         if(config_inds[j] != 1) {
-
+                                  
                                 arma::rowvec p_conf = p_config.row(j);
 
                                 if(all(p_conf == l_conf)) {
-
+                                          
                                         keys[j] = irm_lookup(k, 0); // assign the key
-                                        config_inds[k] = 1; // indicate that the configuration has been matched
+                                        config_inds[j] = 1; // indicate that the configuration has been matched
                                 }
                         }
                 }
