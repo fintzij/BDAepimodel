@@ -7,9 +7,7 @@
 build_tpm_seqs(epimodel)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects, or an analagous
-environment. If not supplied, the list will be generated. The epimodel list
-is coerced into an environment, .epimodel, for internal use.}
+\item{epimodel}{list of bookkeeping and model objects.}
 }
 \value{
 modify the .tpms and .tpm_products lists in the .epimodel environment

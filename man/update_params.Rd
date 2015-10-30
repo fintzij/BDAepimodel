@@ -3,8 +3,8 @@
 \name{update_params}
 \alias{update_params}
 \title{Replace the vector of parameters in an epimodel object with new values and
-optionally update the population level likelihood or the measurement process
-likelihood.}
+update the population level likelihood, the measurement process
+likelihood, and the eigen decomposition objects for irms.}
 \usage{
 update_params(epimodel, params, pop_likelihood = NULL,
   obs_likelihood = NULL)
@@ -24,7 +24,7 @@ updated parameter vector and likelihood objects in the epimodel
 }
 \description{
 Replace the vector of parameters in an epimodel object with new values and
-optionally update the population level likelihood or the measurement process
-likelihood.
+update the population level likelihood, the measurement process
+likelihood, and the eigen decomposition objects for irms.
 }
 

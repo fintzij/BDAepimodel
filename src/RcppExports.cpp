@@ -70,16 +70,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // populationLikelihood
-double populationLikelihood(arma::mat& pop_mat, Rcpp::NumericVector& irm_array, const arma::vec& initdist, const arma::uvec& initdist_param_inds, arma::umat& flow_inds, const arma::uvec& keys, const arma::uvec& inds, bool loglik);
+double populationLikelihood(const arma::mat& pop_mat, Rcpp::NumericVector& irm_array, const arma::vec& initdist, const arma::uvec& initdist_param_inds, const arma::umat& flow_inds, const arma::uvec& keys, const arma::uvec& inds, bool loglik);
 RcppExport SEXP BDAepimodel_populationLikelihood(SEXP pop_matSEXP, SEXP irm_arraySEXP, SEXP initdistSEXP, SEXP initdist_param_indsSEXP, SEXP flow_indsSEXP, SEXP keysSEXP, SEXP indsSEXP, SEXP loglikSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< arma::mat& >::type pop_mat(pop_matSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type pop_mat(pop_matSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type irm_array(irm_arraySEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type initdist(initdistSEXP);
     Rcpp::traits::input_parameter< const arma::uvec& >::type initdist_param_inds(initdist_param_indsSEXP);
-    Rcpp::traits::input_parameter< arma::umat& >::type flow_inds(flow_indsSEXP);
+    Rcpp::traits::input_parameter< const arma::umat& >::type flow_inds(flow_indsSEXP);
     Rcpp::traits::input_parameter< const arma::uvec& >::type keys(keysSEXP);
     Rcpp::traits::input_parameter< const arma::uvec& >::type inds(indsSEXP);
     Rcpp::traits::input_parameter< bool >::type loglik(loglikSEXP);
@@ -87,26 +87,14 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
-// removeSubjPath
-void removeSubjPath(Rcpp::NumericVector& pop_mat, Rcpp::NumericVector& config_mat, Rcpp::IntegerVector subj_inds);
-RcppExport SEXP BDAepimodel_removeSubjPath(SEXP pop_matSEXP, SEXP config_matSEXP, SEXP subj_indsSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type pop_mat(pop_matSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type config_mat(config_matSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type subj_inds(subj_indsSEXP);
-    removeSubjPath(pop_mat, config_mat, subj_inds);
-    return R_NilValue;
-END_RCPP
-}
 // reorderMat
-arma::mat reorderMat(arma::mat& oldmtx, arma::uvec& ord);
+arma::mat reorderMat(const arma::mat& oldmtx, const arma::uvec& ord);
 RcppExport SEXP BDAepimodel_reorderMat(SEXP oldmtxSEXP, SEXP ordSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< arma::mat& >::type oldmtx(oldmtxSEXP);
-    Rcpp::traits::input_parameter< arma::uvec& >::type ord(ordSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type oldmtx(oldmtxSEXP);
+    Rcpp::traits::input_parameter< const arma::uvec& >::type ord(ordSEXP);
     __result = Rcpp::wrap(reorderMat(oldmtx, ord));
     return __result;
 END_RCPP
@@ -125,12 +113,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // retrieveKeys
-arma::vec retrieveKeys(Rcpp::IntegerVector inds, const arma::mat& irm_lookup, const arma::mat& pop_mat, const arma::vec& index_state_num);
+arma::uvec retrieveKeys(const arma::uvec inds, const arma::mat& irm_lookup, const arma::mat& pop_mat, const arma::vec& index_state_num);
 RcppExport SEXP BDAepimodel_retrieveKeys(SEXP indsSEXP, SEXP irm_lookupSEXP, SEXP pop_matSEXP, SEXP index_state_numSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type inds(indsSEXP);
+    Rcpp::traits::input_parameter< const arma::uvec >::type inds(indsSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type irm_lookup(irm_lookupSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type pop_mat(pop_matSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type index_state_num(index_state_numSEXP);
@@ -139,12 +127,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // subjectLikelihood
-double subjectLikelihood(const int subj_ID, const arma::mat& pop_mat, const arma::mat& config_mat, Rcpp::NumericVector& irm_array, const Rcpp::NumericVector& initdist, const arma::uvec& keys, const arma::uvec& inds, bool loglik);
-RcppExport SEXP BDAepimodel_subjectLikelihood(SEXP subj_IDSEXP, SEXP pop_matSEXP, SEXP config_matSEXP, SEXP irm_arraySEXP, SEXP initdistSEXP, SEXP keysSEXP, SEXP indsSEXP, SEXP loglikSEXP) {
+double subjectLikelihood(const int subject, const arma::mat& pop_mat, const arma::mat& config_mat, Rcpp::NumericVector& irm_array, const Rcpp::NumericVector& initdist, const arma::uvec& keys, const arma::uvec& inds, bool loglik);
+RcppExport SEXP BDAepimodel_subjectLikelihood(SEXP subjectSEXP, SEXP pop_matSEXP, SEXP config_matSEXP, SEXP irm_arraySEXP, SEXP initdistSEXP, SEXP keysSEXP, SEXP indsSEXP, SEXP loglikSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< const int >::type subj_ID(subj_IDSEXP);
+    Rcpp::traits::input_parameter< const int >::type subject(subjectSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type pop_mat(pop_matSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type config_mat(config_matSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type irm_array(irm_arraySEXP);
@@ -152,7 +140,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::uvec& >::type keys(keysSEXP);
     Rcpp::traits::input_parameter< const arma::uvec& >::type inds(indsSEXP);
     Rcpp::traits::input_parameter< bool >::type loglik(loglikSEXP);
-    __result = Rcpp::wrap(subjectLikelihood(subj_ID, pop_mat, config_mat, irm_array, initdist, keys, inds, loglik));
+    __result = Rcpp::wrap(subjectLikelihood(subject, pop_mat, config_mat, irm_array, initdist, keys, inds, loglik));
     return __result;
 END_RCPP
 }

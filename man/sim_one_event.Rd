@@ -10,9 +10,7 @@ sim_one_event(config_list, epimodel, lump)
 \item{config_list}{list with three named elements - config_mat, pop_mat,
 rate_mat, and dt_mat.}
 
-\item{epimodel}{list of bookkeeping and model objects, or an analagous
-environment. If not supplied, the list will be generated. The epimodel list
-is coerced into an environment, .epimodel, for internal use.}
+\item{epimodel}{list of bookkeeping and model objects.}
 
 \item{lump}{option specifying whether to simulate the next event directly on
   the extended state space of individuals, or to simulate on the lumped state

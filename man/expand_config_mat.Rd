@@ -8,12 +8,10 @@ configurations.}
 expand_config_mat(epimodel, buffer_size = NULL)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects, or an analagous
-environment. If not supplied, the list will be generated. The epimodel list
-is coerced into an environment, .epimodel, for internal use.}
+\item{epimodel}{list of bookkeeping and model objects.}
 
-\item{buffer_size}{number of buffer rows to insert, defaulting to 30% of the
-  number of rows in the current configuration matrix unless otherwise
+\item{buffer_size}{number of buffer rows to insert, defaulting to 30 percent
+  of the number of rows in the current configuration matrix unless otherwise
   specified.}
 }
 \value{

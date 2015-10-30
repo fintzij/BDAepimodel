@@ -164,11 +164,15 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
           # set up the transition kernel for parameters of the initial distribution
           initdist_kernel <- function(epimodel) {
 
+                    params <- epimodel$params
+                    
                     # calculate parameters of posterior
-                    posterior_params <- epimodel$initdist_prior + epimodel$config_mat[1, epimodel$states[epimodel$initdist_param_inds]]
+                    posterior_params <- epimodel$initdist_prior + epimodel$pop_mat[1, epimodel$states[epimodel$initdist_param_inds]]
 
                     # sample new parameter values
-                    epimodel$params[epimodel$initdist_params[epimodel$initdist_param_inds]] <- MCMCpack::rdirichlet(1, alpha = posterior_params)
+                    params[epimodel$initdist_params[epimodel$initdist_param_inds]] <- MCMCpack::rdirichlet(1, alpha = posterior_params)
+                    
+                    return(params)
 
           }
 

@@ -4,17 +4,17 @@
 \alias{sample_DT_skeleton}
 \title{Sample the state at event times from the discete time skeleton.}
 \usage{
-sample_DT_skeleton(config_mat, epimodel, subject, init_ind, final_ind)
+sample_DT_skeleton(path, epimodel, init_ind, final_ind)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects, or an analagous
-environment. If not supplied, the list will be generated. The epimodel list
-is coerced into an environment, .epimodel, for internal use.}
+\item{path}{column from the config_mat corresponding to a subject path}
 
-\item{subject}{subject ID, i.e. column index in config_mat}
+\item{epimodel}{list of bookkeeping and model objects.}
 
 \item{init_ind,final_ind}{index in the configuration matrix of the left/right
   endpoints of the observation interval}
+
+\item{subject}{subject ID, i.e. column index in config_mat}
 }
 \value{
 updated configuration matrix

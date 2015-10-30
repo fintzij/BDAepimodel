@@ -9,9 +9,7 @@ simulate_epimodel(epimodel, obstimes = NULL, init_state = NULL,
   trim = TRUE, lump = TRUE)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects, or an analagous
-environment. If not supplied, the list will be generated. The epimodel list
-is coerced into an environment, .epimodel, for internal use.}
+\item{epimodel}{list of bookkeeping and model objects.}
 
 \item{meas_vars}{character vector specifying which compartments are measured.}
 

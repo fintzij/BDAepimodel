@@ -11,7 +11,7 @@ using namespace Rcpp;
 //'
 //' @return matrix with rows permuted according to ord
 // [[Rcpp::export]]
-arma::mat reorderMat(arma::mat& oldmtx, arma::uvec& ord) {
+arma::mat reorderMat(const arma::mat& oldmtx, const arma::uvec& ord) {
 
         // shift the row indexing to start at the 0th element
         arma::uvec roword = ord - 1;

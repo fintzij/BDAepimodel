@@ -5,7 +5,7 @@
 \title{Accept or reject a proposed subject-level trajectory via MH and update the
 appropriate objects in the epimodel environment}
 \usage{
-MH_accept_reject(epimodel, subject, subj_ID, iter)
+MH_accept_reject(epimodel, subject, iter)
 }
 \arguments{
 \item{iter}{iteration number}

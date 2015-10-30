@@ -7,7 +7,7 @@ using namespace Rcpp;
 //' Get the irm keys for the compartment counts in a population level
 //' bookkeeping matrix
 //'
-//' @param subj_ID
+//' @param subject
 //' @param pop_mat population level bookkeeping matrix
 //' @param config_mat subject_level bookkeeping matrix for configurations
 //' @param irm_array array of rate matrices
@@ -18,7 +18,7 @@ using namespace Rcpp;
 //'
 //' @return subject level likelihood or log-likelihood
 // [[Rcpp::export]]
-double subjectLikelihood(const int subj_ID, const arma::mat& pop_mat, const arma::mat& config_mat, Rcpp::NumericVector& irm_array, const Rcpp::NumericVector& initdist, const arma::uvec& keys, const arma::uvec& inds, bool loglik) {
+double subjectLikelihood(const int subject, const arma::mat& pop_mat, const arma::mat& config_mat, Rcpp::NumericVector& irm_array, const Rcpp::NumericVector& initdist, const arma::uvec& keys, const arma::uvec& inds, bool loglik) {
 
         int n_endpoints = inds.n_elem;
         arma::uword n_intervals = n_endpoints - 1;
@@ -31,7 +31,7 @@ double subjectLikelihood(const int subj_ID, const arma::mat& pop_mat, const arma
 
         // get the relevant vectors
         arma::vec times_all = pop_mat.col(0);
-        arma::vec subj_path_all = config_mat.col(subj_ID - 1);
+        arma::vec subj_path_all = config_mat.col(subject - 1);
 
         // subset the vectors so they only include event times and the endpoints of the observation period
         arma::vec timediffs = diff(times_all.elem(subj_inds));

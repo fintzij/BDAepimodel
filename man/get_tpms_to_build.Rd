@@ -7,9 +7,7 @@
 get_tpms_to_build(epimodel, subject = NULL)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects, or an analagous
-environment. If not supplied, the list will be generated. The epimodel list
-is coerced into an environment, .epimodel, for internal use.}
+\item{epimodel}{list of bookkeeping and model objects.}
 
 \item{subject_ID}{string ID for subject to be removed}
 }

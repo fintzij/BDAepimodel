@@ -1,20 +1,20 @@
-#' Add buffer rows to a config_mat matrix to enable in-place substitution of
+#' Add buffer rows to a config_mat matrix to enable in-place substitution of 
 #' configurations.
-#'
-#' Each buffer row is made up of NA entries that are inserted at the end of the
+#' 
+#' Each buffer row is made up of NA entries that are inserted at the end of the 
 #' configuration matrix. This function is designed to operate within an epimodel
-#' environment and therefore makes multiple replacements within that
+#' environment and therefore makes multiple replacements within that 
 #' environment.
-#'
+#' 
 #' @inheritParams simulate_epimodel
-#' @param buffer_size number of buffer rows to insert, defaulting to 30% of the
-#'   number of rows in the current configuration matrix unless otherwise
+#' @param buffer_size number of buffer rows to insert, defaulting to 30 percent
+#'   of the number of rows in the current configuration matrix unless otherwise 
 #'   specified.
-#'
-#' @return new configuration matrix and index for the last row in the expanded
+#'   
+#' @return new configuration matrix and index for the last row in the expanded 
 #'   configuration matrix (corresponding to the configuration at tmax)
 #' @export
-#'
+#' 
 
 expand_config_mat <- function(epimodel, buffer_size = NULL) {
 

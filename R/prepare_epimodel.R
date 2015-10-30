@@ -47,16 +47,18 @@ prepare_epimodel <- function(epimodel) {
           epimodel <- init_irm(epimodel)
           
           # compute the rates
-          rates <- do.call(cbind, lapply(epimodel$rates, do.call, list(state = epimodel$irm_key_lookup, params = epimodel$params)))
+          epimodel <- build_new_irms(epimodel, epimodel$params)
           
-          # update the rate matrices
-          buildRateArray(irm_array = epimodel$irm, rates = rates, flow_inds = epimodel$flow_inds)
+          # update the eigen decompositions
+          buildEigenArray(eigenvals = epimodel$eigen_values, eigenvecs = epimodel$eigen_vectors, inversevecs = epimodel$inv_eigen_vectors, irm_array = epimodel$irm)
           
+          # get the irm keys
           epimodel$keys <- retrieveKeys(1:epimodel$ind_final_config, epimodel$irm_key_lookup, epimodel$pop_mat, epimodel$index_state_num)
           
           # compute the population level likelihood, and the measurement
           # process likelihood
-          epimodel$likelihoods$pop_likelihood_cur <- calc_pop_likelihood(epimodel = epimodel, log = TRUE)
+          epimodel$likelihoods$pop_likelihood_cur <- populationLikelihood(pop_mat = epimodel$pop_mat, irm_array = epimodel$irm, initdist = epimodel$initdist, initdist_param_inds = epimodel$initdist_param_inds, flow_inds = epimodel$flow_inds, keys = epimodel$keys, inds = c(1, c(1:epimodel$ind_final_config)[-epimodel$obs_time_inds], epimodel$ind_final_config), loglik = TRUE)
+          
           epimodel$likelihoods$obs_likelihood <- calc_obs_likelihood(epimodel, log = TRUE)
 
           return(epimodel)

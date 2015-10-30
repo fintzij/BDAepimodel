@@ -30,24 +30,11 @@ test_that("The rate matrices are all computed correctly", {
           
           epimodel <- simulate_epimodel(epimodel = epimodel, lump = TRUE, trim = TRUE)
           
-          .epimodel <- list2env(epimodel, parent = emptyenv(), hash = TRUE)
+          epimodel <- prepare_epimodel(epimodel)
           
-          .epimodel$.config_inds <- which(grepl(".X", colnames(.epimodel$config_mat)))
+          expect_equal(epimodel$irm[2, 2, 1], -1)
+          expect_equal(epimodel$irm[1, 2, 2], 1.8)
+          expect_equal(epimodel$irm[3,,3], rep(0, 3))
+          expect_equal(epimodel$irm[1,,4], rep(0, 3))
           
-          expand_config_mat(.epimodel)
-          
-          build_irm(.epimodel)
-          
-          expect_equal(.epimodel$.irm[["1"]][2,2], -1)
-          expect_equal(.epimodel$.irm[["2"]][1,2], 1.8)
-          expect_equal(.epimodel$.irm[["0"]][1,], rep(0, 3))
-          expect_equal(.epimodel$.irm[["3"]][3,], rep(0, 3))
-          
-          # update the IRMs and retest
-          build_irm(.epimodel)
-          
-          expect_equal(.epimodel$.irm[["1"]][1,1], -0.9)
-          expect_equal(.epimodel$.irm[["2"]][2,3], 1)
-          expect_equal(.epimodel$.irm[["0"]][1,], rep(0, 3))
-          expect_equal(.epimodel$.irm[["3"]][3,], rep(0, 3))
 }) 

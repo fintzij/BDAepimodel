@@ -1,6 +1,6 @@
 #' Replace the vector of parameters in an epimodel object with new values and 
-#' optionally update the population level likelihood or the measurement process 
-#' likelihood.
+#' update the population level likelihood, the measurement process 
+#' likelihood, and the eigen decomposition objects for irms. 
 #' 
 #' @param epimodel
 #' @param params
@@ -24,4 +24,6 @@ update_params <- function(epimodel, params, pop_likelihood = NULL, obs_likelihoo
           if(!is.null(obs_likelihood)) {
                     epimodel$likelihoods$obs_likelihood <- obs_likelihood
           }
+          
+          return(epimodel)
 }

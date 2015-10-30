@@ -4,6 +4,7 @@
 #' an inter-observation interval
 #'
 #' @inheritParams simulate_epimodel
+#' @param path column from the config_mat corresponding to a subject path
 #' @param subject subject ID, i.e. column index in config_mat
 #' @param init_ind,final_ind index in the configuration matrix of the left/right
 #'   endpoints of the observation interval
@@ -12,11 +13,11 @@
 #'
 #' @export
 #'
-sample_DT_skeleton <- function(config_mat, epimodel, subject, init_ind, final_ind) {
+sample_DT_skeleton <- function(path, epimodel, init_ind, final_ind) {
         
         # set the initial and final states
-        .init_state         <- epimodel$config_mat[init_ind, subject]
-        .final_state        <- epimodel$config_mat[final_ind, subject]
+        .init_state         <- path[init_ind]
+        .final_state        <- path[final_ind]
         
         # set up subseq vector
         .subseq_vec         <- c(.init_state, rep(0, final_ind - init_ind - 1), .final_state)
@@ -37,7 +38,7 @@ sample_DT_skeleton <- function(config_mat, epimodel, subject, init_ind, final_in
                 .subseq_vec[.ind] <- .cur_state <- sample.int(n = epimodel$num_states, size = 1, replace = FALSE, prob = .state_probs)
         }
         
-        config_mat[init_ind:final_ind, subject] <- .subseq_vec
+        path[init_ind:final_ind] <- .subseq_vec
         
-        return(config_mat)
+        return(path)
 }

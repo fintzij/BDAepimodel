@@ -7,9 +7,7 @@
 update_obs_mat(epimodel)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects, or an analagous
-environment. If not supplied, the list will be generated. The epimodel list
-is coerced into an environment, .epimodel, for internal use.}
+\item{epimodel}{list of bookkeeping and model objects.}
 }
 \value{
 updated observation matrix and obs_time_inds vector in the epimodel

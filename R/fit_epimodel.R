@@ -62,16 +62,7 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                     # re-compute the arrays of rate matrices and eigen
                     # decompositions - only needs to be recomputed every time
                     # parameters are updated.
-                    
-                    # compute the rates
-                    rates <- do.call(cbind, lapply(epimodel$rates, do.call, list(state = epimodel$irm_key_lookup, params = epimodel$params)))
-                    
-                    # update the rate matrices
-                    buildRateArray(irm_array = epimodel$irm, rates = rates, flow_inds = epimodel$flow_inds)
-                    
-                    # update the eigen decompositions
-                    buildEigenArray(eigenvals = epimodel$eigen_values, eigenvecs = epimodel$eigen_vectors, inversevecs = epimodel$inv_eigen_vectors, irm_array = epimodel$irm)
-                    
+
                     # choose which subjects should be redrawn
                     subjects <- sample.int(n = epimodel$popsize, size = configs_to_redraw, replace = config_replacement)
                     
@@ -102,14 +93,20 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                               epimodel$subj_row_ind <- epimodel$ind_final_config + 1
                               
                               # sample status at observation times
-                              epimodel$config_mat <- sample_at_obs_times(config_mat = epimodel$config_mat, epimodel = epimodel, subject = subject)
+                              epimodel$config_mat[, subjects[j]] <- sample_at_obs_times(path = epimodel$config_mat[,subjects[j]], epimodel = epimodel)
+                              
                               # sample status at event times
-                              epimodel$config_mat <- sample_at_event_times(config_mat = epimodel$config_mat, epimodel = epimodel, subject = subject)
+                              epimodel$config_mat[, subjects[j]] <- sample_at_event_times(path = epimodel$config_mat[,subjects[j]], epimodel = epimodel) 
                               # sample paths in inter-event intervals
-                              epimodel <- sample_path(epimodel = epimodel, subject = subject)
+                              epimodel <- sample_path(epimodel = epimodel, subject = subjects[j])
                               
                               # insert the proposed trajectory
-                              epimodel <- insert_trajectory(epimodel = epimodel, subject = subject, reinsertion = FALSE)
+                              epimodel <- insert_trajectory(epimodel = epimodel, subject = subjects[j], reinsertion = FALSE)
+                              if(is.na(epimodel$likelihoods$pop_likelihood_new)) {
+                                        stop(k, j)
+                              }
+                              # accept or reject the proposed path
+                              epimodel <- MH_accept_reject(epimodel = epimodel, subject = subjects[j], iter = j)
                     }
                     
                     # record the acceptance rate for trajectories
@@ -119,18 +116,23 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                     epimodel$likelihoods$obs_likelihood <- calc_obs_likelihood(epimodel, log = TRUE)
                     
                     # get the current values of the parameters
-                    .params_cur <- epimodel$params
+                    epimodel$.params_cur <- epimodel$params
+                    epimodel$.irm_cur <- epimodel$irm
+                    
+                    # retrieve the irm keys (last trajectory update could have
+                    # been rejected, so keys would be incorrect)
+                    epimodel$keys <- retrieveKeys(1:epimodel$ind_final_config, epimodel$irm_key_lookup, epimodel$pop_mat, epimodel$index_state_num)
                     
                     # sample new parameters
                     for(t in 1:length(kernel)) {
-                        kernel[[t]](epimodel)
+                        epimodel <- kernel[[t]](epimodel)
                     }
                     
                     # sample new values for the initial distribution parameters
-                    epimodel$initdist_kernel(epimodel)
+                    epimodel$params <- epimodel$initdist_kernel(epimodel)
                     
                     # record acceptances/rejections for the parameter updates
-                    results$accepts[k - 1, names(epimodel$params)] <- as.numeric(epimodel$params != .params_cur)
+                    results$accepts[k - 1, names(epimodel$params)] <- as.numeric(epimodel$params != epimodel$.params_cur)
                     
                     # save parameter values and log-likelihood
                     if(k %% save_params_every == 0) {
@@ -143,7 +145,7 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                     # save the configuration matrix
                     if(k %% save_configs_every == 0) {
                         
-                        results$configs[[k %/% save_configs_every]] <- epimodel$config_mat[complete.cases(epimodel$config_mat),]
+                        results$configs[[k %/% save_configs_every]] <- epimodel$pop_mat[complete.cases(epimodel$pop_mat),]
                     }
                     
                     if(monitor && (k%%save_configs_every) == 0) {

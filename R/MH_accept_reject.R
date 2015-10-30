@@ -6,7 +6,7 @@
 #' @return updated epimodel environment
 #' @export
 
-MH_accept_reject <- function(epimodel, subject, subj_ID, iter) {
+MH_accept_reject <- function(epimodel, subject, iter) {
           
           if((epimodel$likelihoods$pop_likelihood_new == -Inf ) & (epimodel$likelihoods$subj_likelihood_new == -Inf)) {
                     
@@ -27,24 +27,25 @@ MH_accept_reject <- function(epimodel, subject, subj_ID, iter) {
                     
                     # update the observation matrix and vector of observation
                     # time indices
-                    update_obs_mat(epimodel)
+                    epimodel$obs_mat[, epimodel$meas_vars_aug] <- epimodel$pop_mat[epimodel$obs_time_inds, epimodel$meas_vars]
                     
-                    epimodel$.path_accept_vec[iter] <- 1
+                    # record acceptance
+                    epimodel$path_accept_vec[iter] <- 1
                     
           } else {
                     # the rejected path is being re-inserted into the config mat since it is stored in remove trajectory. need to save it separately first
-                    
                     # remove the proposed path, not overwriting the current path
-                    remove_trajectory(epimodel, subject = subject, save_path = FALSE)
+                    epimodel <- remove_trajectory(epimodel, subject = subject, save_path = FALSE)
                     
                     # reinsert the previous path
-                    reinsert_path(epimodel, subject = subject, subj_ID = subj_ID)
+                    epimodel <- reinsert_path(epimodel, subject = subject)
                     
-                    # update the observation matrix and vector of observation
-                    # time indices
-                    update_obs_mat(epimodel)
+                    # update counts in the obervation matrix
+                    epimodel$obs_mat[, epimodel$meas_vars_aug] <- epimodel$pop_mat[epimodel$obs_time_inds, epimodel$meas_vars]
                     
-                    epimodel$.path_accept_vec[iter] <- 0
-                          
+                    # record rejection
+                    epimodel$path_accept_vec[iter] <- 0
           }
+          
+          return(epimodel)
 }

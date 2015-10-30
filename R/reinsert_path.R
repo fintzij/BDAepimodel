@@ -9,26 +9,29 @@
 #' 
 #' @export
 
-reinsert_path <- function(epimodel, subject, subj_ID) {
+reinsert_path <- function(epimodel, subject) {
           
           # find intervals in .path_cur times for matching indices
-          .inds <- findInterval(epimodel$config_mat[1:epimodel$.ind_final_config,"time"], epimodel$.path_cur[,"time"])
+          inds <- findInterval(epimodel$pop_mat[1:epimodel$ind_final_config,"time"], epimodel$path_cur[,"time"])
           
           # copy the state from the current path into the config_mat
-          epimodel$config_mat[1:epimodel$.ind_final_config, subj_ID] <- epimodel$.path_cur[.inds, subj_ID]
+          epimodel$config_mat[1:epimodel$ind_final_config, subject] <- epimodel$path_cur[inds, 4]
           
           # if there were transitions in the path, copy them to the
           # configuration matrix and call insert_trajectory
-          if(nrow(epimodel$.path_cur) > 2) {
+          if(nrow(epimodel$path_cur) > 2) {
                     
-                    epimodel$config_mat[(epimodel$.ind_final_config + 1) : ((epimodel$.ind_final_config + nrow(epimodel$.path_cur) - 2)), c("time", "ID", "Event", subj_ID)] <- epimodel$.path_cur[2:(nrow(epimodel$.path_cur) - 1), ]
+                    epimodel$pop_mat[(epimodel$ind_final_config + 1) : ((epimodel$ind_final_config + nrow(epimodel$path_cur) - 2)), c("time", "ID", "Event")] <- epimodel$path_cur[2:(nrow(epimodel$path_cur) - 1), 1:3]
+                    epimodel$config_mat[(epimodel$ind_final_config + 1) : ((epimodel$ind_final_config + nrow(epimodel$path_cur) - 2)), subject] <- epimodel$path_cur[2:(nrow(epimodel$path_cur) - 1), 4]
                     
           }
           
           # set the final index of the subject path in the config_mat
-          # .ind_final_config + 1 + (nrow(.path_cur) - 2)
-          epimodel$.subj_row_ind <- epimodel$.ind_final_config + nrow(epimodel$.path_cur) - 1
+          # ind_final_config + 1 + (nrow(path_cur) - 2)
+          epimodel$subj_row_ind <- epimodel$ind_final_config + nrow(epimodel$path_cur) - 1
           
           # insert_trajectory will insert the transitions and reorder the matrix
-          insert_trajectory(epimodel, subject = subject, subj_ID = subj_ID, reinsertion = TRUE) 
+          epimodel <- insert_trajectory(epimodel, subject = subject, reinsertion = TRUE)
+          
+          return(epimodel)
 }

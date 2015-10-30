@@ -29,7 +29,7 @@ void buildFBMats(Rcpp::NumericVector& fb_mats, Rcpp::NumericVector& tpm_prods, a
           Rcpp::IntegerVector obs_inds = obs_time_inds - 1;
           
           // Create the first FB matrix
-          arma::vec pi_0 = arma::normalise(initdist % emit_mat.col(1));
+          arma::vec pi_0 = arma::normalise(initdist % emit_mat.col(0), 1);
           fb_arr.slice(0) = (pi_0 * emit_mat.col(1).t()) % prod_arr.slice(0);
           fb_arr.slice(0) /= accu(fb_arr.slice(0));
           

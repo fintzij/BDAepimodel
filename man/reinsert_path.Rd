@@ -4,7 +4,7 @@
 \alias{reinsert_path}
 \title{Re-insert the current path back into the configuration matrix.}
 \usage{
-reinsert_path(epimodel, subject, subj_ID)
+reinsert_path(epimodel, subject)
 }
 \value{
 updated configuration matrix

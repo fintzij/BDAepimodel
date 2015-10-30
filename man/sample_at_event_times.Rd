@@ -4,7 +4,10 @@
 \alias{sample_at_event_times}
 \title{Sample the infection status at times of state transition of other subjects}
 \usage{
-sample_at_event_times(config_mat, epimodel, subject)
+sample_at_event_times(path, epimodel)
+}
+\arguments{
+\item{path}{column from the config_mat corresponding to a subject path.}
 }
 \value{
 updated configuration matrix of subject level trajectories

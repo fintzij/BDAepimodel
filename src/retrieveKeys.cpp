@@ -14,17 +14,17 @@ using namespace Rcpp;
 //'
 //' @return Vector of keys to index into an IRM array.
 // [[Rcpp::export]]
-arma::vec retrieveKeys(Rcpp::IntegerVector inds, const arma::mat& irm_lookup, const arma::mat& pop_mat, const arma::vec& index_state_num) {
+arma::uvec retrieveKeys(const arma::uvec inds, const arma::mat& irm_lookup, const arma::mat& pop_mat, const arma::vec& index_state_num) {
 
         // ensure that inds starts at 0 so subtract 1
-        inds = inds - 1;
+        arma::uvec row_inds = inds - 1;
           
         // Get relevant dimensions
-        int n_configs = inds.size(); // length of 1:ind_final_config
+        int n_configs = row_inds.n_elem; // length of 1:ind_final_config
         int n_keys = irm_lookup.n_rows; // number of keys
         
         // Initialize output vector
-        arma::vec keys(n_configs, arma::fill::zeros);
+        arma::uvec keys(n_configs, arma::fill::zeros);
 
         // Initialize vector for tracking which configurations have been matched
         arma::vec config_inds(n_configs, arma::fill::zeros);
@@ -54,7 +54,7 @@ arma::vec retrieveKeys(Rcpp::IntegerVector inds, const arma::mat& irm_lookup, co
                         // If the configuration has been matched
                         if(config_inds[j] != 1) {
                                   
-                                arma::rowvec p_conf = p_config.row(j);
+                                arma::rowvec p_conf = p_config.row(row_inds[j]);
 
                                 if(all(p_conf == l_conf)) {
                                           

@@ -7,9 +7,7 @@
 init_results(epimodel)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects, or an analagous
-environment. If not supplied, the list will be generated. The epimodel list
-is coerced into an environment, .epimodel, for internal use.}
+\item{epimodel}{list of bookkeeping and model objects.}
 
 \item{sim_settings}{bookkeeping list of simulation settings}
 }

@@ -15,9 +15,7 @@
 #' the 'GillespieSSA' package so as to facilitate ease of use for users familiar
 #' with that package.
 #'
-#' @param epimodel list of bookkeeping and model objects, or an analagous
-#'   environment. If not supplied, the list will be generated. The epimodel list
-#'   is coerced into an environment, .epimodel, for internal use.
+#' @param epimodel list of bookkeeping and model objects.
 #' @inheritParams init_epimodel
 #' @param return_config option specifying whether to return a matrix of
 #'   subject-level trajectories. Defaults to \code{TRUE}.

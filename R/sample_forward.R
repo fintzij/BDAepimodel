@@ -19,7 +19,7 @@ sample_forward <- function(epimodel, subject, init_time, final_time, init_state,
           while(valid_path == FALSE) {
                     
                     keep_going         <- TRUE
-                    t                  <- init_time
+                    .t                  <- init_time
                     cur_state          <- init_state
                     ind_cur            <- epimodel$subj_row_ind
                     
@@ -44,11 +44,11 @@ sample_forward <- function(epimodel, subject, init_time, final_time, init_state,
                               } 
                               
                               # sample the next transition time
-                              t <- t + rexp(1, rate = abs(epimodel$irm[cur_state, cur_state, irm_key]))
+                              .t <- .t + rexp(1, rate = abs(epimodel$irm[cur_state, cur_state, irm_key]))
                               
                               # if the next transition time is after the right endpoint, 
                               # stop sampling forward and determine if the path is valid
-                              if(t > final_time) {
+                              if(.t > final_time) {
                                         
                                         # stop forward sampling
                                         keep_going = FALSE
@@ -66,7 +66,7 @@ sample_forward <- function(epimodel, subject, init_time, final_time, init_state,
                                                   epimodel$config_mat[epimodel$subj_row_ind : ind_cur, subject] <- NA
                                         }
                                         
-                              # if t <= final_time, sample the next state and 
+                              # if .t <= final_time, sample the next state and 
                               # create an updated row in the config matrix
                               } else {
                                         # sample the next state
@@ -76,7 +76,7 @@ sample_forward <- function(epimodel, subject, init_time, final_time, init_state,
                                         event <- which((epimodel$flow[, cur_state] == -1) & (epimodel$flow[, next_state] == 1))
                                         
                                         # update the configuration matrix
-                                        epimodel$pop_mat[ind_cur, c("time", "ID", "Event")] <- c(t, subject, event)
+                                        epimodel$pop_mat[ind_cur, c("time", "ID", "Event")] <- c(.t, subject, event)
                                         epimodel$config_mat[ind_cur, subject] <- next_state
                                         
                                         # update the sampling object

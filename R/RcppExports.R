@@ -76,17 +76,6 @@ populationLikelihood <- function(pop_mat, irm_array, initdist, initdist_param_in
     .Call('BDAepimodel_populationLikelihood', PACKAGE = 'BDAepimodel', pop_mat, irm_array, initdist, initdist_param_inds, flow_inds, keys, inds, loglik)
 }
 
-#' Add or remove the subject contribution from the compartment counts
-#'
-#' @param pop_mat population bookkeeping matrix in epimodel list
-#' @param config_mat subject level configuration bookkeeping matrix
-#' @param subj_inds indices for rows relating to the subject's events
-#'
-#' @return updated compartment counts
-removeSubjPath <- function(pop_mat, config_mat, subj_inds) {
-    invisible(.Call('BDAepimodel_removeSubjPath', PACKAGE = 'BDAepimodel', pop_mat, config_mat, subj_inds))
-}
-
 #' Reorder the rows of a matrix
 #'
 #' @param mtx matrix to be reordered
@@ -126,7 +115,7 @@ retrieveKeys <- function(inds, irm_lookup, pop_mat, index_state_num) {
 #' Get the irm keys for the compartment counts in a population level
 #' bookkeeping matrix
 #'
-#' @param subj_ID
+#' @param subject
 #' @param pop_mat population level bookkeeping matrix
 #' @param config_mat subject_level bookkeeping matrix for configurations
 #' @param irm_array array of rate matrices
@@ -136,8 +125,8 @@ retrieveKeys <- function(inds, irm_lookup, pop_mat, index_state_num) {
 #'     log-likelihood
 #'
 #' @return subject level likelihood or log-likelihood
-subjectLikelihood <- function(subj_ID, pop_mat, config_mat, irm_array, initdist, keys, inds, loglik) {
-    .Call('BDAepimodel_subjectLikelihood', PACKAGE = 'BDAepimodel', subj_ID, pop_mat, config_mat, irm_array, initdist, keys, inds, loglik)
+subjectLikelihood <- function(subject, pop_mat, config_mat, irm_array, initdist, keys, inds, loglik) {
+    .Call('BDAepimodel_subjectLikelihood', PACKAGE = 'BDAepimodel', subject, pop_mat, config_mat, irm_array, initdist, keys, inds, loglik)
 }
 
 #' Update eigen values, vectors, and inverse matrices for irms

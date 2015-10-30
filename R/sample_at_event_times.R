@@ -1,12 +1,13 @@
 #' Sample the infection status at times of state transition of other subjects
 #'
+#' @param path column from the config_mat corresponding to a subject path.
 #' @inheritParams draw_trajec
 #'
 #' @return updated configuration matrix of subject level trajectories
 #'
 #' @export
 
-sample_at_event_times <- function(config_mat, epimodel, subject) {
+sample_at_event_times <- function(path, epimodel) {
         
         # If the model is progressive and has an absorbing state, only need to
         # sample the discrete time skeleton where the endpoints of observation
@@ -17,13 +18,13 @@ sample_at_event_times <- function(config_mat, epimodel, subject) {
                         
                         # draw the status at inter-event times conditional on the
                         # status at observation times only if a change is observed
-                        if(epimodel$config_mat[epimodel$obs_time_inds[t], subject] != epimodel$config_mat[epimodel$obs_time_inds[t + 1], subject]) {
+                        if(path[epimodel$obs_time_inds[t]] != path[epimodel$obs_time_inds[t + 1]]) {
                                 
                                 # if rates change in the inter-observation time interval,
                                 # sample the discrete time skeleton at event times
                                 if(diff(epimodel$obs_time_inds[t:(t+1)], lag = 1) != 1) {
                                         
-                                        config_mat <- sample_DT_skeleton(epimodel$config_mat, epimodel, subject = subject, init_ind = epimodel$obs_time_inds[t], final_ind = epimodel$obs_time_inds[t+1])
+                                        path <- sample_DT_skeleton(path, epimodel, init_ind = epimodel$obs_time_inds[t], final_ind = epimodel$obs_time_inds[t+1])
                                         
                                 }
                                 
@@ -40,10 +41,10 @@ sample_at_event_times <- function(config_mat, epimodel, subject) {
                         # draw the status at inter-event times conditional
                         # on the status at observation times only if the
                         # subject is not in an absorbing state
-                        if(!epimodel$config_mat[epimodel$obs_time_inds[t], subject] %in% epimodel$absorbing_states) {
+                        if(!path[epimodel$obs_time_inds[t]] %in% epimodel$absorbing_states) {
                                 if(diff(epimodel$obs_time_inds[t:(t+1)], lag = 1) != 1) {
                                         
-                                        config_mat <- sample_DT_skeleton(epimodel$config_mat, epimodel, subject = subject, init_ind = epimodel$obs_time_inds[t], final_ind = epimodel$obs_time_inds[t+1])
+                                          path <- sample_DT_skeleton(path, epimodel, init_ind = epimodel$obs_time_inds[t], final_ind = epimodel$obs_time_inds[t+1])
                                         
                                 }
                                 
@@ -59,12 +60,12 @@ sample_at_event_times <- function(config_mat, epimodel, subject) {
                         
                         if(diff(epimodel$obs_time_inds[t:(t+1)], lag = 1) != 1) {
                                 
-                                config_mat <- sample_DT_skeleton(epimodel$config_mat, epimodel, subject = subject, init_ind = epimodel$obs_time_inds[t], final_ind = epimodel$obs_time_inds[t+1])
+                                  path <- sample_DT_skeleton(path, epimodel, init_ind = epimodel$obs_time_inds[t], final_ind = epimodel$obs_time_inds[t+1])
                         }
                         
                 }
                 
         }
         
-        return(config_mat)
+        return(path)
 }

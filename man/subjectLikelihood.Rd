@@ -5,11 +5,11 @@
 \title{Get the irm keys for the compartment counts in a population level
 bookkeeping matrix}
 \usage{
-subjectLikelihood(subj_ID, pop_mat, config_mat, irm_array, initdist, keys, inds,
+subjectLikelihood(subject, pop_mat, config_mat, irm_array, initdist, keys, inds,
   loglik)
 }
 \arguments{
-\item{subj_ID}{}
+\item{subject}{}
 
 \item{pop_mat}{population level bookkeeping matrix}
 

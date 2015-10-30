@@ -25,7 +25,7 @@ insert_trajectory <- function(epimodel, subject, reinsertion) {
                     epimodel$config_mat <- reorderMat(epimodel$config_mat, row_ord) # reorder config_mat
                               
                     # get the subject indices
-                    subj_inds <- which(epimodel$config_mat[,"ID"] == subject)
+                    subj_inds <- which(epimodel$pop_mat[,"ID"] == subject)
                     
                     for(k in seq_along(subj_inds)) {
                               
@@ -37,9 +37,9 @@ insert_trajectory <- function(epimodel, subject, reinsertion) {
                               
                     }
                     
-                    # update index for the final configuration
+                    # update index for the final configuration and obs time indices
                     epimodel$ind_final_config <- epimodel$subj_row_ind - 1
-                    
+                    epimodel$obs_time_inds <- getObsTimeInds(epimodel$pop_mat, epimodel$obstimes)
           }
           
           # compute the likelihood of the subject's trajectory from a 
@@ -47,26 +47,37 @@ insert_trajectory <- function(epimodel, subject, reinsertion) {
           # following a MH rejection
           if(!reinsertion) {
                     
-                    # check to see if any additional irms are needed
-                    # if so, check_irm will instatiate the required
-                    # matrices and their eigen decompositions
-                    check_irm(epimodel)
+                    # get the vector of keys
+                    epimodel$keys <- retrieveKeys(1:epimodel$ind_final_config, epimodel$irm_key_lookup, epimodel$pop_mat, epimodel$index_state_num)
                     
-                    epimodel$likelihoods$subj_likelihood_new <- calc_subj_likelihood(epimodel = epimodel, subject = subject, subj_ID = subj_ID, log = TRUE)
+                    epimodel$likelihoods$subj_likelihood_new <- subjectLikelihood(subject, pop_mat = epimodel$pop_mat, config_mat = epimodel$config_mat, irm_array = epimodel$irm, initdist = epimodel$initdist, keys = epimodel$keys, inds = c(1, c(1:epimodel$ind_final_config)[-epimodel$obs_time_inds], epimodel$ind_final_config), loglik = TRUE)
                     
           }
            
           
           # add the subject's contribution back into the compartment counts
-          rows_to_update <- 1:epimodel$ind_final_config
-          
-          epimodel$config_mat[, epimodel$states][cbind(rows_to_update, epimodel$config_mat[rows_to_update, subj_ID])] <- epimodel$config_mat[,epimodel$states][cbind(rows_to_update, epimodel$config_mat[rows_to_update, subj_ID])] + 1
+          resolveSubjContrib(epimodel$pop_mat, 1:epimodel$ind_final_config, epimodel$config_mat[,subject], insertion =  TRUE)
           
           # compute the likelihood for the new population-level trajectory -
           # only when not a reinsertion following a MH rejection
           if(!reinsertion) {
                     
-                    epimodel$likelihoods$pop_likelihood_new <- calc_pop_likelihood(epimodel, log = TRUE)
+                    # update the keys to reflect the insertion
+#                     index_contrib <- which(epimodel$config_mat[,subject] %in% epimodel$index_state_num)
+#                     epimodel$keys<- retrieveKeys(index_contrib, epimodel$irm_key_lookup, epimodel$pop_mat, epimodel$index_state_num)
+                    epimodel$keys<- retrieveKeys(1:epimodel$ind_final_config, epimodel$irm_key_lookup, epimodel$pop_mat, epimodel$index_state_num)
                     
-          }
+                    # check to see if any additional irms are needed. check_irm will
+                    # instatiate the required matrices and their eigen decompositions
+                    if(any(epimodel$keys == 0)) {
+                              
+                              epimodel <- append_missing(epimodel)
+                              
+                    }
+                    
+                    epimodel$likelihoods$pop_likelihood_new <- populationLikelihood(pop_mat = epimodel$pop_mat, irm_array = epimodel$irm, initdist = epimodel$initdist, initdist_param_inds = epimodel$initdist_param_inds, flow_inds = epimodel$flow_inds, keys = epimodel$keys, inds = c(1, c(1:epimodel$ind_final_config)[-epimodel$obs_time_inds], epimodel$ind_final_config), loglik = TRUE)
+                    
+          } 
+          
+          return(epimodel)
 }

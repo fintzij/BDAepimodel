@@ -8,9 +8,7 @@ augmentation algorithm.}
 fit_epimodel(epimodel, monitor = FALSE)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects, or an analagous
-environment. If not supplied, the list will be generated. The epimodel list
-is coerced into an environment, .epimodel, for internal use.}
+\item{epimodel}{list of bookkeeping and model objects.}
 
 \item{monitor}{TRUE/FALSE for whether to print the iteration number and
   produce a log-likelihood plot every time a trajectory is saved.}

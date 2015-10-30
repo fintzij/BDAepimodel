@@ -4,7 +4,10 @@
 \alias{sample_at_obs_times}
 \title{Sample the infection status for the specified subject at observation times.}
 \usage{
-sample_at_obs_times(config_mat, epimodel, subject)
+sample_at_obs_times(path, epimodel)
+}
+\arguments{
+\item{path}{column from the config_mat corresponding to a subject path.}
 }
 \value{
 updated configuration matrix

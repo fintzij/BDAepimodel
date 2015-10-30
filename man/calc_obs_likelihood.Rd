@@ -8,9 +8,7 @@ process.}
 calc_obs_likelihood(epimodel, params = NULL, log = FALSE)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects, or an analagous
-environment. If not supplied, the list will be generated. The epimodel list
-is coerced into an environment, .epimodel, for internal use.}
+\item{epimodel}{list of bookkeeping and model objects.}
 
 \item{params}{optional vector of parameters if values other than the current
 values should be used (e.g. in a transition kernel)}

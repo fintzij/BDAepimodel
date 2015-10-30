@@ -39,7 +39,7 @@ void tpmSeqs(Rcpp::NumericVector& tpms, arma::mat& pop_mat, arma::mat eigen_vals
 
                 tpm_arr.slice(j) = vec_arr.slice(keys[j]) * (arma::diagmat(exp(timediffs[j] * eigen_vals.col(keys[j]))) * inv_arr.slice(keys[j]));
 
-                tpm_arr.slice(j).elem(find(tpm_arr.slice(j) < 1e-15)).zeros(); // set negatives and numerical errors to zero
+                tpm_arr.slice(j).elem(find(tpm_arr.slice(j) < 1e-13)).zeros(); // set negatives and numerical errors to zero
 
         }
 }

@@ -5,16 +5,14 @@
 \title{Calculate the likelihood for a subject-level trajectory based on a
 time-inhomogeneous CTMC.}
 \usage{
-calc_subj_likelihood(epimodel, subject, subj_ID, log = TRUE)
+calc_subj_likelihood(epimodel, subject, log = TRUE)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects, or an analagous
-environment. If not supplied, the list will be generated. The epimodel list
-is coerced into an environment, .epimodel, for internal use.}
-
-\item{subj_ID}{string for subject ID}
+\item{epimodel}{list of bookkeeping and model objects.}
 
 \item{log}{TRUE/FALSE for whether to return the log-likelihood or likelihood.}
+
+\item{subj_ID}{string for subject ID}
 }
 \value{
 likelihood or log-likelihood
