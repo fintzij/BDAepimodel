@@ -13,11 +13,14 @@ sample_at_obs_times <- function(path, epimodel) {
         state_vec <- epimodel$obstimes
         
         # draw the last state
-        state_vec[epimodel$nobs] <- prev_state <- sample.int(n = epimodel$num_states, size = 1, prob = colSums(epimodel$fb_mats[,,epimodel$nobs - 1]))
+        state_vec[epimodel$nobs] <- prev_state <- .Internal(sample(epimodel$num_states, size = 1, FALSE, colSums(epimodel$fb_mats[,,epimodel$nobs - 1])))
+        
+#         state_vec[epimodel$nobs] <- prev_state <- sample.int(n = epimodel$num_states, size = 1, prob = colSums(epimodel$fb_mats[,,epimodel$nobs - 1]))
         
         # backward pass to draw each previous state in succession
         for(s in (epimodel$nobs - 1) : 1) {
-                state_vec[s] <- prev_state <- sample.int(n = epimodel$num_states, size = 1, prob = epimodel$fb_mats[, prev_state, s])
+                  state_vec[s] <- prev_state <- .Internal(sample(epimodel$num_states, 1, FALSE, epimodel$fb_mats[, prev_state, s]))
+#                 state_vec[s] <- prev_state <- sample.int(n = epimodel$num_states, size = 1, prob = epimodel$fb_mats[, prev_state, s])
                 
         }
         

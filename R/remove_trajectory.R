@@ -26,7 +26,8 @@ remove_trajectory <- function(epimodel, subject, save_path) {
           # compute the likelihood of the subject's trajectory from a
           # time-inhomogeneous CTMC - only computed when current path is saved
           if(save_path) {
-          
+                    
+                    # update keys
                     epimodel$keys <- retrieveKeys(1:epimodel$ind_final_config, epimodel$irm_key_lookup, epimodel$pop_mat, epimodel$index_state_num)
           
                     # check to see if any additional irms are needed. check_irm will
@@ -45,6 +46,7 @@ remove_trajectory <- function(epimodel, subject, save_path) {
           
                   # remove the rows relating to the trajectory from the configuration matrix
                   epimodel$pop_mat[subj_inds, ] <- NA # set offending rows to NA
+                  epimodel$keys <- epimodel$keys[-subj_inds, , drop = FALSE]
                   
                   row_ord <- order(epimodel$pop_mat[,"time"]) # get new order
                   

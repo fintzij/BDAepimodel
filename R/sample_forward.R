@@ -70,7 +70,8 @@ sample_forward <- function(epimodel, subject, init_time, final_time, init_state,
                               # create an updated row in the config matrix
                               } else {
                                         # sample the next state
-                                        next_state <- sample.int(epimodel$num_states, 1, prob = pmax(epimodel$irm[cur_state, , irm_key], 0))
+                                        next_state <- .Internal(sample(epimodel$num_states, 1, FALSE, prob = pmax(epimodel$irm[cur_state, , irm_key], 0)))
+                                        # next_state <- sample.int(epimodel$num_states, 1, prob = pmax(epimodel$irm[cur_state, , irm_key], 0))
                                         
                                         # identify the event
                                         event <- which((epimodel$flow[, cur_state] == -1) & (epimodel$flow[, next_state] == 1))

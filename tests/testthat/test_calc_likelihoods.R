@@ -258,5 +258,4 @@ test_that("population-level likelihoods are correctly computed within each itera
                     }
                     
           }
-          
 })

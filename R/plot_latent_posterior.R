@@ -31,5 +31,5 @@ plot_latent_posterior <- function(epimodel, states, times) {
           trajecs_dist$lower <- trajecs_dist$mean - 1.96*trajecs_se
           trajecs_dist$upper <- trajecs_dist$mean + 1.96*trajecs_se
           
-          return(print(ggplot2::ggplot(trajecs_dist, ggplot2::aes(x = time, y = mean, colour = state)) + ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper, fill = state), alpha = 0.2) + ggplot2::geom_line() + ggplot2::theme_bw() + ggplot2::labs(title = "Posterior distribution of latent process", x = "Count", y = "Time")))
+          return(print(ggplot2::ggplot(trajecs_dist, ggplot2::aes(x = trajecs_dist$time, y = trajecs_dist$mean, colour = trajecs_dist$state)) + ggplot2::geom_ribbon(ggplot2::aes(ymin = trajecs_dist$lower, ymax = trajecs_dist$upper, fill = trajecs_dist$state), alpha = 0.2) + ggplot2::geom_line() + ggplot2::theme_bw() + ggplot2::labs(title = "Posterior distribution of latent process", x = "Count", y = "Time")))
 }

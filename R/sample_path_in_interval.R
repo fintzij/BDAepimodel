@@ -37,7 +37,8 @@ sample_path_in_interval <- function(epimodel, subject, interval) {
                     init_time <- init_time + log(1 - runif(1) * (1 - exp((final_time - init_time) * epimodel$irm[init_state, init_state, irm_key]))) / epimodel$irm[init_state, init_state, irm_key]
                     
                     # choose the next state
-                    next_state <- sample.int(epimodel$num_states, 1, prob = pmax(epimodel$irm[init_state, , irm_key], 0))
+                    next_state <- .Internal(sample(epimodel$num_states, 1, FALSE, pmax(epimodel$irm[init_state, , irm_key], 0)))
+                    # next_state <- sample.int(epimodel$num_states, 1, prob = pmax(epimodel$irm[init_state, , irm_key], 0))
                     
                     # identify the event and reset the initial state
                     event <- which((epimodel$flow[, init_state] == -1) & (epimodel$flow[, next_state] == 1))

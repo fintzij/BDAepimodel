@@ -102,9 +102,6 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                               
                               # insert the proposed trajectory
                               epimodel <- insert_trajectory(epimodel = epimodel, subject = subjects[j], reinsertion = FALSE)
-                              if(is.na(epimodel$likelihoods$pop_likelihood_new)) {
-                                        stop(k, j)
-                              }
                               # accept or reject the proposed path
                               epimodel <- MH_accept_reject(epimodel = epimodel, subject = subjects[j], iter = j)
                     }
@@ -167,10 +164,6 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                                       params = apply(results$params, 2, median)),
                          settings = epimodel$sim_settings,
                          results = results)
-        
-        # clean up internal objects
-        rm(epimodel)
-        gc()
         
         return(epimodel)
 }

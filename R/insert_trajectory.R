@@ -53,7 +53,6 @@ insert_trajectory <- function(epimodel, subject, reinsertion) {
                     epimodel$likelihoods$subj_likelihood_new <- subjectLikelihood(subject, pop_mat = epimodel$pop_mat, config_mat = epimodel$config_mat, irm_array = epimodel$irm, initdist = epimodel$initdist, keys = epimodel$keys, inds = c(1, c(1:epimodel$ind_final_config)[-epimodel$obs_time_inds], epimodel$ind_final_config), loglik = TRUE)
                     
           }
-           
           
           # add the subject's contribution back into the compartment counts
           resolveSubjContrib(epimodel$pop_mat, 1:epimodel$ind_final_config, epimodel$config_mat[,subject], insertion =  TRUE)
@@ -62,10 +61,14 @@ insert_trajectory <- function(epimodel, subject, reinsertion) {
           # only when not a reinsertion following a MH rejection
           if(!reinsertion) {
                     
-                    # update the keys to reflect the insertion
-#                     index_contrib <- which(epimodel$config_mat[,subject] %in% epimodel$index_state_num)
-#                     epimodel$keys<- retrieveKeys(index_contrib, epimodel$irm_key_lookup, epimodel$pop_mat, epimodel$index_state_num)
-                    epimodel$keys<- retrieveKeys(1:epimodel$ind_final_config, epimodel$irm_key_lookup, epimodel$pop_mat, epimodel$index_state_num)
+                    # update the keys to reflect the insertion - no dimension
+                    # change from previous retrieval, so only update keys where
+                    # subject was in an index state
+                    index_contrib <- which(epimodel$config_mat[,subject] %in% epimodel$index_state_num)
+                    epimodel$keys[index_contrib]<- retrieveKeys(index_contrib, epimodel$irm_key_lookup, epimodel$pop_mat, epimodel$index_state_num)
+                    
+                    # deprecated - only need to retrieve keys where subject was in an index state
+                    # epimodel$keys<- retrieveKeys(1:epimodel$ind_final_config, epimodel$irm_key_lookup, epimodel$pop_mat, epimodel$index_state_num)
                     
                     # check to see if any additional irms are needed. check_irm will
                     # instatiate the required matrices and their eigen decompositions

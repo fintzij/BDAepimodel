@@ -50,6 +50,8 @@ double populationLikelihood(const arma::mat& pop_mat, Rcpp::NumericVector& irm_a
           // initialize the likelihood
           arma::mat init_counts = counts.row(0);
 
+          // cout << init_counts(init_inds) << endl;
+                    
           double pop_lik = sum(init_counts(init_inds) % log(initdist(init_inds)));
           
           // compute the likelihood of the path
@@ -57,11 +59,11 @@ double populationLikelihood(const arma::mat& pop_mat, Rcpp::NumericVector& irm_a
                     
                     next_event = event_seq[j+1];
                     pop_lik += log(irm(event_inds(next_event, 0), event_inds(next_event, 1), irm_keys[j])) + arma::accu(irm.slice(irm_keys[j]).diag() % counts.row(j).t()) * timediffs[j];
-          
+                    
           }
           
           // Tail probability
-          pop_lik += arma::accu(irm.slice(irm_keys[n_intervals]).diag() % counts.row(n_intervals).t()) * timediffs[n_intervals];
+          pop_lik += arma::accu(irm.slice(irm_keys[n_intervals]).diag() % counts.row(n_intervals).t()) * timediffs[n_intervals - 1];
           
           if(loglik) {
                     return pop_lik;
