@@ -13,7 +13,7 @@ using namespace Rcpp;
 //'
 //' @return Updated eigenvalues, eigenvectors, and inverse matrices
 // [[Rcpp::export]]
-void tpmProdSeqs(Rcpp::NumericVector& tpm_prods, Rcpp::NumericVector& tpms, Rcpp::IntegerVector obs_time_inds) {
+void tpmProdSeqs(Rcpp::NumericVector& tpm_prods, Rcpp::NumericVector& tpms, const Rcpp::IntegerVector obs_time_inds) {
 
         // Get indices
         int n_obs = obs_time_inds.size();

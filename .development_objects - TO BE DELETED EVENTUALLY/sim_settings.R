@@ -22,7 +22,7 @@ d_meas_process <- function(state, meas_vars, params, log = TRUE) {
 epimodel <- init_epimodel(obstimes = seq(0, 10, by = 1),
                           popsize = popsize,
                           states = c("S", "I", "R"), 
-                          params = c(beta = rnorm(1, 0.007, 1e-5), mu = rnorm(1, 1, 1e-5), rho = 0.5, S0 = 0.95, I0 = 0.01, R0 = 0.04), 
+                          params = c(beta = rnorm(1, 0.005, 1e-5), mu = rnorm(1, 1, 1e-5), rho = 0.5, S0 = 0.8, I0 = 0.2, R0 = 0), 
                           rates = c("beta * I", "mu"), 
                           flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                           meas_vars = "I",
@@ -213,7 +213,7 @@ rho_kernel <- function(epimodel) {
 # save every tenth configuration matrix
 # resample 10 subject-level trajectories in between parameter updates
 epimodel <- init_settings(epimodel,
-                          niter = 50,
+                          niter = 10,
                           save_params_every = 1, 
                           save_configs_every = 5,
                           kernel = list(beta_mu_kernel, rho_kernel),
@@ -235,6 +235,7 @@ epimodel <- init_settings(epimodel,
 #                         target_accept = c(0.15, 0.5))
 
 # fit the model -----------------------------------------------------------
+
 .epimodel <- epimodel
 Rprof(prof <- tempfile())
 .epimodel <- fit_epimodel(.epimodel, monitor = TRUE) 

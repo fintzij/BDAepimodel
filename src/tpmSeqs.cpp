@@ -15,7 +15,7 @@ using namespace Rcpp;
 //'
 //' @return Updated eigenvalues, eigenvectors, and inverse matrices
 // [[Rcpp::export]]
-void tpmSeqs(Rcpp::NumericVector& tpms, arma::mat& pop_mat, arma::mat eigen_vals, Rcpp::NumericVector& eigen_vecs, Rcpp::NumericVector& inverse_vecs, Rcpp::IntegerVector& irm_keys) {
+void tpmSeqs(Rcpp::NumericVector& tpms, const arma::mat& pop_mat, const arma::mat eigen_vals, Rcpp::NumericVector& eigen_vecs, Rcpp::NumericVector& inverse_vecs, Rcpp::IntegerVector& irm_keys) {
 
         // Set constants
         int n_intervals = irm_keys.size() - 1;

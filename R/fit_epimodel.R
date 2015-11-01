@@ -10,9 +10,6 @@
 #'
 fit_epimodel <- function(epimodel, monitor = FALSE) {
         
-        compiler::compilePKGS(enable=TRUE)
-        compiler::enableJIT(3)
-        
         # check that the simulation settings have been set
         if(is.null(epimodel$sim_settings)) {
                 stop(sQuote("sim_settings"), "must be specified in the epimodel object.")
@@ -89,16 +86,21 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                               
                               # FB matrices
                               buildFBMats(epimodel$fb_mats, epimodel$tpm_products, epimodel$emission_mat, epimodel$initdist, epimodel$obs_time_inds)                        
-                              # set variable for where to start storing additional state changes
-                              epimodel$subj_row_ind <- epimodel$ind_final_config + 1
                               
                               # sample status at observation times
                               epimodel$config_mat[, subjects[j]] <- sample_at_obs_times(path = epimodel$config_mat[,subjects[j]], epimodel = epimodel)
                               
                               # sample status at event times
                               epimodel$config_mat[, subjects[j]] <- sample_at_event_times(path = epimodel$config_mat[,subjects[j]], epimodel = epimodel) 
+                              
                               # sample paths in inter-event intervals
-                              epimodel <- sample_path(epimodel = epimodel, subject = subjects[j])
+                              path <- sample_path(epimodel, subject = subjects[j])
+                              epimodel$n_jumps <- ifelse(is.null(path), 0, nrow(path))
+                              
+                              # insert the path
+                              if(!is.null(path)) {
+                                        insertPath(path, subjects[j], epimodel$pop_mat, epimodel$config_mat, epimodel$ind_final_config)
+                                        } 
                               
                               # insert the proposed trajectory
                               epimodel <- insert_trajectory(epimodel = epimodel, subject = subjects[j], reinsertion = FALSE)

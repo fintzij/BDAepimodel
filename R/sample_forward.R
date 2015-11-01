@@ -1,5 +1,6 @@
 #' Forward path sampling.
 #' 
+#' @param path matrix for storing path, possibly with first transition completed
 #' @inheritParams sample_path_in_interval
 #' @param init_time
 #' @param final_time
@@ -12,16 +13,17 @@
 #'   
 #' @export
 
-sample_forward <- function(epimodel, subject, init_time, final_time, init_state, final_state, irm_key) {
+sample_forward <- function(path, epimodel, subject, init_time, final_time, init_state, final_state, irm_key) {
           
-          valid_path         <- FALSE
+          valid_path          <- FALSE
+          ind_init            <- ifelse(is.na(path[1, 1]), 1, 2)
           
           while(valid_path == FALSE) {
                     
                     keep_going         <- TRUE
-                    .t                  <- init_time
+                    .t                 <- init_time
                     cur_state          <- init_state
-                    ind_cur            <- epimodel$subj_row_ind
+                    ind_cur            <- ind_init
                     
                     while(keep_going == TRUE) {
                               
@@ -29,17 +31,19 @@ sample_forward <- function(epimodel, subject, init_time, final_time, init_state,
                                         
                                         # stop forward sampling
                                         keep_going = FALSE
-                                        
+
                                         # determine if the path is valid 
                                         if(cur_state == final_state) {
-                                                  valid_path <- TRUE
-                                                  epimodel$subj_row_ind <- ind_cur
                                                   
-                                        } else {
-                                                  valid_path <- FALSE
-                                                  epimodel$pop_mat[epimodel$subj_row_ind : ind_cur, ] <- NA
-                                                  epimodel$config_mat[epimodel$subj_row_ind : ind_cur, subject] <- NA                                        }
+                                                  valid_path <- TRUE
                                         
+                                        } else {
+                                                  
+                                                  valid_path <- FALSE
+                                                  path[ind_init : ind_cur, ] <- NA
+                                                  
+                                                  }
+                                                                      
                                         break
                               } 
                               
@@ -58,17 +62,22 @@ sample_forward <- function(epimodel, subject, init_time, final_time, init_state,
                                         # ind_cur. otherwise, ind_cur and cur_state will be 
                                         # reset in the next attempt
                                         if(cur_state == final_state) {
+                                                  
                                                   valid_path <- TRUE
-                                                  epimodel$subj_row_ind <- ind_cur
+                                                  
                                         } else {
                                                   valid_path <- FALSE
-                                                  epimodel$pop_mat[epimodel$subj_row_ind : ind_cur, ] <- NA
-                                                  epimodel$config_mat[epimodel$subj_row_ind : ind_cur, subject] <- NA
+                                                  path[ind_init : ind_cur, ] <- NA
                                         }
                                         
                               # if .t <= final_time, sample the next state and 
                               # create an updated row in the config matrix
                               } else {
+                                        
+                                        if(ind_cur > nrow(path)) {
+                                                  path <- insert_row(path, nrow(path), NA)
+                                        }
+                                        
                                         # sample the next state
                                         next_state <- .Internal(sample(epimodel$num_states, 1, FALSE, prob = pmax(epimodel$irm[cur_state, , irm_key], 0)))
                                         # next_state <- sample.int(epimodel$num_states, 1, prob = pmax(epimodel$irm[cur_state, , irm_key], 0))
@@ -77,8 +86,7 @@ sample_forward <- function(epimodel, subject, init_time, final_time, init_state,
                                         event <- which((epimodel$flow[, cur_state] == -1) & (epimodel$flow[, next_state] == 1))
                                         
                                         # update the configuration matrix
-                                        epimodel$pop_mat[ind_cur, c("time", "ID", "Event")] <- c(.t, subject, event)
-                                        epimodel$config_mat[ind_cur, subject] <- next_state
+                                        path[ind_cur, ] <- c(.t, event, next_state)
                                         
                                         # update the sampling object
                                         ind_cur            <- ind_cur + 1
@@ -87,5 +95,10 @@ sample_forward <- function(epimodel, subject, init_time, final_time, init_state,
                     }
           }
           
-          return(epimodel)
+          if(ind_cur == 1) {
+                    return(NULL)
+                    
+          } else {
+                    return(path[1:(ind_cur - 1), , drop = FALSE])
+          }
 }

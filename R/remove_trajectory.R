@@ -17,7 +17,7 @@ remove_trajectory <- function(epimodel, subject, save_path) {
           
           # save the current path if not removing it b/c of a M-H rejection
           if(save_path) {
-                    epimodel$path_cur  <- cbind(epimodel$pop_mat[c(1, subj_inds, epimodel$ind_final_config), c("time", "ID", "Event")], epimodel$config_mat[c(1, subj_inds, epimodel$ind_final_config), subject])
+                    epimodel$path_cur  <- cbind(epimodel$pop_mat[c(1, subj_inds, epimodel$ind_final_config), c("time", "Event")], epimodel$config_mat[c(1, subj_inds, epimodel$ind_final_config), subject])
           }
           
           # remove the contribution to the compartment counts in the configuration matrix

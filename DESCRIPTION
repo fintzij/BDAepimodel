@@ -5,21 +5,23 @@ Version: 0.1
 Date: 2015-10-18
 Author: Jon Fintzi, Jon Wakefield, Vladimir Minin
 Maintainer: Jon Fintzi <fintzij@uw.edu>
-Description: Tractable fitting of stochastic epidemic models via Bayesian data augmentation
+Description: Tractable fitting of stochastic epidemic models via Bayesian data
+    augmentation
 License: GPL-3
 LazyData: TRUE
-Imports: 
-        ggplot2,
-        reshape2,
-        pryr,
-        MCMCpack,
-        MASS,
-        Rcpp (>= 0.12.1),
-        RcppArmadillo
-LinkingTo: 
-        Rcpp,
-        RcppArmadillo
+Imports:
+    ggplot2,
+    reshape2,
+    pryr,
+    MCMCpack,
+    MASS,
+    Rcpp (>= 0.12.1),
+    RcppArmadillo
+LinkingTo: Rcpp,
+    RcppArmadillo
 VignetteBuilder: knitr
-Suggests: knitr,
+Suggests:
+    knitr,
     rmarkdown,
     testthat
+RoxygenNote: 5.0.0

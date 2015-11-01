@@ -48,6 +48,20 @@ getObsTimeInds <- function(pop_mat, obstimes) {
     .Call('BDAepimodel_getObsTimeInds', PACKAGE = 'BDAepimodel', pop_mat, obstimes)
 }
 
+#' Insert subject transitions into the population-level and subject level 
+#' bookkeeping matrices.
+#'
+#' @param path matrix of transitions to be inserted
+#' @param subject subject ID
+#' @param pop_mat population bookkeeping matrix in epimodel list
+#' @param config_mat subject-level bookkeeping matrix
+#' @param subj_row_ind index stating where to begin inserting the transitions
+#'
+#' @return updated bookeeping objects
+insertPath <- function(path, subject, pop_mat, config_mat, ind) {
+    invisible(.Call('BDAepimodel_insertPath', PACKAGE = 'BDAepimodel', path, subject, pop_mat, config_mat, ind))
+}
+
 #' Join two armadillo cubes
 #'
 #' @param cube1
@@ -110,6 +124,20 @@ resolveSubjContrib <- function(pop_mat, row_inds, col_inds, insertion) {
 #' @return Vector of keys to index into an IRM array.
 retrieveKeys <- function(inds, irm_lookup, pop_mat, index_state_num) {
     .Call('BDAepimodel_retrieveKeys', PACKAGE = 'BDAepimodel', inds, irm_lookup, pop_mat, index_state_num)
+}
+
+#' Update eigen values, vectors, and inverse matrices for irms
+#'
+#' @param tpms array of transition probability matrices to be modified
+#' @param pop_mat population level bookkeeping matrix
+#' @param eigen_vals matrix of eigen values of irms
+#' @param eigen_vecs array of eigen vectors of rate matrices
+#' @param inverse_vecs array of inverse matrices of eigen vectors
+#' @param irm_keys vector of irm array keys
+#'
+#' @return Updated eigenvalues, eigenvectors, and inverse matrices
+sampleEventSubseq <- function(path, tpms, tpm_prods, init_ind, final_ind) {
+    invisible(.Call('BDAepimodel_sampleEventSubseq', PACKAGE = 'BDAepimodel', path, tpms, tpm_prods, init_ind, final_ind))
 }
 
 #' Get the irm keys for the compartment counts in a population level

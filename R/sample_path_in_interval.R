@@ -18,19 +18,22 @@ sample_path_in_interval <- function(epimodel, subject, interval) {
           init_time           <- epimodel$pop_mat[interval, "time"]
           final_time          <- epimodel$pop_mat[interval + 1, "time"]
           
-          irm_key            <- epimodel$keys[interval]
-
+          irm_key             <- epimodel$keys[interval]
+          
+          path                <- matrix(nrow = 5, ncol = 3)
+          
           # if the endpoints are the same, use the forward sampling
           # algorithm until an appropriate path is generated
           if(init_state == final_state) {
                     
-                    epimodel <- sample_forward(epimodel = epimodel, 
-                                                  subject = subject, 
-                                                  init_time = init_time, 
-                                                  final_time = final_time, 
-                                                  init_state = init_state,
-                                                  final_state = final_state,
-                                                  irm_key = irm_key)
+                    path <- sample_forward(path = path,
+                                           epimodel = epimodel, 
+                                           subject = subject, 
+                                           init_time = init_time, 
+                                           final_time = final_time, 
+                                           init_state = init_state,
+                                           final_state = final_state,
+                                           irm_key = irm_key)
                     
           } else {
                     # at least one change occurs, so sample it conditionally
@@ -44,24 +47,23 @@ sample_path_in_interval <- function(epimodel, subject, interval) {
                     event <- which((epimodel$flow[, init_state] == -1) & (epimodel$flow[, next_state] == 1))
                     init_state <- next_state
                     
-                    # update the configuration matrix
-                    epimodel$pop_mat[epimodel$subj_row_ind, c("time", "ID", "Event")] <- c(init_time, subject, event)
-                    epimodel$config_mat[epimodel$subj_row_ind, subject] <- init_state
-                    
-                    # increment epimodel$subj_row_ind 
-                    epimodel$subj_row_ind <- epimodel$subj_row_ind + 1
+                    # insert the first change into the path
+                    path[1, ] <- c(init_time, event, init_state)
                     
                     if(!init_state %in% epimodel$absorbing_states) {
                               # sample forward to complete the path
-                              epimodel <- sample_forward(epimodel = epimodel, 
-                                             subject = subject, 
-                                             init_time = init_time, 
-                                             final_time = final_time, 
-                                             init_state = init_state,
-                                             final_state = final_state,
-                                             irm_key = irm_key)         
+                              path <- sample_forward(path = path,
+                                                     epimodel = epimodel, 
+                                                     subject = subject,
+                                                     init_time = init_time, 
+                                                     final_time = final_time,
+                                                     init_state = init_state,
+                                                     final_state = final_state,
+                                                     irm_key = irm_key)         
+                    } else {
+                              path <- path[1, , drop = FALSE]
                     }
           }
           
-          return(epimodel)
+          return(path)
 }

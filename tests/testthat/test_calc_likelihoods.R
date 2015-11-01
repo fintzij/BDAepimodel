@@ -219,10 +219,6 @@ test_that("population-level likelihoods are correctly computed within each itera
                               # reflect the removal.
                               epimodel <- remove_trajectory(epimodel, subject = subjects[j], save_path = TRUE)
                               
-                              # update instatiate missing IRMs, update the tpms
-                              # and tpm products, the emission probability mtx,
-                              # and the FB matrices.
-                              
                               # TPM sequence
                               tpmSeqs(tpms = epimodel$tpms, pop_mat = epimodel$pop_mat, eigen_vals = epimodel$eigen_values, eigen_vecs = epimodel$eigen_vectors, inverse_vecs = epimodel$inv_eigen_vectors, irm_keys = epimodel$keys)
                               
@@ -234,8 +230,6 @@ test_that("population-level likelihoods are correctly computed within each itera
                               
                               # FB matrices
                               buildFBMats(epimodel$fb_mats, epimodel$tpm_products, epimodel$emission_mat, epimodel$initdist, epimodel$obs_time_inds)                        
-                              # set variable for where to start storing additional state changes
-                              epimodel$subj_row_ind <- epimodel$ind_final_config + 1
                               
                               # sample status at observation times
                               epimodel$config_mat[, subjects[j]] <- sample_at_obs_times(path = epimodel$config_mat[,subjects[j]], epimodel = epimodel)
@@ -244,7 +238,13 @@ test_that("population-level likelihoods are correctly computed within each itera
                               epimodel$config_mat[, subjects[j]] <- sample_at_event_times(path = epimodel$config_mat[,subjects[j]], epimodel = epimodel) 
                               
                               # sample paths in inter-event intervals
-                              epimodel <- sample_path(epimodel = epimodel, subject = subjects[j])
+                              path <- sample_path(epimodel, subject = subjects[j])
+                              epimodel$n_jumps <- ifelse(is.null(path), 0, nrow(path))
+                              
+                              if(!is.null(path)) {
+                                        # insert the path
+                                        insertPath(path, subjects[j], epimodel$pop_mat, epimodel$config_mat, epimodel$ind_final_config)
+                              }
                               
                               # insert the proposed trajectory
                               epimodel <- insert_trajectory(epimodel = epimodel, subject = subjects[j], reinsertion = FALSE)

@@ -14,7 +14,7 @@ insert_trajectory <- function(epimodel, subject, reinsertion) {
           
           # first re-order the configuration matrix if needed, then copy the
           # preceding rows for the new trajectory
-          if(epimodel$ind_final_config != (epimodel$subj_row_ind - 1)) {
+          if(epimodel$n_jumps != 0) {
                     
                     # reorder the matrix
                     row_ord <- order(epimodel$pop_mat[, "time"])
@@ -38,7 +38,7 @@ insert_trajectory <- function(epimodel, subject, reinsertion) {
                     }
                     
                     # update index for the final configuration and obs time indices
-                    epimodel$ind_final_config <- epimodel$subj_row_ind - 1
+                    epimodel$ind_final_config <- epimodel$ind_final_config + epimodel$n_jumps
                     epimodel$obs_time_inds <- getObsTimeInds(epimodel$pop_mat, epimodel$obstimes)
           }
           
