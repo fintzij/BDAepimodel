@@ -5,7 +5,7 @@
 \title{Insert subject transitions into the population-level and subject level 
 bookkeeping matrices.}
 \usage{
-insertPath(path, subject, pop_mat, config_mat, ind)
+insertPath(path, subject, pop_mat, subj_path, ind)
 }
 \arguments{
 \item{path}{matrix of transitions to be inserted}
@@ -14,7 +14,7 @@ insertPath(path, subject, pop_mat, config_mat, ind)
 
 \item{pop_mat}{population bookkeeping matrix in epimodel list}
 
-\item{config_mat}{subject-level bookkeeping matrix}
+\item{subj_path}{vector containing the subject path}
 
 \item{subj_row_ind}{index stating where to begin inserting the transitions}
 }

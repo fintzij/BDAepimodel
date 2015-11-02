@@ -8,7 +8,7 @@
 #' @param final_state
 #' @param irm_key
 #'   
-#' @return updated configuration matrix with a valid path (no update if constant
+#' @return updated bookkeeping matrix with a valid path (no update if constant
 #'   path)
 #'   
 #' @export
@@ -70,8 +70,7 @@ sample_forward <- function(path, epimodel, subject, init_time, final_time, init_
                                                   path[ind_init : ind_cur, ] <- NA
                                         }
                                         
-                              # if .t <= final_time, sample the next state and 
-                              # create an updated row in the config matrix
+                              # if .t <= final_time, sample the next state 
                               } else {
                                         
                                         if(ind_cur > nrow(path)) {

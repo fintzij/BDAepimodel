@@ -7,11 +7,12 @@
 sample_path_in_interval(epimodel, subject, interval)
 }
 \arguments{
+\item{subject}{character string for subject ID code}
+
 \item{interval}{index for the interval within which path is to be drawn}
 }
 \value{
-updated configuration matrix with subject path (excluding at time 0
-  and tmax) at the end
+matrix of transitions for path or NULL
 }
 \description{
 Draw a path within an interval from an endpoint conditioned homogeneous CTMC.

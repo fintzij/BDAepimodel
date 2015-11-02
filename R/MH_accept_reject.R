@@ -25,10 +25,6 @@ MH_accept_reject <- function(epimodel, subject, iter) {
                     # set population level likelihood to the new value
                     epimodel$likelihoods$pop_likelihood_cur <- epimodel$likelihoods$pop_likelihood_new
                     
-                    # update the observation matrix and vector of observation
-                    # time indices
-                    epimodel$obs_mat[, epimodel$meas_vars_aug] <- epimodel$pop_mat[epimodel$obs_time_inds, epimodel$meas_vars]
-                    
                     # record acceptance
                     epimodel$path_accept_vec[iter] <- 1
                     
@@ -40,12 +36,15 @@ MH_accept_reject <- function(epimodel, subject, iter) {
                     # reinsert the previous path
                     epimodel <- reinsert_path(epimodel, subject = subject)
                     
-                    # update counts in the obervation matrix
-                    epimodel$obs_mat[, epimodel$meas_vars_aug] <- epimodel$pop_mat[epimodel$obs_time_inds, epimodel$meas_vars]
-                    
                     # record rejection
                     epimodel$path_accept_vec[iter] <- 0
           }
+          
+          # update counts in the obervation matrix
+          epimodel$obs_mat[, epimodel$meas_vars_aug] <- epimodel$pop_mat[epimodel$obs_time_inds, epimodel$meas_vars]
+          
+          # update the initial configuration vector
+          epimodel$init_config[subject] = epimodel$subj_path[1]
           
           return(epimodel)
 }

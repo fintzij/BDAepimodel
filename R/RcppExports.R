@@ -54,12 +54,12 @@ getObsTimeInds <- function(pop_mat, obstimes) {
 #' @param path matrix of transitions to be inserted
 #' @param subject subject ID
 #' @param pop_mat population bookkeeping matrix in epimodel list
-#' @param config_mat subject-level bookkeeping matrix
+#' @param subj_path vector containing the subject path
 #' @param subj_row_ind index stating where to begin inserting the transitions
 #'
 #' @return updated bookeeping objects
-insertPath <- function(path, subject, pop_mat, config_mat, ind) {
-    invisible(.Call('BDAepimodel_insertPath', PACKAGE = 'BDAepimodel', path, subject, pop_mat, config_mat, ind))
+insertPath <- function(path, subject, pop_mat, subj_path, ind) {
+    invisible(.Call('BDAepimodel_insertPath', PACKAGE = 'BDAepimodel', path, subject, pop_mat, subj_path, ind))
 }
 
 #' Join two armadillo cubes
@@ -104,13 +104,13 @@ reorderMat <- function(oldmtx, ord) {
 #'
 #' @param pop_mat population bookkeeping matrix in epimodel list
 #' @param row_inds vector of row indices, 1:epimodel$ind_final_config
-#' @param col_inds column inds given by the subject path in epimodel$config_mat
+#' @param subj_path column inds given by the subject path
 #' @param insertion Logical indicating whether the resolution should be the
 #'     insertion or the removal of a path
 #'
 #' @return updated compartment counts
-resolveSubjContrib <- function(pop_mat, row_inds, col_inds, insertion) {
-    invisible(.Call('BDAepimodel_resolveSubjContrib', PACKAGE = 'BDAepimodel', pop_mat, row_inds, col_inds, insertion))
+resolveSubjContrib <- function(pop_mat, ind_final_config, subj_path, insertion) {
+    invisible(.Call('BDAepimodel_resolveSubjContrib', PACKAGE = 'BDAepimodel', pop_mat, ind_final_config, subj_path, insertion))
 }
 
 #' Get the irm keys for the compartment counts in a population level
@@ -126,6 +126,21 @@ retrieveKeys <- function(inds, irm_lookup, pop_mat, index_state_num) {
     .Call('BDAepimodel_retrieveKeys', PACKAGE = 'BDAepimodel', inds, irm_lookup, pop_mat, index_state_num)
 }
 
+#' Insert subject transitions into the population-level and subject level 
+#' bookkeeping matrices.
+#'
+#' @param subj_path subject path vector
+#' @param subject ID for subject
+#' @param pop_mat population level bookkeeping matrix
+#' @param init_config initial configuration vector
+#' @param ind_final_config index for final configuration
+#' @param flow_inds matrix of flow indices
+#'
+#' @return extended path vector
+retrieveSubjPath <- function(subj_path, subject, pop_mat, init_config, ind_final_config, flow_inds) {
+    invisible(.Call('BDAepimodel_retrieveSubjPath', PACKAGE = 'BDAepimodel', subj_path, subject, pop_mat, init_config, ind_final_config, flow_inds))
+}
+
 #' Update eigen values, vectors, and inverse matrices for irms
 #'
 #' @param tpms array of transition probability matrices to be modified
@@ -137,7 +152,7 @@ retrieveKeys <- function(inds, irm_lookup, pop_mat, index_state_num) {
 #'
 #' @return Updated eigenvalues, eigenvectors, and inverse matrices
 sampleEventSubseq <- function(path, tpms, tpm_prods, init_ind, final_ind) {
-    invisible(.Call('BDAepimodel_sampleEventSubseq', PACKAGE = 'BDAepimodel', path, tpms, tpm_prods, init_ind, final_ind))
+    .Call('BDAepimodel_sampleEventSubseq', PACKAGE = 'BDAepimodel', path, tpms, tpm_prods, init_ind, final_ind)
 }
 
 #' Get the irm keys for the compartment counts in a population level
@@ -145,16 +160,15 @@ sampleEventSubseq <- function(path, tpms, tpm_prods, init_ind, final_ind) {
 #'
 #' @param subject
 #' @param pop_mat population level bookkeeping matrix
-#' @param config_mat subject_level bookkeeping matrix for configurations
+#' @param subj_path integer vector giving the subject path
 #' @param irm_array array of rate matrices
 #' @param keys vector of irm keys
-#' @param inds indices relating to event times, along with t0 and tmax
 #' @param loglik boolean indicating whether to return the likelihood or
 #'     log-likelihood
 #'
 #' @return subject level likelihood or log-likelihood
-subjectLikelihood <- function(subject, pop_mat, config_mat, irm_array, initdist, keys, inds, loglik) {
-    .Call('BDAepimodel_subjectLikelihood', PACKAGE = 'BDAepimodel', subject, pop_mat, config_mat, irm_array, initdist, keys, inds, loglik)
+subjectLikelihood <- function(subject, pop_mat, subj_path, irm_array, initdist, keys, loglik) {
+    .Call('BDAepimodel_subjectLikelihood', PACKAGE = 'BDAepimodel', subject, pop_mat, subj_path, irm_array, initdist, keys, loglik)
 }
 
 #' Update eigen values, vectors, and inverse matrices for irms

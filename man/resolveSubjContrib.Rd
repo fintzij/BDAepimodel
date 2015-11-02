@@ -4,17 +4,17 @@
 \alias{resolveSubjContrib}
 \title{Add or remove the subject contribution from the compartment counts}
 \usage{
-resolveSubjContrib(pop_mat, row_inds, col_inds, insertion)
+resolveSubjContrib(pop_mat, ind_final_config, subj_path, insertion)
 }
 \arguments{
 \item{pop_mat}{population bookkeeping matrix in epimodel list}
 
-\item{row_inds}{vector of row indices, 1:epimodel$ind_final_config}
-
-\item{col_inds}{column inds given by the subject path in epimodel$config_mat}
+\item{subj_path}{column inds given by the subject path}
 
 \item{insertion}{Logical indicating whether the resolution should be the
 insertion or the removal of a path}
+
+\item{row_inds}{vector of row indices, 1:epimodel$ind_final_config}
 }
 \value{
 updated compartment counts

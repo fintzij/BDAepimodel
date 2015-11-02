@@ -16,7 +16,7 @@ using namespace arma;
 //'
 //' @return Updated eigenvalues, eigenvectors, and inverse matrices
 // [[Rcpp::export]]
-void sampleEventSubseq(Rcpp::NumericVector& path, Rcpp::NumericVector& tpms, Rcpp::NumericVector& tpm_prods, const int init_ind, const int final_ind) {
+Rcpp::IntegerVector sampleEventSubseq(Rcpp::IntegerVector& path, Rcpp::NumericVector& tpms, Rcpp::NumericVector& tpm_prods, const int init_ind, const int final_ind) {
           
           // set the initial and final inds
           int ind_start = init_ind - 1;
@@ -33,7 +33,6 @@ void sampleEventSubseq(Rcpp::NumericVector& path, Rcpp::NumericVector& tpms, Rcp
           // set tpm pointers and path pointer
           arma::cube tpm_arr(tpms.begin(), tpmDims[0], tpmDims[1], tpmDims[2], false);
           arma::cube prod_arr(tpm_prods.begin(), tpmDims[0], tpmDims[1], tpmDims[2], false);
-          arma::vec path_vec(path.begin(), path.size(), false);
           
           // create vector for state probabilities
           Rcpp::NumericVector state_probs(tpmDims[0]);
@@ -42,11 +41,12 @@ void sampleEventSubseq(Rcpp::NumericVector& path, Rcpp::NumericVector& tpms, Rcp
           // Sample the status at observation times
           for(int j = (ind_start+1); j < ind_end; ++j) {
                     
-                    state_probs = tpm_arr.slice(j - 1).row(state_cur - 1).t() % prod_arr.slice(j).col(state_end - 1) / prod_arr.slice(j - 1).at(state_cur - 1, state_end - 1);
+                    state_probs = (tpm_arr.slice(j - 1).row(state_cur - 1).t() % prod_arr.slice(j).col(state_end - 1)) / prod_arr.slice(j - 1).at(state_cur - 1, state_end - 1);
                     
                     next_state = Rcpp::RcppArmadillo::sample(states, 1, false, state_probs);
                     
-                    path_vec[j] = state_cur = next_state(0);
+                    path[j] = state_cur = int(next_state[0]);
           }
           
+          return path;
 }

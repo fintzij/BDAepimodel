@@ -14,7 +14,7 @@ calc_subj_likelihood <- function(epimodel, subject, log = TRUE) {
         .right_endpoints    <- c(.left_endpoints[-1], epimodel$ind_final_config)
 
           # get the subject_path
-          .subj_path          <- epimodel$config_mat[c(1, .right_endpoints), subject]
+          .subj_path          <- epimodel$subj_path[c(1, .right_endpoints)]
           .path_length        <- length(.subj_path)
 
           # compute the time diffs

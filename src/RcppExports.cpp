@@ -58,16 +58,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // insertPath
-void insertPath(const Rcpp::NumericMatrix& path, const int subject, Rcpp::NumericMatrix& pop_mat, Rcpp::NumericMatrix& config_mat, int& ind);
-RcppExport SEXP BDAepimodel_insertPath(SEXP pathSEXP, SEXP subjectSEXP, SEXP pop_matSEXP, SEXP config_matSEXP, SEXP indSEXP) {
+void insertPath(const Rcpp::NumericMatrix& path, const int subject, Rcpp::NumericMatrix& pop_mat, Rcpp::IntegerVector& subj_path, int& ind);
+RcppExport SEXP BDAepimodel_insertPath(SEXP pathSEXP, SEXP subjectSEXP, SEXP pop_matSEXP, SEXP subj_pathSEXP, SEXP indSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< const Rcpp::NumericMatrix& >::type path(pathSEXP);
     Rcpp::traits::input_parameter< const int >::type subject(subjectSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericMatrix& >::type pop_mat(pop_matSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericMatrix& >::type config_mat(config_matSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type subj_path(subj_pathSEXP);
     Rcpp::traits::input_parameter< int& >::type ind(indSEXP);
-    insertPath(path, subject, pop_mat, config_mat, ind);
+    insertPath(path, subject, pop_mat, subj_path, ind);
     return R_NilValue;
 END_RCPP
 }
@@ -114,15 +114,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // resolveSubjContrib
-void resolveSubjContrib(Rcpp::NumericVector& pop_mat, const Rcpp::IntegerVector row_inds, const Rcpp::IntegerVector col_inds, bool insertion);
-RcppExport SEXP BDAepimodel_resolveSubjContrib(SEXP pop_matSEXP, SEXP row_indsSEXP, SEXP col_indsSEXP, SEXP insertionSEXP) {
+void resolveSubjContrib(Rcpp::NumericMatrix& pop_mat, const int ind_final_config, const Rcpp::IntegerVector& subj_path, bool insertion);
+RcppExport SEXP BDAepimodel_resolveSubjContrib(SEXP pop_matSEXP, SEXP ind_final_configSEXP, SEXP subj_pathSEXP, SEXP insertionSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type pop_mat(pop_matSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type row_inds(row_indsSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type col_inds(col_indsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix& >::type pop_mat(pop_matSEXP);
+    Rcpp::traits::input_parameter< const int >::type ind_final_config(ind_final_configSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type subj_path(subj_pathSEXP);
     Rcpp::traits::input_parameter< bool >::type insertion(insertionSEXP);
-    resolveSubjContrib(pop_mat, row_inds, col_inds, insertion);
+    resolveSubjContrib(pop_mat, ind_final_config, subj_path, insertion);
     return R_NilValue;
 END_RCPP
 }
@@ -140,35 +140,50 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
-// sampleEventSubseq
-void sampleEventSubseq(Rcpp::NumericVector& path, Rcpp::NumericVector& tpms, Rcpp::NumericVector& tpm_prods, const int init_ind, const int final_ind);
-RcppExport SEXP BDAepimodel_sampleEventSubseq(SEXP pathSEXP, SEXP tpmsSEXP, SEXP tpm_prodsSEXP, SEXP init_indSEXP, SEXP final_indSEXP) {
+// retrieveSubjPath
+void retrieveSubjPath(Rcpp::IntegerVector& subj_path, const int subject, const Rcpp::NumericMatrix& pop_mat, const Rcpp::IntegerVector& init_config, const int ind_final_config, const Rcpp::IntegerMatrix flow_inds);
+RcppExport SEXP BDAepimodel_retrieveSubjPath(SEXP subj_pathSEXP, SEXP subjectSEXP, SEXP pop_matSEXP, SEXP init_configSEXP, SEXP ind_final_configSEXP, SEXP flow_indsSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type path(pathSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type subj_path(subj_pathSEXP);
+    Rcpp::traits::input_parameter< const int >::type subject(subjectSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericMatrix& >::type pop_mat(pop_matSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type init_config(init_configSEXP);
+    Rcpp::traits::input_parameter< const int >::type ind_final_config(ind_final_configSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerMatrix >::type flow_inds(flow_indsSEXP);
+    retrieveSubjPath(subj_path, subject, pop_mat, init_config, ind_final_config, flow_inds);
+    return R_NilValue;
+END_RCPP
+}
+// sampleEventSubseq
+Rcpp::IntegerVector sampleEventSubseq(Rcpp::IntegerVector& path, Rcpp::NumericVector& tpms, Rcpp::NumericVector& tpm_prods, const int init_ind, const int final_ind);
+RcppExport SEXP BDAepimodel_sampleEventSubseq(SEXP pathSEXP, SEXP tpmsSEXP, SEXP tpm_prodsSEXP, SEXP init_indSEXP, SEXP final_indSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type path(pathSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type tpms(tpmsSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type tpm_prods(tpm_prodsSEXP);
     Rcpp::traits::input_parameter< const int >::type init_ind(init_indSEXP);
     Rcpp::traits::input_parameter< const int >::type final_ind(final_indSEXP);
-    sampleEventSubseq(path, tpms, tpm_prods, init_ind, final_ind);
-    return R_NilValue;
+    __result = Rcpp::wrap(sampleEventSubseq(path, tpms, tpm_prods, init_ind, final_ind));
+    return __result;
 END_RCPP
 }
 // subjectLikelihood
-double subjectLikelihood(const int subject, const arma::mat& pop_mat, const arma::mat& config_mat, Rcpp::NumericVector& irm_array, const Rcpp::NumericVector& initdist, const arma::uvec& keys, const arma::uvec& inds, bool loglik);
-RcppExport SEXP BDAepimodel_subjectLikelihood(SEXP subjectSEXP, SEXP pop_matSEXP, SEXP config_matSEXP, SEXP irm_arraySEXP, SEXP initdistSEXP, SEXP keysSEXP, SEXP indsSEXP, SEXP loglikSEXP) {
+double subjectLikelihood(const int subject, const arma::mat& pop_mat, const arma::uvec& subj_path, Rcpp::NumericVector& irm_array, const Rcpp::NumericVector& initdist, const Rcpp::IntegerVector& keys, bool loglik);
+RcppExport SEXP BDAepimodel_subjectLikelihood(SEXP subjectSEXP, SEXP pop_matSEXP, SEXP subj_pathSEXP, SEXP irm_arraySEXP, SEXP initdistSEXP, SEXP keysSEXP, SEXP loglikSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< const int >::type subject(subjectSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type pop_mat(pop_matSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type config_mat(config_matSEXP);
+    Rcpp::traits::input_parameter< const arma::uvec& >::type subj_path(subj_pathSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type irm_array(irm_arraySEXP);
     Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type initdist(initdistSEXP);
-    Rcpp::traits::input_parameter< const arma::uvec& >::type keys(keysSEXP);
-    Rcpp::traits::input_parameter< const arma::uvec& >::type inds(indsSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type keys(keysSEXP);
     Rcpp::traits::input_parameter< bool >::type loglik(loglikSEXP);
-    __result = Rcpp::wrap(subjectLikelihood(subject, pop_mat, config_mat, irm_array, initdist, keys, inds, loglik));
+    __result = Rcpp::wrap(subjectLikelihood(subject, pop_mat, subj_path, irm_array, initdist, keys, loglik));
     return __result;
 END_RCPP
 }

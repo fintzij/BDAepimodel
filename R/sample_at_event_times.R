@@ -1,9 +1,9 @@
 #' Sample the infection status at times of state transition of other subjects
 #'
-#' @param path column from the config_mat corresponding to a subject path.
+#' @param path vector corresponding to a subject path.
 #' @inheritParams draw_trajec
 #'
-#' @return updated configuration matrix of subject level trajectories
+#' @return updated path vector of subject level trajectories
 #'
 #' @export
 
@@ -24,7 +24,7 @@ sample_at_event_times <- function(path, epimodel) {
                                 # sample the discrete time skeleton at event times
                                 if(diff(epimodel$obs_time_inds[t:(t+1)], lag = 1) != 1) {
                                         
-                                        sampleEventSubseq(path, epimodel$tpms, epimodel$tpm_products, epimodel$obs_time_inds[t], epimodel$obs_time_inds[t+1])
+                                        path <- sampleEventSubseq(path, epimodel$tpms, epimodel$tpm_products, epimodel$obs_time_inds[t], epimodel$obs_time_inds[t+1])
                                         
                                 }
                                 
@@ -44,7 +44,7 @@ sample_at_event_times <- function(path, epimodel) {
                         if(!path[epimodel$obs_time_inds[t]] %in% epimodel$absorbing_states) {
                                 if(diff(epimodel$obs_time_inds[t:(t+1)], lag = 1) != 1) {
                                         
-                                          path <- sample_DT_skeleton(path, epimodel, init_ind = epimodel$obs_time_inds[t], final_ind = epimodel$obs_time_inds[t+1])
+                                        path <-  sampleEventSubseq(path, epimodel$tpms, epimodel$tpm_products, epimodel$obs_time_inds[t], epimodel$obs_time_inds[t+1])
                                         
                                 }
                                 
@@ -60,12 +60,12 @@ sample_at_event_times <- function(path, epimodel) {
                         
                         if(diff(epimodel$obs_time_inds[t:(t+1)], lag = 1) != 1) {
                                 
-                                  path <- sample_DT_skeleton(path, epimodel, init_ind = epimodel$obs_time_inds[t], final_ind = epimodel$obs_time_inds[t+1])
+                                 path <- sampleEventSubseq(path, epimodel$tpms, epimodel$tpm_products, epimodel$obs_time_inds[t], epimodel$obs_time_inds[t+1])
                         }
                         
                 }
                 
         }
-        
-        return(path)
+          
+          return(path)
 }

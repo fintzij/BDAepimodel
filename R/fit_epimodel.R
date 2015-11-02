@@ -19,7 +19,7 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                 stop(sQuote("meas_vars"), "must be specified within the epimodel object.")
         }
         
-        if(is.null(epimodel$config_mat)) {
+        if(is.null(epimodel$pop_mat)) {
                 warning("An initial configuration was not provided so one has been generated.")
                 epimodel <- init_augmentation(epimodel)
         }
@@ -45,7 +45,7 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
         results$params[1, ] <- epimodel$params
         results$log_likelihood[1] <- epimodel$likelihoods$obs_likelihood + epimodel$likelihoods$pop_likelihood_cur
         
-        results$configs[[1]] <- epimodel$pop_mat[complete.cases(epimodel$pop_mat),]
+        results$configs[[1]] <- epimodel$pop_mat[1:epimodel$ind_final_config,]
         
         # initialize the vector for path acceptances
         epimodel$path_accept_vec <- rep(0, configs_to_redraw)
@@ -66,7 +66,7 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                     # cycle through subject-level trajectories to be re-drawn
                     for(j in 1:configs_to_redraw) {
                         
-                              # remove trajectory from the counts in config_mat
+                              # remove trajectory from the counts in pop_mat
                               # and obs_mat, and update the tpm sequences to
                               # reflect the removal.
                               epimodel <- remove_trajectory(epimodel, subject = subjects[j], save_path = TRUE)
@@ -88,10 +88,10 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                               buildFBMats(epimodel$fb_mats, epimodel$tpm_products, epimodel$emission_mat, epimodel$initdist, epimodel$obs_time_inds)                        
                               
                               # sample status at observation times
-                              epimodel$config_mat[, subjects[j]] <- sample_at_obs_times(path = epimodel$config_mat[,subjects[j]], epimodel = epimodel)
+                              epimodel$subj_path <- sample_at_obs_times(path = epimodel$subj_path, epimodel = epimodel)
                               
                               # sample status at event times
-                              epimodel$config_mat[, subjects[j]] <- sample_at_event_times(path = epimodel$config_mat[,subjects[j]], epimodel = epimodel) 
+                              epimodel$subj_path <- sample_at_event_times(path = epimodel$subj_path, epimodel = epimodel)
                               
                               # sample paths in inter-event intervals
                               path <- sample_path(epimodel, subject = subjects[j])
@@ -99,7 +99,14 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                               
                               # insert the path
                               if(!is.null(path)) {
-                                        insertPath(path, subjects[j], epimodel$pop_mat, epimodel$config_mat, epimodel$ind_final_config)
+                                        
+                                        # add rows to the population level bookkeeping matrix if necessary
+                                        if(epimodel$ind_final_config + epimodel$n_jumps > nrow(epimodel$pop_mat)) {
+                                                  epimodel <- expand_pop_mat(epimodel, buffer_size = epimodel$n_jumps)
+                                        }
+                                        
+                                        # insert the path
+                                        insertPath(path, subjects[j], epimodel$pop_mat, epimodel$subj_path, epimodel$ind_final_config)
                                         } 
                               
                               # insert the proposed trajectory

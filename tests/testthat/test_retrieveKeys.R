@@ -99,7 +99,6 @@ test_that("keys within each iteration are correct", {
                     return(params)
           }
           
-          
           beta_mu_rho_kernel <- function(epimodel) {
                     
                     # get existing parameter values 
@@ -149,6 +148,7 @@ test_that("keys within each iteration are correct", {
                     
                     return(epimodel)
           }
+          
           epimodel <- init_settings(epimodel,
                                     niter = 4,
                                     save_params_every = 1, 
@@ -208,7 +208,8 @@ test_that("keys within each iteration are correct", {
                               
                               expect_equal(retrieveKeys(1:epimodel$ind_final_config, epimodel$irm_key_lookup, epimodel$pop_mat, epimodel$index_state_num), epimodel$keys)
                               
-                             
+                              expect_equal(as.numeric(epimodel$pop_mat[1:epimodel$ind_final_config,"I"]), epimodel$irm_key_lookup[epimodel$keys, 2])
+                              
                               # TPM sequence
                               tpmSeqs(tpms = epimodel$tpms, pop_mat = epimodel$pop_mat, eigen_vals = epimodel$eigen_values, eigen_vecs = epimodel$eigen_vectors, inverse_vecs = epimodel$inv_eigen_vectors, irm_keys = epimodel$keys)
                               
@@ -222,23 +223,31 @@ test_that("keys within each iteration are correct", {
                               buildFBMats(epimodel$fb_mats, epimodel$tpm_products, epimodel$emission_mat, epimodel$initdist, epimodel$obs_time_inds)                        
                               
                               # sample status at observation times
-                              epimodel$config_mat[, subjects[j]] <- sample_at_obs_times(path = epimodel$config_mat[,subjects[j]], epimodel = epimodel)
+                              epimodel$subj_path <- sample_at_obs_times(path = epimodel$subj_path, epimodel = epimodel)
                               
                               # sample status at event times
-                              epimodel$config_mat[, subjects[j]] <- sample_at_event_times(path = epimodel$config_mat[,subjects[j]], epimodel = epimodel) 
+                              epimodel$subj_path <- sample_at_event_times(path = epimodel$subj_path, epimodel = epimodel)
                               
                               # sample paths in inter-event intervals
                               path <- sample_path(epimodel, subject = subjects[j])
                               epimodel$n_jumps <- ifelse(is.null(path), 0, nrow(path))
                               
+                              # insert the path
                               if(!is.null(path)) {
+                                        
+                                        # add rows to the population level bookkeeping matrix if necessary
+                                        if(epimodel$ind_final_config + epimodel$n_jumps > nrow(epimodel$pop_mat)) {
+                                                  epimodel <- expand_pop_mat(epimodel, buffer_size = epimodel$n_jumps)
+                                        }
+                                        
                                         # insert the path
-                                        insertPath(path, subjects[j], epimodel$pop_mat, epimodel$config_mat, epimodel$ind_final_config)
-                              }
+                                        insertPath(path, subjects[j], epimodel$pop_mat, epimodel$subj_path, epimodel$ind_final_config)
+                              } 
                               
                               # insert the proposed trajectory
                               epimodel <- insert_trajectory(epimodel = epimodel, subject = subjects[j], reinsertion = FALSE)
                               expect_equal(retrieveKeys(1:epimodel$ind_final_config, epimodel$irm_key_lookup, epimodel$pop_mat, epimodel$index_state_num), epimodel$keys)
+                              expect_equal(as.numeric(epimodel$pop_mat[1:epimodel$ind_final_config,"I"]), epimodel$irm_key_lookup[epimodel$keys, 2])
                               
                               # accept or reject the proposed path
                               epimodel <- MH_accept_reject(epimodel = epimodel, subject = subjects[j], iter = j)

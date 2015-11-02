@@ -1,10 +1,9 @@
 #' Draw a path within an interval from an endpoint conditioned homogeneous CTMC.
 #' 
-#' @inheritParams draw_trajec
+#' @inheritParams sample_path
 #' @param interval index for the interval within which path is to be drawn
 #'   
-#' @return updated configuration matrix with subject path (excluding at time 0
-#'   and tmax) at the end
+#' @return matrix of transitions for path or NULL
 #'   
 #' @export
 #' 
@@ -12,8 +11,8 @@
 sample_path_in_interval <- function(epimodel, subject, interval) {
           
           # set the initial and final states, and times of interval endpoints
-          init_state          <- epimodel$config_mat[interval, subject]
-          final_state         <- epimodel$config_mat[interval + 1, subject]
+          init_state          <- epimodel$subj_path[interval]
+          final_state         <- epimodel$subj_path[interval + 1]
           
           init_time           <- epimodel$pop_mat[interval, "time"]
           final_time          <- epimodel$pop_mat[interval + 1, "time"]

@@ -172,10 +172,12 @@ simulate_epimodel <- function(epimodel, obstimes = NULL, init_state = NULL, meas
                     # reset the final observation time in the configuration matrix
                     epimodel$pop_mat[nrow(epimodel$config_mat),"time"] <- max(epimodel$obstimes)
           }
+          
+          epimodel$init_config <- epimodel$config_mat[1,]
+          epimodel$config_mat <- NULL
 
           if(return_config == FALSE) {
                     epimodel$pop_mat <- NULL
-                    epimodel$config_mat <- NULL
           }
 
           return(epimodel)

@@ -7,10 +7,10 @@
 sample_at_event_times(path, epimodel)
 }
 \arguments{
-\item{path}{column from the config_mat corresponding to a subject path.}
+\item{path}{vector corresponding to a subject path.}
 }
 \value{
-updated configuration matrix of subject level trajectories
+updated path vector of subject level trajectories
 }
 \description{
 Sample the infection status at times of state transition of other subjects

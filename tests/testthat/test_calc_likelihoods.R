@@ -43,9 +43,11 @@ test_that("The log-likelihoods are computed correctly", {
           
           subj1_likelihood <- log(1 - epimodel$params["I0"]) + log(2*epimodel$params["beta"]) - 2*epimodel$params["beta"] * (pop_mat[2,"time"] - pop_mat[1,"time"]) + log(epimodel$params["mu"])  - epimodel$params["mu"] *(pop_mat[3,"time"] - pop_mat[2,"time"])
           
+          retrieveSubjPath(epimodel$subj_path, 1, epimodel$pop_mat, epimodel$init_config, epimodel$ind_final_config, epimodel$flow_inds)
+          
           expect_equal(signif(calc_pop_likelihood(epimodel = epimodel, log = TRUE), digits = 6), as.numeric(signif(pop_likelihood, digits = 6)))
           expect_equal(as.numeric(calc_obs_likelihood(epimodel = epimodel, log = TRUE)), as.numeric(obs_likelihood))
-          expect_equal(as.numeric(subjectLikelihood(1, epimodel$pop_mat, epimodel$config_mat, epimodel$irm, epimodel$initdist, epimodel$keys, c(1, c(1:epimodel$ind_final_config)[-epimodel$obs_time_inds], epimodel$ind_final_config), TRUE)), as.numeric(subj1_likelihood))
+          expect_equal(as.numeric(subjectLikelihood(1, epimodel$pop_mat, epimodel$subj_path, epimodel$irm, epimodel$initdist, epimodel$keys, TRUE)), as.numeric(subj1_likelihood))
 }) 
 
 
@@ -232,19 +234,26 @@ test_that("population-level likelihoods are correctly computed within each itera
                               buildFBMats(epimodel$fb_mats, epimodel$tpm_products, epimodel$emission_mat, epimodel$initdist, epimodel$obs_time_inds)                        
                               
                               # sample status at observation times
-                              epimodel$config_mat[, subjects[j]] <- sample_at_obs_times(path = epimodel$config_mat[,subjects[j]], epimodel = epimodel)
+                              epimodel$subj_path <- sample_at_obs_times(path = epimodel$subj_path, epimodel = epimodel)
                               
                               # sample status at event times
-                              epimodel$config_mat[, subjects[j]] <- sample_at_event_times(path = epimodel$config_mat[,subjects[j]], epimodel = epimodel) 
+                              epimodel$subj_path <- sample_at_event_times(path = epimodel$subj_path, epimodel = epimodel)
                               
                               # sample paths in inter-event intervals
                               path <- sample_path(epimodel, subject = subjects[j])
                               epimodel$n_jumps <- ifelse(is.null(path), 0, nrow(path))
                               
+                              # insert the path
                               if(!is.null(path)) {
+                                        
+                                        # add rows to the population level bookkeeping matrix if necessary
+                                        if(epimodel$ind_final_config + epimodel$n_jumps > nrow(epimodel$pop_mat)) {
+                                                  epimodel <- expand_pop_mat(epimodel, buffer_size = epimodel$n_jumps)
+                                        }
+                                        
                                         # insert the path
-                                        insertPath(path, subjects[j], epimodel$pop_mat, epimodel$config_mat, epimodel$ind_final_config)
-                              }
+                                        insertPath(path, subjects[j], epimodel$pop_mat, epimodel$subj_path, epimodel$ind_final_config)
+                              } 
                               
                               # insert the proposed trajectory
                               epimodel <- insert_trajectory(epimodel = epimodel, subject = subjects[j], reinsertion = FALSE)

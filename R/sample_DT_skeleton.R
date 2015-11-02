@@ -9,7 +9,7 @@
 #' @param init_ind,final_ind index in the configuration matrix of the left/right
 #'   endpoints of the observation interval
 #'
-#' @return updated configuration matrix
+#' @return updated path vector
 #'
 #' @export
 #'

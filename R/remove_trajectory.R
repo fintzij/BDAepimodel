@@ -17,11 +17,18 @@ remove_trajectory <- function(epimodel, subject, save_path) {
           
           # save the current path if not removing it b/c of a M-H rejection
           if(save_path) {
-                    epimodel$path_cur  <- cbind(epimodel$pop_mat[c(1, subj_inds, epimodel$ind_final_config), c("time", "Event")], epimodel$config_mat[c(1, subj_inds, epimodel$ind_final_config), subject])
+                    # get the subject path
+                    retrieveSubjPath(epimodel$subj_path, subject, epimodel$pop_mat, epimodel$init_config, epimodel$ind_final_config, epimodel$flow_inds)
+
+                    # save the transitions
+                    epimodel$path_cur             <- matrix(nrow = 2 + length(subj_inds), ncol = 3)
+                    epimodel$path_cur[,1:2]       <- epimodel$pop_mat[c(1, subj_inds, epimodel$ind_final_config), c("time", "Event")]
+                    epimodel$path_cur[, 3]        <- epimodel$subj_path[c(1, subj_inds, epimodel$ind_final_config)]
+                              
           }
           
           # remove the contribution to the compartment counts in the configuration matrix
-          resolveSubjContrib(epimodel$pop_mat, 1:epimodel$ind_final_config, epimodel$config_mat[,subject], insertion =  FALSE)
+          resolveSubjContrib(epimodel$pop_mat, epimodel$ind_final_config, epimodel$subj_path, insertion =  FALSE)
           
           # compute the likelihood of the subject's trajectory from a
           # time-inhomogeneous CTMC - only computed when current path is saved
@@ -33,12 +40,12 @@ remove_trajectory <- function(epimodel, subject, save_path) {
                     # check to see if any additional irms are needed. check_irm will
                     # instatiate the required matrices and their eigen decompositions
                     if(any(epimodel$keys == 0)) {
-                    
-                        epimodel <- append_missing(epimodel)
-                    
+                              epimodel <- append_missing(epimodel)
                     }
-          
-                    epimodel$likelihoods$subj_likelihood_cur <- subjectLikelihood(subject, pop_mat = epimodel$pop_mat, config_mat = epimodel$config_mat, irm_array = epimodel$irm, initdist = epimodel$initdist, keys = epimodel$keys, inds = c(1, c(1:epimodel$ind_final_config)[-epimodel$obs_time_inds], epimodel$ind_final_config), loglik = TRUE)
+                    
+                    # compute the subject level likelihood
+                    epimodel$likelihoods$subj_likelihood_cur <- subjectLikelihood(subject, epimodel$pop_mat, epimodel$subj_path, epimodel$irm, epimodel$initdist, epimodel$keys, TRUE)
+                    
           }
 
           # if there were transitions, remove the rows, update the indexing variables
@@ -53,8 +60,8 @@ remove_trajectory <- function(epimodel, subject, save_path) {
                   epimodel$pop_mat <- reorderMat(epimodel$pop_mat, row_ord) # reorder matrix
                   colnames(epimodel$pop_mat) <- c("time", "ID", "Event", epimodel$states) # replace column names
                   
-                  epimodel$config_mat[subj_inds,] <- NA # do the same with the configuration matrix
-                  epimodel$config_mat <- reorderMat(epimodel$config_mat, row_ord)
+                  epimodel$subj_path[subj_inds] <- 0L # do the same with the configuration matrix
+                  epimodel$subj_path <- epimodel$subj_path[row_ord]
                   
                   # set the index of the final configuration
                   epimodel$ind_final_config <- epimodel$ind_final_config - length(subj_inds)

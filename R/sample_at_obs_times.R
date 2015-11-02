@@ -1,16 +1,16 @@
 #' Sample the infection status for the specified subject at observation times.
 #'
-#' @param path column from the config_mat corresponding to a subject path.
+#' @param path vector giving a subject path.
 #' @inheritParams draw_trajec
 #'
-#' @return updated configuration matrix
+#' @return updated path vector
 #'
 #' @export
 
 sample_at_obs_times <- function(path, epimodel) {
         
         # initialize the vector
-        state_vec <- epimodel$obstimes
+        state_vec <- epimodel$obs_time_inds
         
         # draw the last state
         state_vec[epimodel$nobs] <- prev_state <- .Internal(sample(epimodel$num_states, size = 1, FALSE, colSums(epimodel$fb_mats[,,epimodel$nobs - 1])))
@@ -24,7 +24,7 @@ sample_at_obs_times <- function(path, epimodel) {
                 
         }
         
-        # update the configuration matrix
+        # update the path
         path[1:epimodel$ind_final_config] <- state_vec[findInterval(epimodel$pop_mat[1:epimodel$ind_final_config,"time"], epimodel$obstimes)]
         
         return(path)

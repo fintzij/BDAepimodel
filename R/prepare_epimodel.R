@@ -20,9 +20,12 @@ prepare_epimodel <- function(epimodel) {
           epimodel <- detect_structure(epimodel)
 
           # add buffer to the configuration matrix, also adds configurations at
-          # observation times and instatiates epimodel$.ind_final_config
-          epimodel <- expand_config_mat(epimodel)
-
+          # observation times and instatiates epimodel$ind_final_config
+          epimodel <- expand_pop_mat(epimodel)
+          
+          # initialize vector for storing the current subject level path
+          epimodel$subj_path <- rep(0L, nrow(epimodel$pop_mat)) 
+          
           # Initialize two arrays for the transition probability matrices, one
           # for the matrices and one for products. Also initialize a bookkeeping
           # vector indicating which tpms and tpm product matrices need to be

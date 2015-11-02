@@ -17,7 +17,7 @@ endpoints of the observation interval}
 \item{subject}{subject ID, i.e. column index in config_mat}
 }
 \value{
-updated configuration matrix
+updated path vector
 }
 \description{
 This function only gets called when there is at least one transition event in

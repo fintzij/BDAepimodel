@@ -22,7 +22,7 @@ insert_trajectory <- function(epimodel, subject, reinsertion) {
                     epimodel$pop_mat <- reorderMat(epimodel$pop_mat, row_ord) # reorder matrix
                     colnames(epimodel$pop_mat) <- c("time", "ID", "Event", epimodel$states) # replace column names
                     
-                    epimodel$config_mat <- reorderMat(epimodel$config_mat, row_ord) # reorder config_mat
+                    epimodel$subj_path <- epimodel$subj_path[row_ord] # reorder subject path vector
                               
                     # get the subject indices
                     subj_inds <- which(epimodel$pop_mat[,"ID"] == subject)
@@ -31,10 +31,6 @@ insert_trajectory <- function(epimodel, subject, reinsertion) {
                               
                               # copy the states from the previous event times
                               epimodel$pop_mat[subj_inds[k], epimodel$states] <- epimodel$pop_mat[subj_inds[k] - 1, epimodel$states]
-                              
-                              # copy the configurations from the previous event times
-                              epimodel$config_mat[subj_inds[k], -subject] <- epimodel$config_mat[subj_inds[k] - 1, -subject] 
-                              
                     }
                     
                     # update index for the final configuration and obs time indices
@@ -50,12 +46,12 @@ insert_trajectory <- function(epimodel, subject, reinsertion) {
                     # get the vector of keys
                     epimodel$keys <- retrieveKeys(1:epimodel$ind_final_config, epimodel$irm_key_lookup, epimodel$pop_mat, epimodel$index_state_num)
                     
-                    epimodel$likelihoods$subj_likelihood_new <- subjectLikelihood(subject, pop_mat = epimodel$pop_mat, config_mat = epimodel$config_mat, irm_array = epimodel$irm, initdist = epimodel$initdist, keys = epimodel$keys, inds = c(1, c(1:epimodel$ind_final_config)[-epimodel$obs_time_inds], epimodel$ind_final_config), loglik = TRUE)
+                    epimodel$likelihoods$subj_likelihood_new <- subjectLikelihood(subject, epimodel$pop_mat, epimodel$subj_path, epimodel$irm, epimodel$initdist, epimodel$keys, TRUE)
                     
           }
           
           # add the subject's contribution back into the compartment counts
-          resolveSubjContrib(epimodel$pop_mat, 1:epimodel$ind_final_config, epimodel$config_mat[,subject], insertion =  TRUE)
+          resolveSubjContrib(epimodel$pop_mat, epimodel$ind_final_config, epimodel$subj_path, insertion =  TRUE)
           
           # compute the likelihood for the new population-level trajectory -
           # only when not a reinsertion following a MH rejection
@@ -64,11 +60,8 @@ insert_trajectory <- function(epimodel, subject, reinsertion) {
                     # update the keys to reflect the insertion - no dimension
                     # change from previous retrieval, so only update keys where
                     # subject was in an index state
-                    index_contrib <- which(epimodel$config_mat[,subject] %in% epimodel$index_state_num)
+                    index_contrib <- which(epimodel$subj_path %in% epimodel$index_state_num)
                     epimodel$keys[index_contrib]<- retrieveKeys(index_contrib, epimodel$irm_key_lookup, epimodel$pop_mat, epimodel$index_state_num)
-                    
-                    # deprecated - only need to retrieve keys where subject was in an index state
-                    # epimodel$keys<- retrieveKeys(1:epimodel$ind_final_config, epimodel$irm_key_lookup, epimodel$pop_mat, epimodel$index_state_num)
                     
                     # check to see if any additional irms are needed. check_irm will
                     # instatiate the required matrices and their eigen decompositions

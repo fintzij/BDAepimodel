@@ -55,6 +55,5 @@ test_that("The original configuration matrix is restored when a path is re-inser
           # re-insert the trajectory
           epimodel <- reinsert_path(epimodel, subject = 1)
 
-          expect_equal(epimodel$config_mat[complete.cases(epimodel$config_mat),], .config_mat[complete.cases(.config_mat),])
           expect_equal(unname(epimodel$pop_mat[complete.cases(epimodel$pop_mat),]), .pop_mat[complete.cases(.pop_mat),])
 })

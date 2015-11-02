@@ -5,19 +5,17 @@
 \title{Get the irm keys for the compartment counts in a population level
 bookkeeping matrix}
 \usage{
-subjectLikelihood(subject, pop_mat, config_mat, irm_array, initdist, keys, inds,
+subjectLikelihood(subject, pop_mat, subj_path, irm_array, initdist, keys,
   loglik)
 }
 \arguments{
 \item{pop_mat}{population level bookkeeping matrix}
 
-\item{config_mat}{subject_level bookkeeping matrix for configurations}
+\item{subj_path}{integer vector giving the subject path}
 
 \item{irm_array}{array of rate matrices}
 
 \item{keys}{vector of irm keys}
-
-\item{inds}{indices relating to event times, along with t0 and tmax}
 
 \item{loglik}{boolean indicating whether to return the likelihood or
 log-likelihood}

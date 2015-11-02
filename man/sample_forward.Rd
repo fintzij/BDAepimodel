@@ -13,7 +13,7 @@ sample_forward(path, epimodel, subject, init_time, final_time, init_state,
 \item{irm_key}{}
 }
 \value{
-updated configuration matrix with a valid path (no update if constant
+updated bookkeeping matrix with a valid path (no update if constant
   path)
 }
 \description{

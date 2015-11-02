@@ -13,7 +13,7 @@ sample_path <- function(epimodel, subject) {
           # sample times of state transition in intervals with a state change
           if(epimodel$progressive & epimodel$absorbing_states) {
                     
-                    intervals <- which(diff(epimodel$config_mat[1:epimodel$ind_final_config, subject], lag = 1) != 0)
+                    intervals <- which(diff(epimodel$subj_path[1:epimodel$ind_final_config], lag = 1) != 0)
                     path      <- vector(mode = "list", length = length(intervals))
                     
                     for(s in seq_along(path)) {
@@ -27,7 +27,7 @@ sample_path <- function(epimodel, subject) {
           # to sample times of transition after absorbtion
           } else if(epimodel$absorbing_states & !epimodel$progressive) {
                     
-                    intervals  <- setdiff(1:(epimodel$ind_final_config - 1), which(epimodel$config_mat[, subject] %in% epimodel$absorbing_states)[1] : (epimodel$ind_final_config - 1))
+                    intervals  <- setdiff(1:(epimodel$ind_final_config - 1), which(epimodel$subj_path[1:epimodel$ind_final_config] %in% epimodel$absorbing_states)[1] : (epimodel$ind_final_config - 1))
                     path <- vector(mode = "list", length = length(intervals))
                     
                     for(s in seq_along(path)) {
