@@ -133,17 +133,17 @@ rho_kernel <- function(epimodel) {
           return(epimodel)
 }
 
-kernel <- list(beta_mu_kernel, rho_p0_kernel)
+kernel <- list(beta_mu_kernel, rho_kernel)
 
 
 # save new parameters every iteration
 # save every tenth configuration matrix
 # resample 10 subject-level trajectories in between parameter updates
 epimodel <- init_settings(epimodel,
-                          niter = 25,
+                          niter = 250000,
                           save_params_every = 1, 
                           save_configs_every = 1,
-                          kernel = list(beta_mu_kernel, rho_kernel),
+                          kernel = kernel,
                           cov_mtx = diag(c(0.02, 0.02, 0.02), nrow = 3, ncol = 3),
                           configs_to_redraw = 10,
                           to_estimation_scale = to_estimation_scale,
@@ -154,6 +154,7 @@ epimodel <- init_settings(epimodel,
 # objects to store results
 BDAepimodel_results <- matrix(0, nrow = length(epimodel$obstimes), ncol = epimodel$sim_settings$niter)
 Gillespie_results <- matrix(0, nrow = length(epimodel$obstimes), ncol = epimodel$sim_settings$niter)
+
 
 epimodel <- prepare_epimodel(epimodel)
 
@@ -176,13 +177,13 @@ set.seed(results$seed)
 results$params[1, ] <- epimodel$params
 results$log_likelihood[1] <- epimodel$likelihoods$obs_likelihood + epimodel$likelihoods$pop_likelihood_cur
 
-results$configs[[1]] <- epimodel$pop_mat[complete.cases(epimodel$pop_mat),]
+results$configs[[1]] <- epimodel$pop_mat[1:epimodel$ind_final_config,]
 
 # initialize the vector for path acceptances
 epimodel$path_accept_vec <- rep(0, configs_to_redraw)
 
 # get start time
-start.time <- Sys.time()
+start.time = Sys.time()
 
 for(k in 1:niter) {
           
@@ -208,7 +209,8 @@ for(k in 1:niter) {
           subjects <- sample.int(10, 1)
           
           # save the original trajectory to the gillespie_results object
-          Gillespie_results[,k] <- ifelse(.epimodel$config_mat[.epimodel$obs_time_inds, subjects] == 2, 1, 0)
+          retrieveSubjPath(.epimodel$subj_path, subjects, .epimodel$pop_mat, .epimodel$init_config, .epimodel$ind_final_config, .epimodel$flow_inds)
+          Gillespie_results[,k] <- ifelse(.epimodel$subj_path[.epimodel$obs_time_inds] == 2, 1, 0)
           
           # remove trajectory from the counts in config_mat 
           # and obs_mat, and update the tpm sequences to 
@@ -227,23 +229,35 @@ for(k in 1:niter) {
           
           # FB matrices
           buildFBMats(.epimodel$fb_mats, .epimodel$tpm_products, .epimodel$emission_mat, .epimodel$initdist, .epimodel$obs_time_inds)                        
-          # set variable for where to start storing additional state changes
-          .epimodel$subj_row_ind <- .epimodel$ind_final_config + 1
           
           # sample status at observation times
-          .epimodel$config_mat <- sample_at_obs_times(config_mat = .epimodel$config_mat, epimodel = .epimodel, subject = subjects)
+          .epimodel$subj_path <- sample_at_obs_times(path = .epimodel$subj_path, epimodel = .epimodel)
+          
           # sample status at event times
-          .epimodel$config_mat <- sample_at_event_times(config_mat = .epimodel$config_mat, epimodel = .epimodel, subject = subjects)
+          .epimodel$subj_path <- sample_at_event_times(path = .epimodel$subj_path, epimodel = .epimodel)
+          
           # sample paths in inter-event intervals
-          .epimodel <- sample_path(epimodel = .epimodel, subject = subjects)
+          path <- sample_path(.epimodel, subject = subjects)
+          .epimodel$n_jumps <- ifelse(is.null(path), 0, nrow(path))
+          
+          # insert the path
+          if(!is.null(path)) {
+                    
+                    # add rows to the population level bookkeeping matrix if necessary
+                    if(.epimodel$ind_final_config + .epimodel$n_jumps > nrow(.epimodel$pop_mat)) {
+                              .epimodel <- expand_pop_mat(.epimodel, buffer_size = .epimodel$n_jumps)
+                    }
+                    
+                    # insert the path
+                    insertPath(path, subjects, .epimodel$pop_mat, .epimodel$subj_path, .epimodel$ind_final_config)
+          } 
           
           # insert the proposed trajectory
           .epimodel <- insert_trajectory(epimodel = .epimodel, subject = subjects, reinsertion = FALSE)
-          
           # accept or reject the proposed path
           .epimodel <- MH_accept_reject(epimodel = .epimodel, subject = subjects, iter = k)
           
-          BDAepimodel_results[,k] <- ifelse(.epimodel$config_mat[.epimodel$obs_time_inds, subjects] == 2, 1, 0)
+          BDAepimodel_results[,k] <- ifelse(.epimodel$subj_path[.epimodel$obs_time_inds] == 2, 1, 0)
           
 }
 end.time <- Sys.time()
