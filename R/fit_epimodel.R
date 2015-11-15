@@ -164,13 +164,13 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
         
         results$time <- difftime(end.time, start.time, units = "hours")
         
-        epimodel <- list(model = list(dat = epimodel$dat,
-                                      time_var = epimodel$time_var,
-                                      meas_vars = epimodel$meas_vars,
-                                      obstimes = epimodel$obstimes,
-                                      popsize = epimodel$popsize,
-                                      states = epimodel$states,
-                                      params = apply(results$params, 2, median)),
+        epimodel <- list(dat = epimodel$dat,
+                         time_var = epimodel$time_var,
+                         meas_vars = epimodel$meas_vars,
+                         obstimes = epimodel$obstimes,
+                         popsize = epimodel$popsize,
+                         states = epimodel$states,
+                         params = apply(results$params, 2, median),
                          settings = epimodel$sim_settings,
                          results = results)
         

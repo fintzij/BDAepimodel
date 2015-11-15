@@ -4,7 +4,8 @@
 \alias{plot_latent_posterior}
 \title{Plot the posterior distribution of the latent paths for measured states.}
 \usage{
-plot_latent_posterior(epimodel, states, times)
+plot_latent_posterior(epimodel, states, times, proportion = FALSE,
+  truth = NULL, true_popsize = NULL)
 }
 \arguments{
 \item{epimodel}{fitted epimodel object}
@@ -12,6 +13,13 @@ plot_latent_posterior(epimodel, states, times)
 \item{states}{character vector of states for which to plot the posterior}
 
 \item{times}{sequence of times at which to compute the posterior}
+
+\item{proportion}{if true, plot the proportion instead of the counts}
+
+\item{truth}{true latent trajectory}
+
+\item{true_popsize}{true population size, defaults to the population size
+specified in the epimodel object unless otherwise provided.}
 }
 \value{
 plot of the posterior distribution of the latent paths

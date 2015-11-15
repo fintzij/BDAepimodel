@@ -22,7 +22,7 @@ d_meas_process <- function(state, meas_vars, params, log = TRUE) {
 epimodel <- init_epimodel(obstimes = seq(0, 10, by = 1),
                           popsize = popsize,
                           states = c("S", "I", "R"), 
-                          params = c(beta = rnorm(1, 0.005, 1e-5), mu = rnorm(1, 1, 1e-5), rho = 0.5, S0 = 0.95, I0 = 0.01, R0 = 0.04), 
+                          params = c(beta = rnorm(1, 0.004, 1e-5), mu = rnorm(1, 1, 1e-5), rho = 0.5, S0 = 0.95, I0 = 0.01, R0 = 0.04), 
                           rates = c("beta * I", "mu"), 
                           flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                           meas_vars = "I",
@@ -38,86 +38,86 @@ epimodel <- simulate_epimodel(epimodel = epimodel, lump = TRUE, trim = TRUE)
 # Set the MCMC settings ---------------------------------------------------
 
 # Kernel - MH - Beta, Mu, Rho ---------------------------------------------
-
-to_estimation_scale <- function(params, epimodel) {
-          
-          params_est          <- params
-          
-          params_est["beta"]  <- log(params["beta"] * epimodel$popsize/params["mu"])
-          
-          params_est["mu"]    <- log(params["mu"])
-          
-          params_est["rho"]   <- logit(params["rho"])
-          
-          return(params_est)
-}
-
-from_estimation_scale <- function(params_est, epimodel) {
-          
-          params              <- params_est
-          
-          params["beta"]      <- exp(params_est["mu"])/epimodel$popsize * exp(params_est["beta"])
-          
-          params["mu"]        <- exp(params_est["mu"])
-          
-          params["rho"]       <- expit(params["rho"])
-          
-          return(params)
-}
-
-
-beta_mu_rho_kernel <- function(epimodel) {
-          
-          # get existing parameter values 
-          proposal <- epimodel$params
-          
-          # get prior likelihood and complete data log likelihood for current parameters
-          prior_prob_cur <- c(dnorm(epimodel$params["beta"], mean = log(1), sd = 1.8, log = TRUE),
-                              dnorm(epimodel$params["mu"], mean = log(1), sd = 3, log = TRUE),
-                              dnorm(epimodel$params["rho"], mean = log(0.4), sd = 0.6, log = TRUE)) 
-          
-          log_likelihood_cur <- epimodel$likelihoods$pop_likelihood_cur + epimodel$likelihoods$obs_likelihood
-          
-          # transform to estimation scale
-          proposal[c("beta", "mu", "rho")] <- epimodel$sim_settings$to_estimation_scale(proposal[c("beta", "mu", "rho")], epimodel)
-          
-          # make proposal
-          proposal[c("beta", "mu", "rho")] <- MASS::mvrnorm(n = 1, mu = proposal[c("beta", "mu", "rho")], Sigma = epimodel$sim_settings$cov_mtx)
-          
-          # get prior likelihood for proposed parameters
-          prior_prob_new <- c(dnorm(proposal[[1]], mean = log(1), sd = 1.8, log = TRUE),
-                              dnorm(proposal[[2]], mean = log(1), sd = 3, log = TRUE),
-                              dnorm(proposal[[3]], mean = log(0.4), sd = 0.6, log = TRUE))
-          
-          # transform back to the model scale
-          proposal[c("beta","mu", "rho")] <- epimodel$sim_settings$from_estimation_scale(proposal[c("beta", "mu", "rho")], epimodel)
-          
-          # update array of rate matrices
-          epimodel <- build_new_irms(epimodel, proposal)
-          
-          # get population level complete data likelihood for the new parameters
-          pop_likelihood_new  <- calc_pop_likelihood(epimodel, log = TRUE)
-          obs_likelihood_new  <- calc_obs_likelihood(epimodel = epimodel, params = proposal, log = TRUE)
-          log_likelihood_new  <- pop_likelihood_new + obs_likelihood_new
-          
-          # compute the acceptance probability and accept or reject proposal
-          accept_prob <- log_likelihood_new - log_likelihood_cur + sum(prior_prob_new) - sum(prior_prob_cur)
-          
-          if(accept_prob >= 0 || accept_prob >= log(runif(1))) {
-                    
-                    # update parameters, likelihood objects, and eigen decompositions
-                    epimodel <- update_params(epimodel, params = proposal, pop_likelihood = pop_likelihood_new, obs_likelihood = obs_likelihood_new)
-                    
-                    # update the eigen decompositions
-                    buildEigenArray(eigenvals = epimodel$eigen_values, eigenvecs = epimodel$eigen_vectors, inversevecs = epimodel$inv_eigen_vectors, irm_array = epimodel$irm)
-                    
-          } else {
-                    # restore the previous array of rate matrices
-                    epimodel$irm <- epimodel$.irm_cur
-          }
-          
-          return(epimodel)
-}
+# 
+# to_estimation_scale <- function(params, epimodel) {
+#           
+#           params_est          <- params
+#           
+#           params_est["beta"]  <- log(params["beta"] * epimodel$popsize/params["mu"])
+#           
+#           params_est["mu"]    <- log(params["mu"])
+#           
+#           params_est["rho"]   <- logit(params["rho"])
+#           
+#           return(params_est)
+# }
+# 
+# from_estimation_scale <- function(params_est, epimodel) {
+#           
+#           params              <- params_est
+#           
+#           params["beta"]      <- exp(params_est["mu"])/epimodel$popsize * exp(params_est["beta"])
+#           
+#           params["mu"]        <- exp(params_est["mu"])
+#           
+#           params["rho"]       <- expit(params["rho"])
+#           
+#           return(params)
+# }
+# 
+# 
+# beta_mu_rho_kernel <- function(epimodel) {
+#           
+#           # get existing parameter values 
+#           proposal <- epimodel$params
+#           
+#           # get prior likelihood and complete data log likelihood for current parameters
+#           prior_prob_cur <- c(dnorm(epimodel$params["beta"], mean = log(1), sd = 1.8, log = TRUE),
+#                               dnorm(epimodel$params["mu"], mean = log(1), sd = 3, log = TRUE),
+#                               dnorm(epimodel$params["rho"], mean = log(0.4), sd = 0.6, log = TRUE)) 
+#           
+#           log_likelihood_cur <- epimodel$likelihoods$pop_likelihood_cur + epimodel$likelihoods$obs_likelihood
+#           
+#           # transform to estimation scale
+#           proposal <- epimodel$sim_settings$to_estimation_scale(proposal, epimodel)
+#           
+#           # make proposal
+#           proposal[c("beta", "mu", "rho")] <- MASS::mvrnorm(n = 1, mu = proposal[c("beta", "mu", "rho")], Sigma = epimodel$sim_settings$cov_mtx)
+#           
+#           # get prior likelihood for proposed parameters
+#           prior_prob_new <- c(dnorm(proposal[[1]], mean = log(1), sd = 1.8, log = TRUE),
+#                               dnorm(proposal[[2]], mean = log(1), sd = 3, log = TRUE),
+#                               dnorm(proposal[[3]], mean = log(0.4), sd = 0.6, log = TRUE))
+#           
+#           # transform back to the model scale
+#           proposal <- epimodel$sim_settings$from_estimation_scale(proposal, epimodel)
+#           
+#           # update array of rate matrices
+#           epimodel <- build_new_irms(epimodel, proposal)
+#           
+#           # get population level complete data likelihood for the new parameters
+#           pop_likelihood_new  <- calc_pop_likelihood(epimodel, log = TRUE)
+#           obs_likelihood_new  <- calc_obs_likelihood(epimodel = epimodel, params = proposal, log = TRUE)
+#           log_likelihood_new  <- pop_likelihood_new + obs_likelihood_new
+#           
+#           # compute the acceptance probability and accept or reject proposal
+#           accept_prob <- log_likelihood_new - log_likelihood_cur + sum(prior_prob_new) - sum(prior_prob_cur)
+#           
+#           if(accept_prob >= 0 || accept_prob >= log(runif(1))) {
+#                     
+#                     # update parameters, likelihood objects, and eigen decompositions
+#                     epimodel <- update_params(epimodel, params = proposal, pop_likelihood = pop_likelihood_new, obs_likelihood = obs_likelihood_new)
+#                     
+#                     # update the eigen decompositions
+#                     buildEigenArray(eigenvals = epimodel$eigen_values, eigenvecs = epimodel$eigen_vectors, inversevecs = epimodel$inv_eigen_vectors, irm_array = epimodel$irm)
+#                     
+#           } else {
+#                     # restore the previous array of rate matrices
+#                     epimodel$irm <- epimodel$.irm_cur
+#           }
+#           
+#           return(epimodel)
+# }
 
 
 # Kernel MH - beta, mu; Gibbs - rho ----------------------------------------------
@@ -156,7 +156,7 @@ beta_mu_kernel <- function(epimodel) {
           log_likelihood_cur <- epimodel$likelihoods$pop_likelihood_cur + epimodel$likelihoods$obs_likelihood
           
           # transform to estimation scale
-          proposal[c("beta", "mu")] <- epimodel$sim_settings$to_estimation_scale(proposal[c("beta", "mu")], epimodel)
+          proposal <- epimodel$sim_settings$to_estimation_scale(proposal, epimodel)
           
           # make proposal
           proposal[c("beta", "mu")] <- MASS::mvrnorm(n = 1, mu = proposal[c("beta", "mu")], Sigma = epimodel$sim_settings$cov_mtx)
@@ -166,7 +166,7 @@ beta_mu_kernel <- function(epimodel) {
                               dnorm(proposal[[2]], mean = log(1), sd = 3, log = TRUE))
           
           # transform back to the model scale
-          proposal[c("beta","mu")] <- epimodel$sim_settings$from_estimation_scale(proposal[c("beta", "mu")], epimodel)
+          proposal <- epimodel$sim_settings$from_estimation_scale(proposal, epimodel)
           
           
           # update array of rate matrices
