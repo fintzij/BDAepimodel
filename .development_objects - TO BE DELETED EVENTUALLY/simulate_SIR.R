@@ -4,6 +4,7 @@
 #' @param params vector of parameters, must be in the following order: beta, mu,
 #'   rho, S0, I0, R0
 #' @param popsize population size
+#' @param init_config compartment counts at t0. 
 #' @param trim logical for whether to trim the observations after the epidemic 
 #'   has died off
 #'   
@@ -15,14 +16,16 @@
 #' popsize <- 100
 #' 
 #' epidemic <- simulate_SIR(obstimes, params, popsize)
-simulate_SIR <- function(obstimes, params, popsize, trim = TRUE) {
+simulate_SIR <- function(obstimes, params, popsize, init_config = NULL, trim = TRUE) {
           
-          # generate initial configuration
-          init_config <- rmultinom(1, popsize, params[4:6])
-          if(init_config[2] == 0) {
-                    while(init_config[2] == 0) {
-                              init_config <- rmultinom(1, popsize, params[4:6])
-                    }
+          if(is.null(init_config)) {
+                    # generate initial configuration
+                    init_config <- rmultinom(1, popsize, params[4:6])
+                    if(init_config[2] == 0) {
+                              while(init_config[2] == 0) {
+                                        init_config <- rmultinom(1, popsize, params[4:6])
+                              }
+                    }   
           }
           
           # simulate the pop_mat

@@ -32,9 +32,9 @@ Rcpp::NumericMatrix simulateSIR(Rcpp::NumericVector obstimes, Rcpp::NumericVecto
           Rcpp::NumericVector dt(1); // time increment
           double tmax = obstimes[nobs - 1]; // end of observation period
 
-          int St = init_config[0]; // number of susceptibles
-          int It = init_config[1]; // number of infecteds
-          int Rt = popsize - St - It; // number of recovereds
+          double St = init_config[0]; // number of susceptibles
+          double It = init_config[1]; // number of infecteds
+          double Rt = init_config[2]; // number of recovereds
           
           // Vector of lumped rates
           Rcpp::NumericVector rates(2);
@@ -45,7 +45,6 @@ Rcpp::NumericMatrix simulateSIR(Rcpp::NumericVector obstimes, Rcpp::NumericVecto
           Rcpp::IntegerVector next_event(1); // next event
           Rcpp::IntegerVector subj_ind(1); // subject index
           int subject(1); // subject ID
-
           
           Rcpp::IntegerVector susc_IDs = Rcpp::seq_len(St); // IDs for susceptibles
           Rcpp::IntegerVector infec_IDs = St + Rcpp::seq_len(It); // IDs for infecteds
@@ -55,24 +54,26 @@ Rcpp::NumericMatrix simulateSIR(Rcpp::NumericVector obstimes, Rcpp::NumericVecto
           std::vector<int> infecteds = Rcpp::as<std::vector<int> >(infec_IDs);  // convert to std vector
           std::vector<int> susc_inds = Rcpp::as<std::vector<int> >(susc_Inds); // convert to std vector
           std::vector<int> infec_inds = Rcpp::as<std::vector<int> >(infec_Inds);  // convert to std vector
-
+          
+          // set keep_going and the row index
           bool keep_going = true;
           int ind = 0;
-          
+
           // start simulating
           while(keep_going) {
                     
-                    // sample the next event
-                    next_event = Rcpp::RcppArmadillo::sample(events, 1, false, rates); 
+                    // sample the next time
+                    dt = Rcpp::rexp(1, sum(rates));
+                    t += dt[0];
                     
-                    if(next_event[0] == 1) { // infection occurs
+                    if(t > tmax) {
+                              keep_going = false; // stop simulating
                               
-                              dt = Rcpp::rexp(1, rates[0]); // sample the next event time
-                              t += dt[0]; // compute the new time
+                    } else {
+                              // sample the next event
+                              next_event = Rcpp::RcppArmadillo::sample(events, 1, false, rates);
                               
-                              if(t > tmax) {
-                                        keep_going = false; // stop simulating
-                              } else {
+                              if(next_event[0] == 1) { // infection occurs
                                         
                                         // choose subject
                                         subject = susceptibles.back();
@@ -99,7 +100,7 @@ Rcpp::NumericMatrix simulateSIR(Rcpp::NumericVector obstimes, Rcpp::NumericVecto
                                         pop_mat(ind, 3) = St; // number of susceptibles
                                         pop_mat(ind, 4) = It; // number of infecteds
                                         pop_mat(ind, 5) = Rt; // number of recovereds
-
+                                        
                                         // increment row index
                                         ind += 1;
                                         
@@ -108,17 +109,9 @@ Rcpp::NumericMatrix simulateSIR(Rcpp::NumericVector obstimes, Rcpp::NumericVecto
                                         if((rates[0] == 0) & (rates[1] == 0)) {
                                                   keep_going = false;
                                         }
-                              }
-
-                              
-                    } else if(next_event[0] == 2) { // recovery occurs
-                              
-                              dt = Rcpp::rexp(1, rates[1]); // sample the next event time
-                              t += dt[0]; // compute the new time
-                              
-                              if(t > tmax) {
-                                        keep_going = false; // stop simulating
-                              } else {
+                                        
+                              } else if(next_event[0] == 2) { // recovery occurs
+                                        
                                         // choose subject
                                         subj_ind = Rcpp::RcppArmadillo::sample(infec_inds, 1, false, Rcpp::NumericVector::create());
                                         subject = infecteds[subj_ind[0]];
@@ -151,6 +144,7 @@ Rcpp::NumericMatrix simulateSIR(Rcpp::NumericVector obstimes, Rcpp::NumericVecto
                                         if((rates[0] == 0) & (rates[1] == 0)) {
                                                   keep_going = false;
                                         }
+                                        
                               }
                     }
           }

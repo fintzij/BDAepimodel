@@ -17,69 +17,12 @@ library(batch)
 parseCommandArgs()
 
 # Set up simulation objects ----------------------------------------------------------------
-
-niter <- 10000; nobs <- length(seq(0, 10, by = 0.05))
-
-# if(sim_num == 1){
-#           # Set up BDAepimodel objects
-#           initialization_fcn <- function(){
-#                     init_state <- as.numeric(rmultinom(1, 200, c(0.95, 0.05, 0)))
-#                     names(init_state ) <- c("S", "I", "R")
-#                     return(init_state)
-#           }
-#           
-#           r_meas_process <- function(state, meas_vars, params){
-#                     rbinom(n = nrow(state), size = state[,meas_vars], prob = params["rho"])
-#           }
-#           
-#           # R0 = 4, mu = 1, rho = 0.5, p0 = 0.05
-#           epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.05),
-#                                     states = c("S", "I", "R"), 
-#                                     params = c(beta = 0.02, mu = 1, rho = 0.5, p0 = 0.05), 
-#                                     rates = c("beta * I", "mu"), 
-#                                     flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
-#                                     meas_vars = "I",
-#                                     r_meas_process = r_meas_process)
-#           
-#           # Set up GillespieSSA objects
-#           params <- epimodel$params
-#           a = c("beta*S*I", "mu*I")
-#           nu <- matrix(c(-1,+1,0, 0, -1, +1),nrow=3)
-#           gSSA_traj <- rep(0, nobs)
-#           
-# } else if(sim_num == 2) {
-#           results_SIRS <- data.frame(method = rep(c("BDAepimodel", "GillespieSSA"), each = nobs),
-#                                     estimate = rep(0, 2*nobs),
-#                                     lower = rep(0, 2*nobs),
-#                                     upper = rep(0, 2*nobs))
-#           
-#           # Set up BDAepimodel objects
-#           
-#           r_meas_process <- function(state, meas_vars, params){
-#                     rbinom(n = nrow(state), size = state[,meas_vars], prob = params["rho"])
-#           }
-#           
-#           # R0 = 4, mu = 1, rho = 0.5, p0 = 0.05
-#           epimodel <- init_epimodel(obstimes = seq(0, 10, by = 0.05),
-#                                     states = c("S", "I", "R"), 
-#                                     params = c(beta = 0.02, mu = 1, gamma = 0.5, rho = 0.5, p0 = 0.05), 
-#                                     rates = c("beta * I", "mu", "gamma"), 
-#                                     flow = matrix(c(-1, 1, 0, 0, -1, 1, 1, 0, -1), ncol = 3, byrow = T), 
-#                                     meas_vars = "I",
-#                                     r_meas_process = r_meas_process)
-#           
-#           # Set up GillespieSSA objects
-#           params <- epimodel$params
-#           a = c("beta*S*I", "mu*I", "lambda * R")
-#           nu <- matrix(c(-1,+1,0, 0, -1, +1, 1, 0, -1),nrow=3)
-#           gSSA_traj <- rep(0, nobs)
-# }
-
-
 # Set up GillespieSSA objects
+niter <- 10000
 popsize = 10
-obstimes = seq(0, 10, by = 0.05)
-params <- c(beta = 0.4, mu = 1, rho = 0.5, S0 = 0.8, I0 = 0.2, R0 = 0)
+obstimes = seq(0, 10, by = 1)
+nobs <- length(obstimes)
+params <- c(beta = 0.5, mu = 1, rho = 0.5, S0 = 0.8, I0 = 0.2, R0 = 0)
 a = c("beta*S*I", "mu*I")
 nu <- matrix(c(-1,+1,0, 0, -1, +1),nrow=3)
 
@@ -89,12 +32,28 @@ initialization_fcn <- function(){
           return(init_state)
 }
 
+r_meas_process <- function(state, meas_vars, params){
+          rbinom(n = nrow(state), size = state[,meas_vars], prob = params["rho"])
+}
+
+epimodel <- init_epimodel(obstimes = obstimes,
+                          popsize = popsize,
+                          states = c("S", "I", "R"), 
+                          params = params, 
+                          rates = c("beta * I", "mu"), 
+                          flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
+                          meas_vars = "I",
+                          r_meas_process = r_meas_process)
+
+
 # Register the cluster and run the simulation -----------------------------
 
 # nclust = 15
 # cl <- makeForkCluster(nclust)
 
-trajecs <- matrix(0, nrow = 2*length(obstimes), ncol = niter)
+trajecs <- matrix(0, nrow = 3*length(obstimes), ncol = niter)
+simSIR_step1 <- rep(0, niter)
+gssa_step1 <- rep(0, niter)
 
 for(j in 1:niter) {
           
@@ -107,7 +66,9 @@ for(j in 1:niter) {
                     }
           }
           
-          BDAepimodel_traj <- simulate_SIR(obstimes = obstimes, params = params, popsize = popsize, trim = FALSE)$obs_mat[,"I_augmented"] 
+          simulateSIR_traj <- simulate_SIR(obstimes = obstimes, params = params, popsize = popsize, init_config = init_state, trim = FALSE)$obs_mat[,"I_augmented"]
+
+          BDAepimodel_traj <- simulate_epimodel(epimodel = epimodel, init_state = init_state, lump = TRUE, trim = FALSE)$obs_mat[,"I_augmented"]
           
           gSSA_sim <- ssa(init_state, a, nu, params, tf = 10)$data[,c(1,3)]
           
@@ -116,23 +77,22 @@ for(j in 1:niter) {
                     gSSA_traj[k] <- gSSA_sim[sum(gSSA_sim[,1] <= obstimes[k]), 2]
           }
           
-          trajecs[,j] <- c(BDAepimodel_traj, gSSA_traj)
-} 
-
+          trajecs[,j] <- c(simulateSIR_traj, BDAepimodel_traj, gSSA_traj)
+}
 
 # Process results and generate plots --------------------------------------
 
-results <- data.frame(method = rep(c("BDAepimodel", "GillespieSSA"), each = nobs),
-                      time = seq(0, 10, by = 0.05),
-                      estimate = rep(0, 2*nobs),
-                      lower = rep(0, 2*nobs),
-                      upper = rep(0, 2*nobs))
+results <- data.frame(method = rep(c("simulateSIR","BDAepimodel", "GillespieSSA"), each = nobs),
+                      time = obstimes,
+                      estimate = rep(0, 3*nobs),
+                      lower = rep(0, 3*nobs),
+                      upper = rep(0, 3*nobs))
 
 results$estimate <- rowMeans(trajecs)
 results$lower <- pmax(0,results$estimate - 1.96 * apply(trajecs, 1, sd) / sqrt(niter))
 results$upper <- results$estimate + 1.96 * apply(trajecs, 1, sd) / sqrt(niter)
 
-results_diff <- data.frame(time = seq(0, 10, by = 0.05),
+results_diff <- data.frame(time = obstimes,
                            estimate = rep(0, nobs),
                            lower = rep(0, nobs), 
                            upper = rep(0, nobs))
