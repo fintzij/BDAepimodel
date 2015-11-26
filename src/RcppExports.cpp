@@ -170,6 +170,19 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// simulateSIR
+Rcpp::NumericMatrix simulateSIR(Rcpp::NumericVector obstimes, Rcpp::NumericVector params, Rcpp::IntegerVector init_config);
+RcppExport SEXP BDAepimodel_simulateSIR(SEXP obstimesSEXP, SEXP paramsSEXP, SEXP init_configSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type obstimes(obstimesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type params(paramsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type init_config(init_configSEXP);
+    __result = Rcpp::wrap(simulateSIR(obstimes, params, init_config));
+    return __result;
+END_RCPP
+}
 // subjectLikelihood
 double subjectLikelihood(const int subject, const arma::mat& pop_mat, const arma::uvec& subj_path, Rcpp::NumericVector& irm_array, const Rcpp::NumericVector& initdist, const Rcpp::IntegerVector& keys, bool loglik);
 RcppExport SEXP BDAepimodel_subjectLikelihood(SEXP subjectSEXP, SEXP pop_matSEXP, SEXP subj_pathSEXP, SEXP irm_arraySEXP, SEXP initdistSEXP, SEXP keysSEXP, SEXP loglikSEXP) {

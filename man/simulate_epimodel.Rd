@@ -14,13 +14,13 @@ simulate_epimodel(epimodel, obstimes = NULL, init_state = NULL,
 \item{meas_vars}{character vector specifying which compartments are measured.}
 
 \item{r_meas_process}{function to simulate from the measurement process, with
-named arguments \code{state}, \code{meas_vars}, and \code{params}, which
-are the current state of the process (given as a named character vector
-with element names corresponding exactly to the names of compartments), a
-vector with the names of the states to be measured, and a named vector of
-process parameters. The function should return noisy measurements of the
-process in a vector with named elements corresponding to each of the
-measured compartments specified in \code{meas_vars}. The function must
+named arguments \code{state}, \code{meas_vars}, and \code{params}, which 
+are the current state of the process (given as a named character vector 
+with element names corresponding exactly to the names of compartments), a 
+vector with the names of the states to be measured, and a named vector of 
+process parameters. The function should return noisy measurements of the 
+process in a vector with named elements corresponding to each of the 
+measured compartments specified in \code{meas_vars}. The function must 
 index into the state vector and parameter vector using element names.}
 
 \item{return_config}{option specifying whether to return a matrix of

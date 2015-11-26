@@ -1,72 +1,74 @@
 #' Initialize epimodel bookkeeping object.
-#'
-#' Initializes a bookkeeping list containing the population level and subject
-#' level bookkeeping objects, measurement, and epidemic process settings. At a
-#' minimum, the epimodel object must be initialized with the states, params,
-#' rates, flow, and either the vector of observation times or a matrix with
+#' 
+#' Initializes a bookkeeping list containing the population level and subject 
+#' level bookkeeping objects, measurement, and epidemic process settings. At a 
+#' minimum, the epimodel object must be initialized with the states, params, 
+#' rates, flow, and either the vector of observation times or a matrix with 
 #' data.
-#'
-#' @param states character vector with names of compartments corresponding
+#' 
+#' @param states character vector with names of compartments corresponding 
 #'   exactly to the names of compartments used in the \code{*_rates} arguments.
-#' @param params numeric vector of process parameters with element names
-#'   corresponding exactly to names of parameters used in the \code{rates}
-#'   arguments. The params vector must contain a number of parameters equal to
-#'   the number of states for the categorical distribution for the state of a
-#'   subject at t0. The names of these parameters must end in 0 - e.g. for the
-#'   SIR model: S0, I0, R0. A value of zero for one of the initial distribution
-#'   parameters will be interpretted as a model assumption that subjects cannot
+#' @param params numeric vector of process parameters with element names 
+#'   corresponding exactly to names of parameters used in the \code{rates} 
+#'   arguments. The params vector must contain a number of parameters equal to 
+#'   the number of states for the categorical distribution for the state of a 
+#'   subject at t0. The names of these parameters must end in 0 - e.g. for the 
+#'   SIR model: S0, I0, R0. A value of zero for one of the initial distribution 
+#'   parameters will be interpretted as a model assumption that subjects cannot 
 #'   occupy that state at time t0.
-#' @param rates character vector with strings specifying the flow rates between
+#' @param rates character vector with strings specifying the flow rates between 
 #'   compartments. Each variable in a rate must correspond to the name of one of
-#'   the \code{states}, \code{params}, or \code{covars} (covariates not yet
+#'   the \code{states}, \code{params}, or \code{covars} (covariates not yet 
 #'   implemented).
-#' @param flow numeric matrix of dimension \code{number of transitions \emph{x}
+#' @param flow numeric matrix of dimension \code{number of transitions \emph{x} 
 #'   number of compartments}. Each row corresponds to a possible transition, and
-#'   each column in a row has element 1 to indicate an entry to that
+#'   each column in a row has element 1 to indicate an entry to that 
 #'   compartment, -1 to indicate an exit, and 0 for no change in the size of the
 #'   compartment on the subject level.
-#' @param dat matrix of dimension \code{number of observation times \emph{x}
-#'   number of measured compartments}. \code{dat} must have one column with
-#'   observation times (numeric and strictly increasing), whose the name of
-#'   which is given by the \code{times} variable. The matrix must be sorted in
+#' @param dat matrix of dimension \code{number of observation times \emph{x} 
+#'   number of measured compartments}. \code{dat} must have one column with 
+#'   observation times (numeric and strictly increasing), whose the name of 
+#'   which is given by the \code{times} variable. The matrix must be sorted in 
 #'   ascending time order.
 #' @param time_var string indicating the name of the variable coding observation
 #'   times in \code{dat}.
 #' @param popsize size of the population.
-#' @param config_mat population-level bookkeeping matrix for compartment counts
+#' @param config_mat population-level bookkeeping matrix for compartment counts 
 #'   and the configuration of individuals at times of state transition.
-#' @param obs_mat population-level bookkeeping matrix for compartment counts at
+#' @param obs_mat population-level bookkeeping matrix for compartment counts at 
 #'   observation times.
-#' @param initdist_prior vector of parameters for dirichlet prior for default
-#'   categorical distribution over initial distribution at t0. Defaults to flat
+#' @param initdist_prior vector of parameters for dirichlet prior for default 
+#'   categorical distribution over initial distribution at t0. Defaults to flat 
 #'   prior unless otherwise specified.
 #' @param meas_vars character vector specifying which compartments are measured.
+#' @param incidence_vars character vector specifying which of the measured
+#'   compartments contain incidence data rather than prevalence data.
 #' @param r_meas_process function to simulate from the measurement process, with
-#'   named arguments \code{state}, \code{meas_vars}, and \code{params}, which
-#'   are the current state of the process (given as a named character vector
-#'   with element names corresponding exactly to the names of compartments), a
-#'   vector with the names of the states to be measured, and a named vector of
-#'   process parameters. The function should return noisy measurements of the
-#'   process in a vector with named elements corresponding to each of the
-#'   measured compartments specified in \code{meas_vars}. The function must
+#'   named arguments \code{state}, \code{meas_vars}, and \code{params}, which 
+#'   are the current state of the process (given as a named character vector 
+#'   with element names corresponding exactly to the names of compartments), a 
+#'   vector with the names of the states to be measured, and a named vector of 
+#'   process parameters. The function should return noisy measurements of the 
+#'   process in a vector with named elements corresponding to each of the 
+#'   measured compartments specified in \code{meas_vars}. The function must 
 #'   index into the state vector and parameter vector using element names.
-#' @param d_meas_process function to evaluate the density of the measurement
+#' @param d_meas_process function to evaluate the density of the measurement 
 #'   process with arguments and output specified as in \code{r_meas_process}.
-#' @param covar optional numeric matrix of time varying covariates (currently
+#' @param covar optional numeric matrix of time varying covariates (currently 
 #'   not working).
-#' @param tcovar numeric vector of times for time-varying covariates (currently
+#' @param tcovar numeric vector of times for time-varying covariates (currently 
 #'   not working).
 #' @param sim_settings bookkeeping list for simulation settings.
-#'
+#'   
 #' @return list containing bookkeeping objects and model configuration objects.
 #' @export
-#'
+#' 
 #' @examples epimodel <- init_epimodel(states = c("S", "I", "R"),
 #' params = c(beta = 0.02, mu = 1, gamma = 0.5, rho = 0.5, p0 = 0.05),
 #' rates = c("beta * I", "mu", "gamma"),
 #' flow = matrix(c(-1, 1, 0, 0, -1, 1, 1, 0, -1), ncol = 3, byrow = T))
-#'
-init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NULL, obstimes = NULL, popsize = NULL, config_mat = NULL, obs_mat = NULL, initdist_prior = NULL, meas_vars = NULL, r_meas_process = NULL, d_meas_process = NULL, covar = NULL, tcovar = NULL, sim_settings = NULL) {
+#' 
+init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NULL, obstimes = NULL, popsize = NULL, config_mat = NULL, obs_mat = NULL, initdist_prior = NULL, meas_vars = NULL, incidence_vars = NULL, r_meas_process = NULL, d_meas_process = NULL, covar = NULL, tcovar = NULL, sim_settings = NULL) {
 
 
           # user must specify states, parameters, flow, and rates at a minimum.
@@ -90,6 +92,10 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
                     stop(sQuote("flow"), "must have number of columns equal to the number of states")
           } else{
                     colnames(flow) <- states
+          }
+          
+          if(!is.null(incidence_vars) & !all(incidence_vars %in% meas_vars)) {
+                    stop(sQuote("The incidence variables must be a subset of the measured variables"))
           }
 
           # check that the user has indicated which is the times variable if a
@@ -200,6 +206,7 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
                            initdist_prior = initdist_prior,
                            initdist_kernel = initdist_kernel,
                            meas_vars = meas_vars,
+                           incidence_vars = incidence_vars,
                            r_meas_process = r_meas_process,
                            d_meas_process = d_meas_process,
                            covar = covar,

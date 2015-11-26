@@ -6,38 +6,38 @@
 \usage{
 init_epimodel(states, params, rates, flow, dat = NULL, time_var = NULL,
   obstimes = NULL, popsize = NULL, config_mat = NULL, obs_mat = NULL,
-  initdist_prior = NULL, meas_vars = NULL, r_meas_process = NULL,
-  d_meas_process = NULL, covar = NULL, tcovar = NULL,
-  sim_settings = NULL)
+  initdist_prior = NULL, meas_vars = NULL, incidence_vars = NULL,
+  r_meas_process = NULL, d_meas_process = NULL, covar = NULL,
+  tcovar = NULL, sim_settings = NULL)
 }
 \arguments{
-\item{states}{character vector with names of compartments corresponding
+\item{states}{character vector with names of compartments corresponding 
 exactly to the names of compartments used in the \code{*_rates} arguments.}
 
-\item{params}{numeric vector of process parameters with element names
-corresponding exactly to names of parameters used in the \code{rates}
-arguments. The params vector must contain a number of parameters equal to
-the number of states for the categorical distribution for the state of a
-subject at t0. The names of these parameters must end in 0 - e.g. for the
-SIR model: S0, I0, R0. A value of zero for one of the initial distribution
-parameters will be interpretted as a model assumption that subjects cannot
+\item{params}{numeric vector of process parameters with element names 
+corresponding exactly to names of parameters used in the \code{rates} 
+arguments. The params vector must contain a number of parameters equal to 
+the number of states for the categorical distribution for the state of a 
+subject at t0. The names of these parameters must end in 0 - e.g. for the 
+SIR model: S0, I0, R0. A value of zero for one of the initial distribution 
+parameters will be interpretted as a model assumption that subjects cannot 
 occupy that state at time t0.}
 
-\item{rates}{character vector with strings specifying the flow rates between
+\item{rates}{character vector with strings specifying the flow rates between 
 compartments. Each variable in a rate must correspond to the name of one of
-the \code{states}, \code{params}, or \code{covars} (covariates not yet
+the \code{states}, \code{params}, or \code{covars} (covariates not yet 
 implemented).}
 
-\item{flow}{numeric matrix of dimension \code{number of transitions \emph{x}
+\item{flow}{numeric matrix of dimension \code{number of transitions \emph{x} 
 number of compartments}. Each row corresponds to a possible transition, and
-each column in a row has element 1 to indicate an entry to that
+each column in a row has element 1 to indicate an entry to that 
 compartment, -1 to indicate an exit, and 0 for no change in the size of the
 compartment on the subject level.}
 
-\item{dat}{matrix of dimension \code{number of observation times \emph{x}
-number of measured compartments}. \code{dat} must have one column with
-observation times (numeric and strictly increasing), whose the name of
-which is given by the \code{times} variable. The matrix must be sorted in
+\item{dat}{matrix of dimension \code{number of observation times \emph{x} 
+number of measured compartments}. \code{dat} must have one column with 
+observation times (numeric and strictly increasing), whose the name of 
+which is given by the \code{times} variable. The matrix must be sorted in 
 ascending time order.}
 
 \item{time_var}{string indicating the name of the variable coding observation
@@ -45,35 +45,38 @@ times in \code{dat}.}
 
 \item{popsize}{size of the population.}
 
-\item{config_mat}{population-level bookkeeping matrix for compartment counts
+\item{config_mat}{population-level bookkeeping matrix for compartment counts 
 and the configuration of individuals at times of state transition.}
 
-\item{obs_mat}{population-level bookkeeping matrix for compartment counts at
+\item{obs_mat}{population-level bookkeeping matrix for compartment counts at 
 observation times.}
 
-\item{initdist_prior}{vector of parameters for dirichlet prior for default
-categorical distribution over initial distribution at t0. Defaults to flat
+\item{initdist_prior}{vector of parameters for dirichlet prior for default 
+categorical distribution over initial distribution at t0. Defaults to flat 
 prior unless otherwise specified.}
 
 \item{meas_vars}{character vector specifying which compartments are measured.}
 
+\item{incidence_vars}{character vector specifying which of the measured
+compartments contain incidence data rather than prevalence data.}
+
 \item{r_meas_process}{function to simulate from the measurement process, with
-named arguments \code{state}, \code{meas_vars}, and \code{params}, which
-are the current state of the process (given as a named character vector
-with element names corresponding exactly to the names of compartments), a
-vector with the names of the states to be measured, and a named vector of
-process parameters. The function should return noisy measurements of the
-process in a vector with named elements corresponding to each of the
-measured compartments specified in \code{meas_vars}. The function must
+named arguments \code{state}, \code{meas_vars}, and \code{params}, which 
+are the current state of the process (given as a named character vector 
+with element names corresponding exactly to the names of compartments), a 
+vector with the names of the states to be measured, and a named vector of 
+process parameters. The function should return noisy measurements of the 
+process in a vector with named elements corresponding to each of the 
+measured compartments specified in \code{meas_vars}. The function must 
 index into the state vector and parameter vector using element names.}
 
-\item{d_meas_process}{function to evaluate the density of the measurement
+\item{d_meas_process}{function to evaluate the density of the measurement 
 process with arguments and output specified as in \code{r_meas_process}.}
 
-\item{covar}{optional numeric matrix of time varying covariates (currently
+\item{covar}{optional numeric matrix of time varying covariates (currently 
 not working).}
 
-\item{tcovar}{numeric vector of times for time-varying covariates (currently
+\item{tcovar}{numeric vector of times for time-varying covariates (currently 
 not working).}
 
 \item{sim_settings}{bookkeeping list for simulation settings.}
@@ -82,10 +85,10 @@ not working).}
 list containing bookkeeping objects and model configuration objects.
 }
 \description{
-Initializes a bookkeeping list containing the population level and subject
-level bookkeeping objects, measurement, and epidemic process settings. At a
-minimum, the epimodel object must be initialized with the states, params,
-rates, flow, and either the vector of observation times or a matrix with
+Initializes a bookkeeping list containing the population level and subject 
+level bookkeeping objects, measurement, and epidemic process settings. At a 
+minimum, the epimodel object must be initialized with the states, params, 
+rates, flow, and either the vector of observation times or a matrix with 
 data.
 }
 \examples{

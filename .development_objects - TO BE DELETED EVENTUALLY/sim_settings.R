@@ -18,14 +18,14 @@ d_meas_process <- function(state, meas_vars, params, log = TRUE) {
 }
 
 
-
 epimodel <- init_epimodel(obstimes = seq(0, 10, by = 1),
                           popsize = popsize,
                           states = c("S", "I", "R"), 
-                          params = c(beta = rnorm(1, 0.004, 1e-5), mu = rnorm(1, 1, 1e-5), rho = 0.5, S0 = 0.95, I0 = 0.01, R0 = 0.04), 
+                          params = c(beta = rnorm(1, 0.005, 1e-5), mu = rnorm(1, 1, 1e-5), rho = 0.5, S0 = 0.95, I0 = 0.01, R0 = 0.04), 
                           rates = c("beta * I", "mu"), 
                           flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                           meas_vars = "I",
+                          incidence_vars = "I",
                           r_meas_process = r_meas_process,
                           d_meas_process = d_meas_process)
 
@@ -34,180 +34,71 @@ epimodel <- init_epimodel(obstimes = seq(0, 10, by = 1),
 
 epimodel <- simulate_epimodel(epimodel = epimodel, lump = TRUE, trim = TRUE)
 
-
 # Set the MCMC settings ---------------------------------------------------
 
 # Kernel - MH - Beta, Mu, Rho ---------------------------------------------
-# 
-# to_estimation_scale <- function(params, epimodel) {
-#           
-#           params_est          <- params
-#           
-#           params_est["beta"]  <- log(params["beta"] * epimodel$popsize/params["mu"])
-#           
-#           params_est["mu"]    <- log(params["mu"])
-#           
-#           params_est["rho"]   <- logit(params["rho"])
-#           
-#           return(params_est)
-# }
-# 
-# from_estimation_scale <- function(params_est, epimodel) {
-#           
-#           params              <- params_est
-#           
-#           params["beta"]      <- exp(params_est["mu"])/epimodel$popsize * exp(params_est["beta"])
-#           
-#           params["mu"]        <- exp(params_est["mu"])
-#           
-#           params["rho"]       <- expit(params["rho"])
-#           
-#           return(params)
-# }
-# 
-# 
-# beta_mu_rho_kernel <- function(epimodel) {
-#           
-#           # get existing parameter values 
-#           proposal <- epimodel$params
-#           
-#           # get prior likelihood and complete data log likelihood for current parameters
-#           prior_prob_cur <- c(dnorm(epimodel$params["beta"], mean = log(1), sd = 1.8, log = TRUE),
-#                               dnorm(epimodel$params["mu"], mean = log(1), sd = 3, log = TRUE),
-#                               dnorm(epimodel$params["rho"], mean = log(0.4), sd = 0.6, log = TRUE)) 
-#           
-#           log_likelihood_cur <- epimodel$likelihoods$pop_likelihood_cur + epimodel$likelihoods$obs_likelihood
-#           
-#           # transform to estimation scale
-#           proposal <- epimodel$sim_settings$to_estimation_scale(proposal, epimodel)
-#           
-#           # make proposal
-#           proposal[c("beta", "mu", "rho")] <- MASS::mvrnorm(n = 1, mu = proposal[c("beta", "mu", "rho")], Sigma = epimodel$sim_settings$cov_mtx)
-#           
-#           # get prior likelihood for proposed parameters
-#           prior_prob_new <- c(dnorm(proposal[[1]], mean = log(1), sd = 1.8, log = TRUE),
-#                               dnorm(proposal[[2]], mean = log(1), sd = 3, log = TRUE),
-#                               dnorm(proposal[[3]], mean = log(0.4), sd = 0.6, log = TRUE))
-#           
-#           # transform back to the model scale
-#           proposal <- epimodel$sim_settings$from_estimation_scale(proposal, epimodel)
-#           
-#           # update array of rate matrices
-#           epimodel <- build_new_irms(epimodel, proposal)
-#           
-#           # get population level complete data likelihood for the new parameters
-#           pop_likelihood_new  <- calc_pop_likelihood(epimodel, log = TRUE)
-#           obs_likelihood_new  <- calc_obs_likelihood(epimodel = epimodel, params = proposal, log = TRUE)
-#           log_likelihood_new  <- pop_likelihood_new + obs_likelihood_new
-#           
-#           # compute the acceptance probability and accept or reject proposal
-#           accept_prob <- log_likelihood_new - log_likelihood_cur + sum(prior_prob_new) - sum(prior_prob_cur)
-#           
-#           if(accept_prob >= 0 || accept_prob >= log(runif(1))) {
-#                     
-#                     # update parameters, likelihood objects, and eigen decompositions
-#                     epimodel <- update_params(epimodel, params = proposal, pop_likelihood = pop_likelihood_new, obs_likelihood = obs_likelihood_new)
-#                     
-#                     # update the eigen decompositions
-#                     buildEigenArray(eigenvals = epimodel$eigen_values, eigenvecs = epimodel$eigen_vectors, inversevecs = epimodel$inv_eigen_vectors, irm_array = epimodel$irm)
-#                     
-#           } else {
-#                     # restore the previous array of rate matrices
-#                     epimodel$irm <- epimodel$.irm_cur
-#           }
-#           
-#           return(epimodel)
-# }
 
+# gibbs kernel
+Rcpp::cppFunction("Rcpp::NumericVector getSuffStats(const Rcpp::NumericMatrix& pop_mat, const int ind_final_config) {
+                  
+                  // initialize sufficient statistics
+                  int num_inf = 0;
+                  int num_rec = 0;
+                  double beta_suff = 0;
+                  double mu_suff = 0;
+                  
+                  // initialize times
+                  double cur_time = 0;
+                  double next_time = 0;
+                  
+                  // compute the sufficient statistics
+                  for(int j = 0; j < ind_final_config - 1; ++j) {
+                  
+                  cur_time = next_time;
+                  next_time = pop_mat(j+1, 0); 
+                  
+                  beta_suff += pop_mat(j, 3) * pop_mat(j, 4) * (next_time - cur_time);
+                  mu_suff += pop_mat(j, 4) * (next_time - cur_time);
+                  
+                  if(pop_mat(j + 1, 2) == 1) {
+                  num_inf += 1;
+                  }
+                  
+                  if(pop_mat(j + 1, 2) == 2) {
+                  num_rec += 1;
+                  }
+                  }
+                  
+                  return Rcpp::NumericVector::create(num_inf, beta_suff, num_rec, mu_suff);
+                  }")
 
-# Kernel MH - beta, mu; Gibbs - rho ----------------------------------------------
-
-to_estimation_scale <- function(params, epimodel) {
+gibbs_kernel <- function(epimodel) {
           
-          params_est          <- params
+          # get sufficient statistics
+          suff_stats          <- getSuffStats(epimodel$pop_mat, epimodel$ind_final_config)
           
-          params_est["beta"]  <- log(params["beta"] * epimodel$popsize/params["mu"])
-          
-          params_est["mu"]    <- log(params["mu"])
-          
-          return(params_est)
-}
-
-from_estimation_scale <- function(params_est, epimodel) {
-          
-          params              <- params_est
-          
-          params["beta"]      <- exp(params_est["mu"])/epimodel$popsize * exp(params_est["beta"])
-          
-          params["mu"]        <- exp(params_est["mu"])
-          
-          return(params)
-}
-
-beta_mu_kernel <- function(epimodel) {
-          
-          # get existing parameter values 
-          proposal <- epimodel$params
-
-          # get prior likelihood and complete data log likelihood for current parameters
-          prior_prob_cur <- c(dnorm(epimodel$params["beta"], mean = log(1), sd = 1.8, log = TRUE),
-                              dnorm(epimodel$params["mu"], mean = log(1), sd = 3, log = TRUE)) 
-          
-          log_likelihood_cur <- epimodel$likelihoods$pop_likelihood_cur + epimodel$likelihoods$obs_likelihood
-          
-          # transform to estimation scale
-          proposal <- epimodel$sim_settings$to_estimation_scale(proposal, epimodel)
-          
-          # make proposal
-          proposal[c("beta", "mu")] <- MASS::mvrnorm(n = 1, mu = proposal[c("beta", "mu")], Sigma = epimodel$sim_settings$cov_mtx)
-          
-          # get prior likelihood for proposed parameters
-          prior_prob_new <- c(dnorm(proposal[[1]], mean = log(1), sd = 1.8, log = TRUE),
-                              dnorm(proposal[[2]], mean = log(1), sd = 3, log = TRUE))
-          
-          # transform back to the model scale
-          proposal <- epimodel$sim_settings$from_estimation_scale(proposal, epimodel)
-          
+          # update parameters
+          proposal          <- epimodel$params
+          proposal["beta"]  <- rgamma(1, 1 + suff_stats[1], 0.000001 + suff_stats[2])
+          proposal["mu"]    <- rgamma(1, 1 + suff_stats[3], 0.000001 + suff_stats[4])
+          proposal["rho"]   <- rbeta(1, shape1 = 1 + sum(epimodel$obs_mat[,"I_observed"]), shape2 = 1 + sum(epimodel$obs_mat[,"I_augmented"] - epimodel$obs_mat[,"I_observed"]))
           
           # update array of rate matrices
-          epimodel <- build_new_irms(epimodel, proposal)
+          epimodel            <- build_new_irms(epimodel, proposal)
           
-          # get population level complete data likelihood for the new parameters
+          # update the eigen decompositions
+          buildEigenArray(eigenvals = epimodel$eigen_values, eigenvecs = epimodel$eigen_vectors, inversevecs = epimodel$inv_eigen_vectors, irm_array = epimodel$irm)
+          
+          # get likelihoods under the new parameters
           pop_likelihood_new  <- calc_pop_likelihood(epimodel, log = TRUE)
-          obs_likelihood_new  <- calc_obs_likelihood(epimodel = epimodel, params = proposal, log = TRUE)
-          log_likelihood_new  <- pop_likelihood_new + obs_likelihood_new
+          obs_likelihood_new  <- calc_obs_likelihood(epimodel, params = proposal, log = TRUE)
           
-          # compute the acceptance probability and accept or reject proposal
-          accept_prob <- log_likelihood_new - log_likelihood_cur + sum(prior_prob_new) - sum(prior_prob_cur)
-          
-          if(accept_prob >= 0 || accept_prob >= log(runif(1))) {
-                    
-                    # update parameters, likelihood objects, and eigen decompositions
-                    epimodel <- update_params(epimodel, params = proposal, pop_likelihood = pop_likelihood_new, obs_likelihood = obs_likelihood_new)
-                    
-                    # update the eigen decompositions
-                    buildEigenArray(eigenvals = epimodel$eigen_values, eigenvecs = epimodel$eigen_vectors, inversevecs = epimodel$inv_eigen_vectors, irm_array = epimodel$irm)
-                    
-          } else {
-                    # restore the previous array of rate matrices
-                    epimodel$irm <- epimodel$.irm_cur
-          }
+          # update parameters, likelihood objects, and eigen decompositions
+          epimodel            <- update_params(epimodel, params = proposal, pop_likelihood = pop_likelihood_new, obs_likelihood = obs_likelihood_new)
           
           return(epimodel)
 }
 
-rho_kernel <- function(epimodel) {
-          
-          # Gibbs updates for rho - beta(1, 1) prior
-          params_new          <- epimodel$params
-          params_new["rho"]   <- rbeta(1, shape1 = 1 + sum(epimodel$obs_mat[,"I_observed"]), shape2 = 1 + sum(epimodel$obs_mat[,"I_augmented"] - epimodel$obs_mat[,"I_observed"]))
-          
-          obs_likelihood_new <- calc_obs_likelihood(epimodel, params = params_new, log = TRUE)
-          
-          epimodel <- update_params(epimodel, params = params_new, obs_likelihood = obs_likelihood_new)
-        
-          return(epimodel)
-}
 
 # save new parameters every iteration
 # save every tenth configuration matrix

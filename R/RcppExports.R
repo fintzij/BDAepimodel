@@ -155,6 +155,18 @@ sampleEventSubseq <- function(path, tpms, tpm_prods, init_ind, final_ind) {
     .Call('BDAepimodel_sampleEventSubseq', PACKAGE = 'BDAepimodel', path, tpms, tpm_prods, init_ind, final_ind)
 }
 
+#' Rcpp code to simulate a general stochastic epidemic and binomial counts. 
+#'
+#' @param popsize population size
+#' @param obstimes vector of observation times
+#' @param params vector of parameters: beta, mu
+#' @param init_config initial configuration of compartment counts
+#'
+#' @return updated bookeeping objects
+simulateSIR <- function(obstimes, params, init_config) {
+    .Call('BDAepimodel_simulateSIR', PACKAGE = 'BDAepimodel', obstimes, params, init_config)
+}
+
 #' Get the irm keys for the compartment counts in a population level
 #' bookkeeping matrix
 #'

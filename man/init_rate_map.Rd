@@ -7,12 +7,12 @@
 init_rate_map(rates, states)
 }
 \arguments{
-\item{rates}{character vector with strings specifying the flow rates between
+\item{rates}{character vector with strings specifying the flow rates between 
 compartments. Each variable in a rate must correspond to the name of one of
-the \code{states}, \code{params}, or \code{covars} (covariates not yet
+the \code{states}, \code{params}, or \code{covars} (covariates not yet 
 implemented).}
 
-\item{states}{character vector with names of compartments corresponding
+\item{states}{character vector with names of compartments corresponding 
 exactly to the names of compartments used in the \code{*_rates} arguments.}
 }
 \value{
