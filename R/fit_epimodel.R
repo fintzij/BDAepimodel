@@ -107,7 +107,7 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                                         
                                         # insert the path
                                         insertPath(path, subjects[j], epimodel$pop_mat, epimodel$subj_path, epimodel$ind_final_config)
-                                        } 
+                              }
                               
                               # insert the proposed trajectory
                               epimodel <- insert_trajectory(epimodel = epimodel, subject = subjects[j], reinsertion = FALSE)

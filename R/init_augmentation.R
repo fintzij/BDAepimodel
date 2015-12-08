@@ -10,16 +10,19 @@ init_augmentation <- function(epimodel) {
           
           epimod <- epimodel
           
-          epimodel <- simulate_epimodel(epimodel = epimod, lump = TRUE, trim = FALSE)
+          epimod <- simulate_epimodel(epimodel = epimod, lump = TRUE, trim = FALSE)
           
-          epimodel$obs_mat[,epimodel$meas_vars_obs] <- epimodel$dat[,epimodel$meas_vars]
+          epimod$obs_mat[,epimodel$meas_vars_obs] <- epimod$dat[,epimodel$meas_vars] <- epimodel$dat[,epimodel$meas_vars]
           
-          if(!all(epimodel$d_meas_process(state = epimodel$obs_mat, meas_vars = epimodel$meas_vars, params = epimodel$params, log = FALSE) > 0)) {
-                    while(!all(epimodel$d_meas_process(state = epimodel$obs_mat, meas_vars = epimodel$meas_vars, params = epimodel$params, log = FALSE) > 0)) {
-                              epimodel <- epimod
-                              epimodel <- simulate_epimodel(epimodel = epimod, lump = TRUE, trim = TRUE)
+          if(!all(epimod$d_meas_process(state = epimod$obs_mat, meas_vars = epimod$meas_vars, params = epimod$params, log = FALSE) > 0)) {
+                    while(!all(epimod$d_meas_process(state = epimod$obs_mat, meas_vars = epimod$meas_vars, params = epimod$params, log = FALSE) > 0)) {
+                              epimod <- epimodel
+                              epimod <- simulate_epimodel(epimodel = epimod, lump = TRUE, trim = TRUE)
+                              epimod$obs_mat[,epimodel$meas_vars_obs] <- epimod$dat[,epimod$meas_vars] <- epimodel$dat[,epimodel$meas_vars]
                     }
           }
+          
+          epimodel <- epimod
           
           return(epimodel)
 }

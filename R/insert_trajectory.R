@@ -50,8 +50,10 @@ insert_trajectory <- function(epimodel, subject, reinsertion) {
                     
           }
           
-          # add the subject's contribution back into the compartment counts
+          # add the subject's contribution back into the compartment counts and
+          # update the initial configuration vector
           resolveSubjContrib(epimodel$pop_mat, epimodel$ind_final_config, epimodel$subj_path, insertion =  TRUE)
+          epimodel$init_config[subject] <- epimodel$subj_path[1]
           
           # compute the likelihood for the new population-level trajectory -
           # only when not a reinsertion following a MH rejection

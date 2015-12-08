@@ -140,7 +140,7 @@ kernel <- list(beta_mu_kernel, rho_kernel)
 # save every tenth configuration matrix
 # resample 10 subject-level trajectories in between parameter updates
 epimodel <- init_settings(epimodel,
-                          niter = 250000,
+                          niter = 100000,
                           save_params_every = 1, 
                           save_configs_every = 1,
                           kernel = kernel,

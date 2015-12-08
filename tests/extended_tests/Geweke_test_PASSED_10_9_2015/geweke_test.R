@@ -136,11 +136,10 @@ rho_kernel <- function(epimodel) {
 # save every tenth configuration matrix
 # resample 10 subject-level trajectories in between parameter updates
 epimodel <- init_settings(epimodel,
-                          niter = 50000,
+                          niter = 100000,
                           save_params_every = 1, 
                           save_configs_every = 5,
                           kernel = list(beta_mu_kernel, rho_kernel),
-                          cov_mtx = diag(c(0.02, 0.02)),
                           configs_to_redraw = 10,
                           to_estimation_scale = to_estimation_scale,
                           from_estimation_scale = from_estimation_scale)
@@ -250,11 +249,12 @@ for(k in 1:niter) {
           BDAepimodel_results[,k] <- epimodel$obs_mat[,"I_augmented"]
           
           # simulate a new epidemic via Gillespie and ensure that it consists of data
-          Gillespie_results[,k] <- simulate_epimodel(epimodel_gillespie, return_config = FALSE, trim = FALSE)$obs_mat[,"I_augmented"]
+          # Gillespie_results[,k] <- simulate_epimodel(epimodel_gillespie, return_config = FALSE, trim = FALSE)$obs_mat[,"I_augmented"]
+          Gillespie_results[,k] <- simulate_SIR(epimodel_gillespie$obstimes, epimodel_gillespie$params, epimodel_gillespie$popsize, trim = FALSE)$obs_mat[,"I_augmented"]
           
           if(all(Gillespie_results[,k] == 0)) {
                     while(all(Gillespie_results[,k] == 0)) {
-                              Gillespie_results[,k] <- simulate_epimodel(epimodel_gillespie, return_config = FALSE, trim = FALSE)$obs_mat[,"I_augmented"]
+                              Gillespie_results[,k] <- simulate_SIR(epimodel_gillespie$obstimes, epimodel_gillespie$params, epimodel_gillespie$popsize, trim = FALSE)$obs_mat[,"I_augmented"]
                     }
           }
           
@@ -288,7 +288,12 @@ pdf(file = "BDAepimodel_Geweke_plots.pdf")
 results_comp <- data.frame(method = rep(c("BDAepimodel", "Gillespie Counts"), each = epimodel$nobs), time = rep(epimodel$obstimes, 2), count = 0, mcse = 0)
 results_comp[results_comp$method == "BDAepimodel","count"] <- rowMeans(BDAepimodel_results)
 results_comp[results_comp$method == "Gillespie Counts","count"] <- rowMeans(Gillespie_results)
-BDAepimodel_vars <- sapply(apply(BDAepimodel_results, 1, initseq), "[[", "var.pos")
+BDAepimodel_vars <- rep(0, nrow(BDAepimodel_results))
+for(k in 1:length(BDAepimodel_vars)) {
+          if(k%%50 == 0) print(k) 
+          BDAepimodel_vars[k] <- initseq(BDAepimodel_results[k,])$var.pos
+}
+
 results_comp[results_comp$method == "BDAepimodel","mcse"] <- sqrt(BDAepimodel_vars)/sqrt(niter)
 results_comp[results_comp$method == "Gillespie","mcse"] <- apply(Gillespie_results, 1, sd)/sqrt(niter)
 
