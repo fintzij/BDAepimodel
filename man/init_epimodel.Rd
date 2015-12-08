@@ -6,9 +6,9 @@
 \usage{
 init_epimodel(states, params, rates, flow, dat = NULL, time_var = NULL,
   obstimes = NULL, popsize = NULL, config_mat = NULL, obs_mat = NULL,
-  initdist_prior = NULL, meas_vars = NULL, incidence_vars = NULL,
-  r_meas_process = NULL, d_meas_process = NULL, covar = NULL,
-  tcovar = NULL, sim_settings = NULL)
+  initdist_prior = NULL, meas_vars = NULL, r_meas_process = NULL,
+  d_meas_process = NULL, covar = NULL, tcovar = NULL,
+  sim_settings = NULL)
 }
 \arguments{
 \item{states}{character vector with names of compartments corresponding 
@@ -56,9 +56,6 @@ categorical distribution over initial distribution at t0. Defaults to flat
 prior unless otherwise specified.}
 
 \item{meas_vars}{character vector specifying which compartments are measured.}
-
-\item{incidence_vars}{character vector specifying which of the measured
-compartments contain incidence data rather than prevalence data.}
 
 \item{r_meas_process}{function to simulate from the measurement process, with
 named arguments \code{state}, \code{meas_vars}, and \code{params}, which 

@@ -41,8 +41,6 @@
 #'   categorical distribution over initial distribution at t0. Defaults to flat 
 #'   prior unless otherwise specified.
 #' @param meas_vars character vector specifying which compartments are measured.
-#' @param incidence_vars character vector specifying which of the measured
-#'   compartments contain incidence data rather than prevalence data.
 #' @param r_meas_process function to simulate from the measurement process, with
 #'   named arguments \code{state}, \code{meas_vars}, and \code{params}, which 
 #'   are the current state of the process (given as a named character vector 
@@ -68,7 +66,7 @@
 #' rates = c("beta * I", "mu", "gamma"),
 #' flow = matrix(c(-1, 1, 0, 0, -1, 1, 1, 0, -1), ncol = 3, byrow = T))
 #' 
-init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NULL, obstimes = NULL, popsize = NULL, config_mat = NULL, obs_mat = NULL, initdist_prior = NULL, meas_vars = NULL, incidence_vars = NULL, r_meas_process = NULL, d_meas_process = NULL, covar = NULL, tcovar = NULL, sim_settings = NULL) {
+init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NULL, obstimes = NULL, popsize = NULL, config_mat = NULL, obs_mat = NULL, initdist_prior = NULL, meas_vars = NULL, r_meas_process = NULL, d_meas_process = NULL, covar = NULL, tcovar = NULL, sim_settings = NULL) {
 
 
           # user must specify states, parameters, flow, and rates at a minimum.
@@ -92,10 +90,6 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
                     stop(sQuote("flow"), "must have number of columns equal to the number of states")
           } else{
                     colnames(flow) <- states
-          }
-          
-          if(!is.null(incidence_vars) & !all(incidence_vars %in% meas_vars)) {
-                    stop(sQuote("The incidence variables must be a subset of the measured variables"))
           }
 
           # check that the user has indicated which is the times variable if a
@@ -206,7 +200,6 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
                            initdist_prior = initdist_prior,
                            initdist_kernel = initdist_kernel,
                            meas_vars = meas_vars,
-                           incidence_vars = incidence_vars,
                            r_meas_process = r_meas_process,
                            d_meas_process = d_meas_process,
                            covar = covar,

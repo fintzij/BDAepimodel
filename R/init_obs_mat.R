@@ -26,7 +26,7 @@ init_obs_mat <- function(epimodel){
 
           # if data was provided, insert it into the appropriate observed columns
           if(!is.null(epimodel$dat)) {
-                    obs_mat[, paste(epimodel$meas_vars, "_observed", sep="")] <- epimodel$dat[, epimodel$meas_vars]
+                    obs_mat[1:nrow(epimodel$dat), paste(epimodel$meas_vars, "_observed", sep="")] <- epimodel$dat[, epimodel$meas_vars]
           }
 
           return(obs_mat)

@@ -35,10 +35,10 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
         config_replacement    <- epimodel$sim_settings$config_replacement
         
         # initialize list for storing results
-        results <- init_results(epimodel)
+        results               <- init_results(epimodel)
         
         # set seed
-        results$seed        <- epimodel$sim_settings$seed
+        results$seed          <- epimodel$sim_settings$seed
         set.seed(results$seed)
         
         # store the initial values in the results matrix
@@ -55,7 +55,7 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
         
         # generate niter parameter samples
         for(k in 2:niter) {
-
+                    
                     # re-compute the arrays of rate matrices and eigen
                     # decompositions - only needs to be recomputed every time
                     # parameters are updated.

@@ -7,7 +7,7 @@
 set.seed(52787)
 require(BDAepimodel)
 
-popsize <- 750
+popsize <- 200
 
 r_meas_process <- function(state, meas_vars, params){
           rbinom(n = nrow(state), size = state[,meas_vars], prob = params["rho"])
@@ -21,11 +21,12 @@ d_meas_process <- function(state, meas_vars, params, log = TRUE) {
 epimodel <- init_epimodel(obstimes = seq(0, 10, by = 1),
                           popsize = popsize,
                           states = c("S", "I", "R"), 
-                          params = c(beta = rnorm(1, 0.005, 1e-5), mu = rnorm(1, 1, 1e-5), rho = 0.5, S0 = 0.95, I0 = 0.01, R0 = 0.04), 
+                          params = c(beta = rnorm(1, 0.01, 1e-5), mu = rnorm(1, 1, 1e-5), rho = 0.5, S0 = 0.95, I0 = 0.01, R0 = 0.04), 
                           rates = c("beta * I", "mu"), 
                           flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
                           meas_vars = "I",
                           incidence_vars = "I",
+                          incidence_codes = 1,
                           r_meas_process = r_meas_process,
                           d_meas_process = d_meas_process)
 
@@ -107,23 +108,8 @@ epimodel <- init_settings(epimodel,
                           niter = 100,
                           save_params_every = 1, 
                           save_configs_every = 5,
-                          kernel = list(beta_mu_kernel, rho_kernel),
-                          cov_mtx = diag(c(0.02, 0.02)),
-                          configs_to_redraw = 70,
-                          to_estimation_scale = to_estimation_scale,
-                          from_estimation_scale = from_estimation_scale)
-
-# epimodel <- init_tuning(epimodel,
-#                         tune_params = c("beta", "mu", "rho"),
-#                         cov_mtx = matrix(c(1, -0.865, -0.747, 
-#                                            -0.865, 1, 0.831,
-#                                            -0.747, 0.831, 1), nrow = 3),
-#                         cov_scale = 0.02, 
-#                         mintune = 20,
-#                         maxtune = 50, 
-#                         ntu = 5000,
-#                         tunewt = 0.25,
-#                         target_accept = c(0.15, 0.5))
+                          kernel = list(gibbs_kernel),
+                          configs_to_redraw = 20)
 
 # fit the model -----------------------------------------------------------
 
