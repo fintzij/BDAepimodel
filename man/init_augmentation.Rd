@@ -2,7 +2,7 @@
 % Please edit documentation in R/init_augmentation.R
 \name{init_augmentation}
 \alias{init_augmentation}
-\title{Generate an initial configuration that is concordant with the data, updating
+\title{Generate an initial configuration that is concordant with the data, updating 
 the configuration and observation matrices.}
 \usage{
 init_augmentation(epimodel)
@@ -14,7 +14,7 @@ init_augmentation(epimodel)
 initialized epimodel object
 }
 \description{
-Generate an initial configuration that is concordant with the data, updating
+Generate an initial configuration that is concordant with the data, updating 
 the configuration and observation matrices.
 }
 

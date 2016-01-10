@@ -111,8 +111,10 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                               
                               # insert the proposed trajectory
                               epimodel <- insert_trajectory(epimodel = epimodel, subject = subjects[j], reinsertion = FALSE)
+                              
                               # accept or reject the proposed path
                               epimodel <- MH_accept_reject(epimodel = epimodel, subject = subjects[j], iter = j)
+                              
                     }
                     
                     # record the acceptance rate for trajectories
@@ -135,7 +137,8 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                     }
                     
                     # sample new values for the initial distribution parameters
-                    epimodel$params <- epimodel$initdist_kernel(epimodel)
+                    epimodel$params     <- epimodel$initdist_kernel(epimodel)
+                    epimodel$initdist   <- epimodel$params[epimodel$initdist_params]
                     
                     # record acceptances/rejections for the parameter updates
                     results$accepts[k - 1, names(epimodel$params)] <- as.numeric(epimodel$params != epimodel$.params_cur)

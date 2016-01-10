@@ -15,7 +15,7 @@
 #' @export 
 plot_latent_posterior <- function(epimodel, states, times, cm = "med", proportion = FALSE, truth = NULL, true_popsize = NULL, dat = NULL) {
           
-          if(missing(states)) states <- epimodel$model$meas_vars
+          if(missing(states)) states <- epimodel$meas_vars
           if(missing(times)) times <- seq(min(epimodel$obstimes), max(epimodel$obstimes), length = 201)
           
           counts <- matrix(0, nrow = length(times) * length(states), ncol = length(epimodel$results$configs)) 
@@ -32,7 +32,7 @@ plot_latent_posterior <- function(epimodel, states, times, cm = "med", proportio
           }
           
           if(proportion) {
-                    counts <- counts / epimodel$model$popsize
+                    counts <- counts / epimodel$popsize
           }
           
           trajecs_dist <- data.frame(time = rep(times, length(states)), state = rep(states, length(times)), cm = 0, lower = 0, upper = 0)
@@ -78,7 +78,14 @@ plot_latent_posterior <- function(epimodel, states, times, cm = "med", proportio
           }
           
           if(!is.null(dat)) {
-                    trajecs_post <- trajecs_post + ggplot2::geom_point(aes(x = time, y = eval(parse(text = epimodel$model$meas_vars)), colour = paste(epimodel$model$meas_vars,"Observed Count")), size = 5, data = data.frame(epimodel$model$dat))
+                    if(!proportion) {
+                              trajecs_post <- trajecs_post + ggplot2::geom_point(aes(x = time, y = eval(parse(text = epimodel$meas_vars)), colour = paste(epimodel$model$meas_vars,"Observed Count")), size = 5, data = data.frame(epimodel$dat)) 
+                    } else {
+                              prop <- dat
+                              prop[,epimodel$meas_vars] <- prop[,epimodel$meas_vars] / epimodel$popsize * 2
+                              trajecs_post <- trajecs_post + ggplot2::geom_point(aes(x = time, y = eval(parse(text = epimodel$meas_vars)), colour = paste(epimodel$meas_vars,"Observed Count")), size = 5, data = data.frame(prop)) 
+                    }
+                    
           }
           
           return(print(trajecs_post))
