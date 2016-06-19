@@ -24,6 +24,10 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                 epimodel <- init_augmentation(epimodel)
         }
         
+          if(!is.null(epimodel$sim_settings$post_init_params)) {
+                    epimodel$params <- epimodel$sim_settings$post_init_params
+          }
+        
         epimodel <- prepare_epimodel(epimodel)
         
         # move some of the simulation settings to internal objects
@@ -50,6 +54,9 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
         # initialize the vector for path acceptances
         epimodel$path_accept_vec <- rep(0, configs_to_redraw)
         
+        # build the vector of probabilities for selecting which subjects to sample
+        subj_probs <- subject_probabilities(epimodel)
+        
         # get start time
         start.time = Sys.time()
         
@@ -61,7 +68,7 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                     # parameters are updated.
 
                     # choose which subjects should be redrawn
-                    subjects <- sample.int(n = epimodel$popsize, size = configs_to_redraw, replace = config_replacement)
+                    subjects <- sample.int(n = epimodel$popsize, size = configs_to_redraw, replace = config_replacement, prob = subj_probs)
                     
                     # cycle through subject-level trajectories to be re-drawn
                     for(j in 1:configs_to_redraw) {
@@ -111,11 +118,13 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                               
                               # insert the proposed trajectory
                               epimodel <- insert_trajectory(epimodel = epimodel, subject = subjects[j], reinsertion = FALSE)
-                              
+                              if(any(epimodel$pop_mat[!is.na(epimodel$pop_mat)] < 0)) break
+                                        
                               # accept or reject the proposed path
                               epimodel <- MH_accept_reject(epimodel = epimodel, subject = subjects[j], iter = j)
-                              
                     }
+                    
+                    if(any(epimodel$pop_mat[!is.na(epimodel$pop_mat)] < 0)) break
                     
                     # record the acceptance rate for trajectories
                     results$accepts[k - 1,"paths"] <- mean(epimodel$path_accept_vec)

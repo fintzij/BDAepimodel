@@ -155,7 +155,8 @@ sampleEventSubseq <- function(path, tpms, tpm_prods, init_ind, final_ind) {
     .Call('BDAepimodel_sampleEventSubseq', PACKAGE = 'BDAepimodel', path, tpms, tpm_prods, init_ind, final_ind)
 }
 
-#' Rcpp code to simulate a general stochastic epidemic and binomial counts. 
+#' simulateSIR function, included in this file because of difficulty including sample.h in two separate files.
+#' Rcpp code to simulate a general stochastic epidemic and binomial counts.
 #'
 #' @param popsize population size
 #' @param obstimes vector of observation times

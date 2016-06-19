@@ -1,6 +1,6 @@
 Package: BDAepimodel
 Type: Package
-Title: Fit Stochastic Epidemic Models via Bayesian Data Augmentation
+Title: Fit Stochastic Epidemic Models in R via Bayesian Data Augmentation
 Version: 0.1
 Date: 2015-10-18
 Author: Jon Fintzi, Jon Wakefield, Vladimir Minin
@@ -15,7 +15,7 @@ Imports:
     pryr,
     MCMCpack,
     MASS,
-    Rcpp (>= 0.12.1),
+    Rcpp (>= 0.12.3),
     RcppArmadillo
 LinkingTo: Rcpp,
     RcppArmadillo

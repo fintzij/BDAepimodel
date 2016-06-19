@@ -4,9 +4,12 @@
 \alias{init_settings}
 \title{Initialize a bookkeeping list of MCMC settings.}
 \usage{
-init_settings(epimodel, niter, configs_to_redraw, save_params_every = 1,
-  save_configs_every = niter\%/\%100, kernel, cov_mtx = NULL,
-  to_estimation_scale = NULL, from_estimation_scale = NULL, seed = NULL)
+init_settings(epimodel, niter, configs_to_redraw,
+  preferential_sampling = NULL, init_popsize = NULL,
+  compartment_dist = NULL, save_params_every = 1,
+  save_configs_every = niter\%/\%100, kernel, post_init_params = NULL,
+  cov_mtx = NULL, to_estimation_scale = NULL,
+  from_estimation_scale = NULL, seed = NULL)
 }
 \arguments{
 \item{epimodel}{epimodel object}
@@ -16,6 +19,23 @@ sampler.}
 
 \item{configs_to_redraw}{number of subject level trajectories to sample 
 between parameter updates.}
+
+\item{preferential_sampling}{list with three elements in the following order:
+the size of the sub-population to be preferentially sampled, the 
+probability that a subject-path is sampled for an individual in the 
+preferential group (so if 90% of the subject-path sampling should happen in
+the preferential group, this would  be 0.9), and a logical for whether the 
+preferential group should be first made up of subjects whose paths in the 
+initial collection of paths are not constant. If FALSE, the preferential 
+group simply consists of the first n individuals, where n is the size of 
+the group. If a list is not specified (the default), subjects are drawn 
+uniformly at random.}
+
+\item{init_popsize}{population size with which to initialize the epidemic.}
+
+\item{compartment_dist}{distribution according to which to place the 
+remainder of the subjects. required if init_popsize is not equal to the 
+true population size. Supplied as a named vector of probabilities.}
 
 \item{save_params_every}{thin parameter updates by saving every k-th draw, 
 defaults to 1.}
@@ -29,6 +49,9 @@ epimodel list. The kernels should be self-contained, in particular making
 any necessary transformations of parameters and calculating prior 
 probabilities as needed. Each kernel function should include a call to 
 \code{update_params} at the end.}
+
+\item{post_init_params}{a vector of initial parameter values to be used after
+an acceptable initial configuration has been simulated.}
 
 \item{cov_mtx}{covariance matrix to be used in the transition kernels.}
 

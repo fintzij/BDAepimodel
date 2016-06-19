@@ -10,10 +10,16 @@ init_augmentation <- function(epimodel) {
           
           SIR <- all(epimodel$states == c("S","I","R"))
           
+          if(is.null(epimodel$sim_settings$init_popsize)) {
+                    init_popsize <- epimodel$popsize
+          } else {
+                    init_popsize <- epimodel$sim_settings$init_popsize
+          }
+          
           epimod <- epimodel
           
           if(SIR) {
-                    init_config <- simulate_SIR(epimodel$obstimes, epimodel$params, epimodel$popsize, trim = FALSE)        
+                    init_config <- simulate_SIR(epimodel$obstimes, epimodel$params, init_popsize, trim = FALSE)        
                     epimod$obs_mat <- init_config$obs_mat
                     epimod$pop_mat <- init_config$pop_mat
                     epimod$init_config <- rep(1:epimodel$num_states, epimod$pop_mat[1,epimod$states])
@@ -29,7 +35,7 @@ init_augmentation <- function(epimodel) {
                               epimod <- epimodel
                               
                               if(SIR) {
-                                        init_config <- simulate_SIR(epimodel$obstimes, epimodel$params, epimodel$popsize, trim = FALSE)        
+                                        init_config <- simulate_SIR(epimodel$obstimes, epimodel$params, init_popsize, trim = FALSE)        
                                         epimod$obs_mat <- init_config$obs_mat
                                         epimod$pop_mat <- init_config$pop_mat
                                         epimod$init_config <- rep(1:epimodel$num_states, epimod$pop_mat[1,epimod$states])
@@ -41,6 +47,14 @@ init_augmentation <- function(epimodel) {
           }
           
           epimodel <- epimod
+          
+          if(epimodel$sim_settings$init_popsize < epimodel$popsize) {
+                    state_probs <- epimodel$sim_settings$compartment_dist[epimodel$states]
+                    other_subj_inits <- replicate(n = epimodel$popsize - epimodel$sim_settings$init_popsize, expr = sample.int(epimodel$num_states, 1, prob = state_probs))
+                    other_subj_statecounts <- sapply(1:epimodel$num_states, function(x) sum(other_subj_inits == x))
+                    epimodel$init_config <- c(epimodel$init_config, other_subj_inits)
+                    epimodel$pop_mat[,4:ncol(epimodel$pop_mat)] <- sweep(epimodel$pop_mat[,4:ncol(epimodel$pop_mat)], 2, other_subj_statecounts, FUN="+")
+          }
           
           return(epimodel)
 }

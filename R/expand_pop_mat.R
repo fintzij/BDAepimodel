@@ -45,7 +45,7 @@ expand_pop_mat <- function(epimodel, buffer_size = NULL) {
 
           # add buffer of NAs
           if(is.null(buffer_size)) {
-                    buffer_size <- floor(0.1 * epimodel$ind_final_config)
+                    buffer_size <- floor(epimodel$num_states * epimodel$popsize)
           }
 
           # expand the configuration matrix
