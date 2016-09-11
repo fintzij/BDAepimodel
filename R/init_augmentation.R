@@ -48,7 +48,7 @@ init_augmentation <- function(epimodel) {
           
           epimodel <- epimod
           
-          if(epimodel$sim_settings$init_popsize < epimodel$popsize) {
+          if(init_popsize < epimodel$popsize) {
                     state_probs <- epimodel$sim_settings$compartment_dist[epimodel$states]
                     other_subj_inits <- replicate(n = epimodel$popsize - epimodel$sim_settings$init_popsize, expr = sample.int(epimodel$num_states, 1, prob = state_probs))
                     other_subj_statecounts <- sapply(1:epimodel$num_states, function(x) sum(other_subj_inits == x))

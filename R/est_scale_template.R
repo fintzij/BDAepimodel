@@ -11,7 +11,7 @@
 #' @return template for transformation functions.
 #' @export
 #' 
-to_est_scale_template <- function(params, epimodel) {
+est_scale_template <- function(params, epimodel) {
           
           ############################################################################
           ### COPY AND PASTE THIS TEMPLATE INTO A NEW SCRIPT AND EDIT ACCORDINGLY. ###

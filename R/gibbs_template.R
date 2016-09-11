@@ -29,9 +29,9 @@ gibbs_template <- function(epimodel) {
           # epimodel <- build_new_irms(epimodel, proposal)
           # pop_likelihood_new  <- calc_pop_likelihood(epimodel, log = TRUE) 
 
-          # update parameters and likelihoods - DO NOT DELETE THIS LINE if
-          # sampling a parameter that affects the calculation of the population
-          # level likelihood, include that as well
+          # update parameters and likelihoods - DO NOT DELETE THIS LINE 
+          # if sampling a parameter that affects the calculation of the 
+          #  population level likelihood, include that as well
           # epimodel <- update_params(epimodel, params = proposal, pop_likelihood = pop_likelihood_new, obs_likelihood = obs_likelihood_new)
           
           epimodel <- update_params(epimodel, params = proposal, obs_likelihood = obs_likelihood_new)

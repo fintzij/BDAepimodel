@@ -1,0 +1,225 @@
+---
+title: "The BDAepimodel package for fitting stochastic epidemic models to disease prevalence data via Bayesian data augmentaiton"
+author: "Jon Fintzi, Jon Wakefield, Vladimir Minin"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{The BDAepimodel package for fitting stochastic epidemic models to disease prevalence data via Bayesian data augmentaiton}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+This vignette details the functionality of the R package implementing the agent-based Bayesian data augmentation algorithm in Fintzi, Wakefield, and Minin (2016). The purpose of this document is to demonstrate how to simulate an epidemic and a dataset using the package, and how to implement the MCMC algorithm to perform inference. For technical details of the algorithm we refer the user to the original paper, which is available on arXiv (https://arxiv.org/abs/1606.07995). The implementation is reasonably fast for progressive, non-recurrent stochastic epidemic models in populations as large as several thousand individuals, but is not yet optimized for large population inference. Future work and extensions, along with a more efficient implementation, will be made available in the 'stemr' package (https://github.com/fintzij/stemr).
+
+## Installing and loading the BDAepimodel package
+
+The BDAepimodel package may be installed using the 'devtools' package as follows: 
+```{r, eval = FALSE}
+library(devtools)
+install_github("fintzij/BDAepimodel",build_vignettes=TRUE) 
+library(BDAepimodel)
+
+```
+
+```{r, include=FALSE}
+require(ggplot2)
+require(Rcpp)
+require(MCMCpack)
+require(BDAepimodel)
+set.seed(1834)
+```
+
+## Simulating data
+
+Suppose we want to simulate an epidemic with SIR dynamics, and to sample prevalence counts at a set of observation times. In order to simulate an epidemic and a dataset, we must specify several components of the stochastic epidemic model. We begin by creating functions to simulate from, and evaluate the log-density (*N.B.* it is important that the *log* density be returned!) of the measurement process. Strictly speaking, we do not need the density function yet, but we will need it for inference so we may as well declare it now. These functions will be called internally and should take three arguments, named 'state', 'meas_vars', and 'params' as input. The 'state' argument will be a matrix of compartment counts, the first column of which indicates observation time and subsequent columns which give the observed and augmented compartment counts. The suffixes "_observed", and "_augmented" are attached internally, but should be referenced within the measurement process function. The 'meas_vars' argument will be a character vector of compartment names. The 'params' argument will be a named numeric vector of model parameters. Note that in specifying these functions, it suffices to do so generically and that the user need not deal yet with the actual arguments.  
+
+```{r}
+r_meas_process <- function(state, meas_vars, params){
+          # in our example, rho will be the name of the binomial sampling probability parameter.
+          # this function returns a matrix of observed counts
+          rbinom(n = nrow(state), size = state[,meas_vars], prob = params["rho"])
+}
+
+d_meas_process <- function(state, meas_vars, params, log = TRUE) {
+          # note that the names of the measurement variables are endowed with suffixes "_observed" and "_augmented". This is required.
+          # we will declare the names of the measurement variables shortly.
+          dbinom(x = state[, paste0(meas_vars, "_observed")], size = state[, paste0(meas_vars, "_augmented")], prob = params["rho"], log = log) 
+}
+```
+
+Having created functions to simulate from and evaluate the log-density of the measurement process, we now initialize our stochastic epidemic model object. This initialization step will create objects that will govern the dynamics of the epidemic model. 
+
+```{r}
+epimodel <- init_epimodel(obstimes = seq(0, 15, by = 1),
+                          popsize = 750,
+                          states = c("S", "I", "R"),
+                          params = c(beta = 2.5/(750 * 0.9) * 0.5, mu = 0.5, rho = 0.2, S0 = 0.9, I0 = 0.03, R0 = 0.07),
+                          rates = c("beta * I", "mu"),
+                          flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T),
+                          meas_vars = "I",
+                          r_meas_process = r_meas_process,
+                          d_meas_process = d_meas_process)
+```
+
+Let us go through each of the arguments to this function one-by-one. 
++ `obstimes`: This is the vector of observation times at which prevalence is sampled.
++ `popsize`: Pretty self-explanatory, this one is the population size.
++ `states`: Character vector of model compartment names.
++ `params`: Named numeric vector of model parameters. The parameters governing the probability that an individual is in S, I, or R at time 0 are given by S0, I0, and R0. Appending 0 to the name of a model compartment identifies that parameter as an initial state parameter.
++ `rates`: Vector of strings that state how to compute the *unlumped* rates for each type of transition. See the supplement of Fintzi, Wakefield, and Minin (2016) for a discussion of the distinction between lumped and unlumped rates. 
++ `flow`: Numeric matrix giving the change to the population of each model compartment corresponding to each transition event. States are given in columns of the flow matrix, and reaction events in rows. The columns are assumed to be in the same order as the `states` argument, while the rows correspond to the transition events in the `rates` argument. 
++ `meas_vars`: Character vector giving the name of the observed model compartment. 
++ `r_meas_process, d_meas_process`: The functions for sampling from and evaluating the log-density of the measurement process.
+
+We now have everything we need to simulate an epidemic and a dataset. The `simulate_epimodel` function will return an 'epimodel' object, which among other objects contains the full latent epidemic path and a dataset. 
+
+```{r}
+# simulate the epidemic and the dataset. The lump argument instructs the simulation function to simulate the epidemic on the lumped state space of counts, which is more efficient than doing so on the unlumped state space of individuals. 
+epimodel <- simulate_epimodel(epimodel = epimodel, lump = TRUE, trim = TRUE)
+plot(x = epimodel$pop_mat[,"time"], y = epimodel$pop_mat[,"I"], "l", ylim = c(-5, 200), xlab = "Time", ylab = "Prevalence")
+points(x = epimodel$dat[,"time"], y = epimodel$dat[,"I"])
+```
+
+Before proceeeding to inference, it will be useful to examine a few of the objects within the epimodel list, as we will need to understand these objects in order to construct transition kernels for the model parameters. First, let us examine the `obs_mat` matrix in the epimodel list, which contains the observed and latent counts for the compartment on which prevalence data is collected. This is the matrix that is actually passed to the `state` variable in the measurement process functions. 
+```{r}
+head(epimodel$obs_mat)
+```
+As the MCMC runs and the latent path is updated, it is censused at each iteration and the latent compartments from which the data are emitted are copied into the columns ending in '_augmented'. We note that there is no need for the user to ever create this matrix themselves when constructing a transition kernel as it is made available internally and may be accessed when we write the kernel functions.
+
+We now turn our attention to a pair of objects that supply the complete collection of subject level paths. The first is a vector that gives the initial configuration of the population at the first observation time, named `init_config`. Subjects are coded from 1 to `popsize`. The codes in this vector correspond to the disease state of the subject, and are ordered as they were supplied to the `state` argument when the epimodel was initialized. In our example, S=1, I=2, R=3.
+```{r}
+head(epimodel$init_config)
+```
+
+The second object that identifies the collection of paths is the matrix which stores the sequence of transition times, subject IDs, and event codes, named `pop_mat`. 
+```{r}
+head(epimodel$pop_mat)
+```
+There are several aspects of the structure of this matrix that should be pointed out. The first column contains the times of the transition events and observations. The second column contains the ID for the subject that transitioned at each event time. The matrix is sorted by time. If a row in the observation matrix corresponds to an observation time, the ID code is 0. The third column corresponds to the code for each transition event. Again, the code for an observation is 0. The remaining observation codes correspond to the transition events in the order they were supplied when the epimodel object was initialized. Thus, in our example, infection and recoveries are coded 1 and 2, respectively. The remaining columns give the compartment counts at each event or observation time. Since we know the initial configuration of the system, we have a fully identified collection of subject-level paths. One final point to keep in mind is that this matrix will be expanded internally as we add buffer rows to avoid growing or shrinking the size of the matrix as the number of transition events changes. The matrix will still be sorted, but row corresponding to the final observation is tracked and is made available in the epimodel object. The object identifying the row number is named `ind_final_config`. 
+
+## Inference
+In order to conduct inference, we must first write transition kernels for the stochastic epidemic model parameters. We can access templates to assist in writing the transition kernels through the `templates()` function (see `help(templates)`). In our SIR model example, we are able to update all of the model parameters from their univariate full conditional distributions (see Table 1 in the original paper). 
+
+### Writing transition kernels
+We will pass a list of functions for the transition kernels to the epimodel object. Each kernel function takes the whole epimodel list as its only argument, and therefore may access any object saved in the epimodel list. There is no need to write transition kernels for the initial state probability parameters. These will get sampled automatically using the Dirichlet-Multinomial conjugate distributions. To see how the kernel functions get called, the user should inspect lines 144-146 of the `fit_epimodel` function. 
+
+The first function we will write will be an Rcpp helper function for computing the sufficient statistics for the rate parameters in the SIR model based on the `pop_mat` matrix. This function will take as inputs the `pop_mat` object and the row number of the final configuration, and output a numeric vector of sufficient statistics. 
+
+```{r}
+Rcpp::cppFunction("Rcpp::NumericVector getSuffStats(const Rcpp::NumericMatrix& pop_mat, const int ind_final_config) {
+                  
+                  // initialize sufficient statistics
+                  int num_inf = 0;       // number of infection events
+                  int num_rec = 0;       // number of recovery events
+                  double beta_suff = 0;  // integrated hazard for the infectivity
+                  double mu_suff = 0;    // integrated hazard for the recovery
+                  
+                  // initialize times
+                  double cur_time = 0;   // current time
+                  double next_time = 0;  // time of the next event
+                  
+                  // compute the sufficient statistics - loop through the pop_mat matrix until
+                  // reaching the row for the final observation time
+                  for(int j = 0; j < ind_final_config - 1; ++j) {
+                  
+                  cur_time = next_time;         
+                  next_time = pop_mat(j+1, 0); // grab the time of the next event
+                  
+                  beta_suff += pop_mat(j, 3) * pop_mat(j, 4) * (next_time - cur_time); // add S*I*(t_{j+1} - t_j) to beta_suff
+                  mu_suff += pop_mat(j, 4) * (next_time - cur_time);                   // add I*(t_{j+1} - t_j) to mu_suff
+                  
+                  // if the next event is an infection, increment the number of infections
+                  if(pop_mat(j + 1, 2) == 1) {  
+                  num_inf += 1;
+                  }
+                  
+                  // if the next event is a recovery, increment the number of recoveries
+                  if(pop_mat(j + 1, 2) == 2) {
+                  num_rec += 1;
+                  }
+                  }
+                  
+                  // return the vector of sufficient statistics for the rate parameters
+                  return Rcpp::NumericVector::create(num_inf, beta_suff, num_rec, mu_suff);
+                  }")
+```
+
+We next create a function to perform Gibbs updates for the model parameters. To see a template of such a function, call `templates("gibbs")`. This function takes the epimodel list as input and returns an updated epimodel list. Note that the priors for the parameters are implicitly defined in this function (see comments in the code below for priors). Each kernel function that updates rate parameters must include function calls to update the sequence of rate matrices for the latent process, along with their eigen decompositions, as well as the log-likelihood of the latent process (`build_new_irms`, `buildEigenArray`, `calc_pop_likelihood`). These  Each kernel function that updates measurement process parameters must include function calls to update the observed data log-likelihood (`calc_obs_likelihood`). A kernel ends with a call to the `update_params` function and returns the now updated epimodel list. 
+```{r}
+gibbs_kernel <- function(epimodel) {
+          
+          # get sufficient statistics using the previously compiled getSuffStats function (above)
+          suff_stats          <- getSuffStats(epimodel$pop_mat, epimodel$ind_final_config)
+          
+          # update parameters from their univariate full conditional distributions
+          # Priors: beta ~ gamma(0.002, 1)
+          #         mu   ~ gamma(2.1, 4)
+          #         rho  ~ beta(2/3, 1)
+          proposal          <- epimodel$params # params is the vector of ALL model parameters
+          proposal["beta"]  <- rgamma(1, 0.002 + suff_stats[1], 1 + suff_stats[2])
+          proposal["mu"]    <- rgamma(1, 2.1 + suff_stats[3], 4 + suff_stats[4])
+          proposal["rho"]   <- rbeta(1, shape1 = 500/epimodel$popsize + sum(epimodel$obs_mat[,"I_observed"]), shape2 = 1 + sum(epimodel$obs_mat[,"I_augmented"] - epimodel$obs_mat[,"I_observed"]))
+          
+          
+          #### THE FOLLOWING SECTION CAN BE INCLUDED PIECEMEAL AS APPROPRIATE
+          # update array of rate matrices - MUST BE INCLUDED WHEN UPDATING RATE PARAMETERS
+          epimodel            <- build_new_irms(epimodel, proposal)
+          
+          # update the eigen decompositions - MUST BE INCLUDED WHEN UPDATING RATE PARAMETERS
+          buildEigenArray(eigenvals = epimodel$eigen_values, eigenvecs = epimodel$eigen_vectors, inversevecs = epimodel$inv_eigen_vectors, irm_array = epimodel$irm)
+          
+          # get log-likelihoods under the new parameters
+          # MUST BE INCLUDED WHEN UPDATING RATE PARAMETERS
+          pop_likelihood_new  <- calc_pop_likelihood(epimodel, log = TRUE) #### NOTE - log = TRUE
+          
+          # MUST BE INCLUDED WHEN UPDATING SAMPLING PARAMETERS
+          obs_likelihood_new  <- calc_obs_likelihood(epimodel, params = proposal, log = TRUE) #### NOTE - log = TRUE
+          
+          # update parameters, likelihood objects, and eigen decompositions
+          epimodel            <- update_params(epimodel, params = proposal, pop_likelihood = pop_likelihood_new, obs_likelihood = obs_likelihood_new)
+          
+          return(epimodel)
+}
+
+```
+In the Gibbs updates implemented in the function above, we first compute the sufficient statistics, and then sample new values for the rate parameters and the binomial sampling probability from their univariate full conditional distributions. Since we have updated all model parameters except the initial state distribution parameters, which are updated automatically, we supply the vector of model parameters, the new population level likelihood, and the new observed data log-likelihood to the `update_params` function. 
+
+### Fitting the stochastic epidemic model
+We now have everything we need to estimate the stochastic epidemic model parameters. We will now reinitialize the epimodel object from the beginning, as if we had not previously initialized it for simulation, then initialize the MCMC settings and run the MCMC. Note that we must also supply parameters for the dirichlet prior distribution for the initial state probabilities. 
+
+```{r}
+# grab the data that was simulated previously. No need to redefine the measurement process functions, they remain unchanged.
+dat <- epimodel$dat 
+
+# initial values for the initial state probability parameters
+init_dist <- MCMCpack::rdirichlet(1, c(9,0.5,0.5))
+
+# initialize the epimodel object
+epimodel <- init_epimodel(popsize = 750,
+                          states = c("S", "I", "R"), 
+                          params = c(beta = rnorm(1, 2.8 / 750, 1e-3), mu = rnorm(1, 0.5, 0.1), rho = 150 / 750, S0 = init_dist[1], I0 = init_dist[2], R0 = init_dist[3]), 
+                          rates = c("beta * I", "mu"), 
+                          flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
+                          dat = dat,
+                          time_var = "time",
+                          meas_vars = "I",
+                          initdist_prior = c(9,0.2,0.5), ### Parameters for the dirichlet prior distribution for the initial state probs
+                          r_meas_process = r_meas_process,
+                          d_meas_process = d_meas_process)
+
+```
+
+Having initialized an epimodel object, we now proceed to set our MCMC settings and to run the MCMC. The MCMC output is accessible via `epimodel$results`. 
+
+```{r}
+epimodel <- init_settings(epimodel,
+                          niter = 100,                       # Number of MCMC iterations.
+                          save_params_every = 1,             # Thinning interval for the parameters.
+                          save_configs_every = 5,            # Thinning interval for the full latent paths.
+                          kernel = list(gibbs_kernel),       # Transition kernels, passed as a list.
+                          configs_to_redraw = 10)            # Number of subject-paths to sample per MCMC iteration
+
+epimodel <- fit_epimodel(epimodel, monitor = FALSE)
+
+```
+
