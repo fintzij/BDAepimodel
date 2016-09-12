@@ -37,27 +37,34 @@ Suppose we want to simulate an epidemic with SIR dynamics, and to sample prevale
 r_meas_process <- function(state, meas_vars, params){
           # in our example, rho will be the name of the binomial sampling probability parameter.
           # this function returns a matrix of observed counts
-          rbinom(n = nrow(state), size = state[,meas_vars], prob = params["rho"])
+          rbinom(n = nrow(state), 
+                 size = state[,meas_vars],
+                 prob = params["rho"])
 }
 
 d_meas_process <- function(state, meas_vars, params, log = TRUE) {
           # note that the names of the measurement variables are endowed with suffixes "_observed" and "_augmented". This is required.
           # we will declare the names of the measurement variables shortly.
-          dbinom(x = state[, paste0(meas_vars, "_observed")], size = state[, paste0(meas_vars, "_augmented")], prob = params["rho"], log = log) 
+          dbinom(x = state[, paste0(meas_vars, "_observed")], 
+                 size = state[, paste0(meas_vars, "_augmented")], 
+                 prob = params["rho"], log = log) 
 }
 ```
 
 Having created functions to simulate from and evaluate the log-density of the measurement process, we now initialize our stochastic epidemic model object. This initialization step will create objects that will govern the dynamics of the epidemic model. 
 
 ```{r}
-epimodel <- init_epimodel(obstimes = seq(0, 15, by = 1),
-                          popsize = 750,
-                          states = c("S", "I", "R"),
-                          params = c(beta = 2.5/(750 * 0.9) * 0.5, mu = 0.5, rho = 0.2, S0 = 0.9, I0 = 0.03, R0 = 0.07),
-                          rates = c("beta * I", "mu"),
-                          flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T),
-                          meas_vars = "I",
-                          r_meas_process = r_meas_process,
+epimodel <- init_epimodel(obstimes = seq(0, 15, by = 1),                              # vector of observation times
+                          popsize = 750,                                              # population size
+                          states = c("S", "I", "R"),                                  # compartment names
+                          params = c(beta = 2.5/(750 * 0.9) * 0.5,                    # infectivity parameter
+                                     mu = 0.5,                                        # recovery rate
+                                     rho = 0.2,                                       # binomial sampling probability
+                                     S0 = 0.9, I0 = 0.03, R0 = 0.07),                 # initial state probabilities
+                          rates = c("beta * I", "mu"),                                # transition rates
+                          flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T),  # flow matrix
+                          meas_vars = "I",                                            # name of measurement variable
+                          r_meas_process = r_meas_process,                            # measurement process functions
                           d_meas_process = d_meas_process)
 ```
 
@@ -195,14 +202,17 @@ dat <- epimodel$dat
 init_dist <- MCMCpack::rdirichlet(1, c(9,0.5,0.5))
 
 # initialize the epimodel object
-epimodel <- init_epimodel(popsize = 750,
-                          states = c("S", "I", "R"), 
-                          params = c(beta = rnorm(1, 2.8 / 750, 1e-3), mu = rnorm(1, 0.5, 0.1), rho = 150 / 750, S0 = init_dist[1], I0 = init_dist[2], R0 = init_dist[3]), 
-                          rates = c("beta * I", "mu"), 
-                          flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
-                          dat = dat,
-                          time_var = "time",
-                          meas_vars = "I",
+epimodel <- init_epimodel(popsize = 750,                                                       # population size
+                          states = c("S", "I", "R"),                                           # compartment names
+                          params = c(beta = rnorm(1, 2.8 / 750, 1e-3),                         # per-contact infectivity rate
+                                     mu = rnorm(1, 0.5, 0.1),                                  # recovery rate
+                                     rho = 150 / 750,                                          # binomial sampling probability
+                                     S0 = init_dist[1], I0 = init_dist[2], R0 = init_dist[3]), # initial state probabilities
+                          rates = c("beta * I", "mu"),                                         # unlumped transition rates
+                          flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T),           # flow matrix
+                          dat = dat,                                                           # dataset
+                          time_var = "time",                                                   # name of time variable in the dataset
+                          meas_vars = "I",                                                     # name of measurement var in the dataset
                           initdist_prior = c(9,0.2,0.5), ### Parameters for the dirichlet prior distribution for the initial state probs
                           r_meas_process = r_meas_process,
                           d_meas_process = d_meas_process)
