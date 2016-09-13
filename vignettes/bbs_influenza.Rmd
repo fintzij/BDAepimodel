@@ -1,0 +1,144 @@
+---
+title: "An analysis of prevalence data for an outbreak of influenza in a British boarding school"
+author: "Jon Fintzi, Jon Wakefield, Vladimir Minin"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{An analysis of prevalence data for an outbreak of influenza in a British boarding school}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+In this vignette, we will demonstrate how to implement the MCMC algorithm for analyzing prevalence counts from an outbreak of influenza in a British boarding school. This dataset was pulled from the `pomp` package, and was described and analyzed in Fintzi, Wakefield, and Minin (2016).
+
+## Influenza in a British boarding school
+
+We begin by read and plotting in the dataset. 
+```{r}
+set.seed(52787)
+st.date <- as.Date("1978/1/22")
+en.date <- as.Date("1978/2/4")
+date.seq <- seq(st.date,en.date, by = "day")
+
+bbs <- data.frame(time = rep(date.seq,1),
+                  count = c(rep("Observed count", 14)),
+                  I = c(3,8,28,76,222,293,257,237,192,126,70,28,12,5))
+
+theme_set(theme_bw())
+ggplot(bbs, aes(x = time, y = I, colour = count, shape = count)) + geom_point(size = 4) + geom_line(size = 1) + labs(x = "Date (1978)", y = "Number of infected boys") + theme(text = element_text(size = 20)) + scale_colour_discrete(guide = "none") + scale_shape(guide = "none")
+
+# The fitting function requires a matrix, whereas ggplot requires a data frame.
+# We're just creating a matrix version of the data, no big deal.
+dat <- matrix(c(0:13, 3,8,28,76,222,293,257,237,192,126,70,28,12,5), ncol = 2)
+colnames(dat) <- c("time", "I")
+```
+
+As in the previous SIR model example, we instatiate a function to evaluate the log-density of the binomial measurement process and initialize the epimodel object. 
+
+```{r}
+# same measurement process log-density as before
+d_meas_process <- function(state, meas_vars, params, log = TRUE) {
+
+          dbinom(x = state[, paste0(meas_vars, "_observed")], size = state[, paste0(meas_vars, "_augmented")], prob = params["rho"], log = log)
+
+}
+
+# initializing the epimodel object, note that the dat argument corresponds to the dataset
+epimodel <- init_epimodel(popsize = 763,
+                          states = c("S", "I", "R"),                                 # SIR model
+                          params = c(beta = rnorm(1, 0.002, 1e-4),                   # initial value for the infectivity rate
+                                     mu = rnorm(1, 0.35, 1e-3),                      # initial value for the recovery rate
+                                     rho = 0.9,                                      # initial value for the detection probability
+                                     S0 = 0.99, I0 = 0.005, R0 = 0.005),             # initial state probabilities
+                          rates = c("beta * I", "mu"),                               # unlumped rates: S->I, I->R
+                          flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), # flow matrix
+                          dat = dat,                                                 # boarding school data
+                          time_var = "time",                                         # name of time variable in the dataset
+                          meas_vars = "I",                                           # name of the measurment variable in the dataset
+                          initdist_prior = c(900, 3, 9),                             # Dirichlet hyperprior parameters
+                          d_meas_process = d_meas_process)
+```
+
+Having initialized the epimodel object, we write a function to update the model parameters from their full univariate conditional distributions via Gibbs sampling. We will use the same Rcpp helper function as before for computing the sufficient statistics for the rate parameters. 
+
+```{r}
+# helper function for computing the sufficient statistics for the rate parameters
+Rcpp::cppFunction("Rcpp::NumericVector getSuffStats(const Rcpp::NumericMatrix& pop_mat, const int ind_final_config) {
+
+                  // initialize sufficient statistics
+                  int num_inf = 0;
+                  int num_rec = 0;
+                  double beta_suff = 0;
+                  double mu_suff = 0;
+
+                  // initialize times
+                  double cur_time = 0;
+                  double next_time = 0;
+
+                  // compute the sufficient statistics
+                  for(int j = 0; j < ind_final_config - 1; ++j) {
+
+                  cur_time = next_time;
+                  next_time = pop_mat(j+1, 0);
+
+                  beta_suff += pop_mat(j, 3) * pop_mat(j, 4) * (next_time - cur_time);
+                  mu_suff += pop_mat(j, 4) * (next_time - cur_time);
+
+                  if(pop_mat(j + 1, 2) == 1) {
+                  num_inf += 1;
+                  }
+
+                  if(pop_mat(j + 1, 2) == 2) {
+                  num_rec += 1;
+                  }
+                  }
+
+                  return Rcpp::NumericVector::create(num_inf, beta_suff, num_rec, mu_suff);
+                  }")
+
+# gibbs kernel
+gibbs_kernel <- function(epimodel) {
+
+          # get sufficient statistics
+          suff_stats          <- getSuffStats(epimodel$pop_mat, epimodel$ind_final_config)
+
+          # update parameters
+          # priors: beta ~ gamma(0.001, 1)
+          #         mu   ~ gamma(1, 2)
+          #         rho  ~ beta(2, 1)
+          proposal          <- epimodel$params
+          proposal["beta"]  <- rgamma(1, 0.001 + suff_stats[1], 1 + suff_stats[2])
+          proposal["mu"]    <- rgamma(1, 1 + suff_stats[3], 2 + suff_stats[4])
+          proposal["rho"]   <- rbeta(1, shape1 = 2 + sum(epimodel$obs_mat[,"I_observed"]), shape2 = 1 + sum(epimodel$obs_mat[,"I_augmented"] - epimodel$obs_mat[,"I_observed"]))
+
+          # update array of rate matrices
+          epimodel            <- build_new_irms(epimodel, proposal)
+
+          # update the eigen decompositions
+          buildEigenArray(eigenvals = epimodel$eigen_values, eigenvecs = epimodel$eigen_vectors, inversevecs = epimodel$inv_eigen_vectors, irm_array = epimodel$irm)
+
+          # get likelihoods under the new parameters
+          pop_likelihood_new  <- calc_pop_likelihood(epimodel, log = TRUE)
+          obs_likelihood_new  <- calc_obs_likelihood(epimodel, params = proposal, log = TRUE)
+
+          # update parameters, likelihood objects, and eigen decompositions
+          epimodel            <- update_params(epimodel, params = proposal, pop_likelihood = pop_likelihood_new, obs_likelihood = obs_likelihood_new)
+
+          return(epimodel)
+}
+
+```
+
+We now have everything we need to run the MCMC, so we set the MCMC settings and proceed. 
+```{r, warning=FALSE}
+epimodel <- init_settings(epimodel,
+                          niter = 100,                 # in the paper, we used 250,000 iterations per MCMC chain
+                          save_params_every = 1,
+                          save_configs_every = 5,      # in the paper, we saved every 500th collection of latent paths
+                          kernel = list(gibbs_kernel),
+                          configs_to_redraw = 10)
+
+epimodel <- fit_epimodel(epimodel, monitor = TRUE)
+```
+
+The posterior sample of model parameters, latent paths, log-likelihoods, and acceptances are accessible as described in the *BDAepimodel* vignette via the `epimodel$results` slot in the returned object.

@@ -1,0 +1,506 @@
+---
+title: "Simulations included in the paper Efficient Data Augmentation for Fitting Stochastic Epidemic Models to Prevalence Data"
+author: "Jon Fintzi, Jon Wakefield, Vladimir Minin"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Simulations included Fintzi, Wakefield, and Minin (2016)}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+This vignette walks through the code for implementing the simulations contained in the 2016 paper by Fintzi, Wakefield, and Minin, titled "Efficient Data Augmentation for Fitting Stochastic Epidemic Models to Prevalence Data". 
+
+## Simulation 1 - Inference for the posterior distribution of the latent process
+An epidemic with SIR dynamics was simulated in a population of 750 individuals, of which 90% were initially susceptible, 3% were initially infected, and 7% were immune. The per–contact infectivity rate was $\beta = 0.00185$ and the recovery rate was $\mu = 0.5$, which together correspond to a basic reproduction
+number of $R_0 = \beta N / µ = 2.78$ and a mean infectious duration of two days. Binomially sampled
+prevalence counts were drawn at observation times 0, 1,..., 15 with sampling probability $ \rho=0.2$. 
+
+This simulation aimed to establish that we could estimate the posterior distribution for the latent process and to study the sensitivity of the estimated posterior as the degree of prior information was varied. We used three different prior regimes: Regime 1 - diffuse priors for the rate parameters and the binomial sampling probability; Regime 2 - informative priors for the rate parameters, but a diffuse prior for the binomial sampling probability; Regime 3 - informative priors for the rates and the binomial sampling probability. The same prior for the initial state parameters was maintained under all three regimes. We present code for the informative prior regime (3) below, with the modifications for the other prior regimes in commented code blocks. 
+
+The data are simulated as follows:
+
+```{r, warning = F}
+library(BDAepimodel)
+library(Rcpp)
+library(coda)
+set.seed(1834)
+
+# declare the functions for simulating from and evaluating the log-density of the measurement process
+
+r_meas_process <- function(state, meas_vars, params){
+          # in our example, rho will be the name of the binomial sampling probability parameter.
+          # this function returns a matrix of observed counts
+          rbinom(n = nrow(state), 
+                 size = state[,meas_vars],
+                 prob = params["rho"])
+}
+
+d_meas_process <- function(state, meas_vars, params, log = TRUE) {
+          # note that the names of the measurement variables are endowed with suffixes "_observed" and "_augmented". This is required.
+          # we will declare the names of the measurement variables shortly.
+          dbinom(x = state[, paste0(meas_vars, "_observed")], 
+                 size = state[, paste0(meas_vars, "_augmented")], 
+                 prob = params["rho"], log = log)
+}
+
+# initialize the stochastic epidemic model object
+epimodel <- init_epimodel(obstimes = seq(0, 15, by = 1),                              # vector of observation times
+                          popsize = 750,                                              # population size
+                          states = c("S", "I", "R"),                                  # compartment names
+                          params = c(beta = 2.5/(750 * 0.9) * 0.5,                    # infectivity parameter
+                                     mu = 0.5,                                        # recovery rate
+                                     rho = 0.2,                                       # binomial sampling probability
+                                     S0 = 0.9, I0 = 0.03, R0 = 0.07),                 # initial state probabilities
+                          rates = c("beta * I", "mu"),                                # unlumped transition rates
+                          flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T),  # flow matrix
+                          meas_vars = "I",                                            # name of measurement variable
+                          r_meas_process = r_meas_process,                            # measurement process functions
+                          d_meas_process = d_meas_process)
+
+# simulate the epidemic and the dataset.  
+epimodel <- simulate_epimodel(epimodel = epimodel, lump = TRUE, trim = TRUE)
+plot(x = epimodel$pop_mat[,"time"], y = epimodel$pop_mat[,"I"], "l", ylim = c(-5, 200), xlab = "Time", ylab = "Prevalence")
+points(x = epimodel$dat[,"time"], y = epimodel$dat[,"I"])
+```
+
+We grab the true latent path (for later comparison) along with the dataset. In order to perform inference, we will need a transition kernel for Gibbs updates of the rate parameters and the binomial sampling probability. One of the objectives of this simulation was to explore the sensitivity of the latent posterior distribution to the degree of prior information about model parameters. The code presented below displays the implementation for the case with informative parameters. We ran three chains, each for 250,000 MCMC iterations, updating 10 subject-paths per iteration. 
+
+```{r, warning = F}
+# grab the data that was simulated previously. No need to redefine the measurement process functions, they remain unchanged.
+dat <- epimodel$dat 
+true_path <- epimodel$pop_mat
+
+# helper function for computing the sufficient statistics for the SIR model rate parameters
+Rcpp::cppFunction("Rcpp::NumericVector getSuffStats(const Rcpp::NumericMatrix& pop_mat, const int ind_final_config) {
+                  
+                  // initialize sufficient statistics
+                  int num_inf = 0;       // number of infection events
+                  int num_rec = 0;       // number of recovery events
+                  double beta_suff = 0;  // integrated hazard for the infectivity
+                  double mu_suff = 0;    // integrated hazard for the recovery
+                  
+                  // initialize times
+                  double cur_time = 0;   // current time
+                  double next_time = 0;  // time of the next event
+                  
+                  // compute the sufficient statistics - loop through the pop_mat matrix until
+                  // reaching the row for the final observation time
+                  for(int j = 0; j < ind_final_config - 1; ++j) {
+                  
+                  cur_time = next_time;         
+                  next_time = pop_mat(j+1, 0); // grab the time of the next event
+                  
+                  beta_suff += pop_mat(j, 3) * pop_mat(j, 4) * (next_time - cur_time); // add S*I*(t_{j+1} - t_j) to beta_suff
+                  mu_suff += pop_mat(j, 4) * (next_time - cur_time);                   // add I*(t_{j+1} - t_j) to mu_suff
+                  
+                  // if the next event is an infection, increment the number of infections
+                  if(pop_mat(j + 1, 2) == 1) {  
+                  num_inf += 1;
+                  }
+                  
+                  // if the next event is a recovery, increment the number of recoveries
+                  if(pop_mat(j + 1, 2) == 2) {
+                  num_rec += 1;
+                  }
+                  }
+                  
+                  // return the vector of sufficient statistics for the rate parameters
+                  return Rcpp::NumericVector::create(num_inf, beta_suff, num_rec, mu_suff);
+                  }")
+
+# MCMC transition kernel for the SIR model rate parameters and the binomial
+# sampling probability. The prior distributions for the parameters are contained
+# in this function.
+
+gibbs_kernel <- function(epimodel) {
+          
+          # get sufficient statistics using the previously compiled getSuffStats function (above)
+          suff_stats          <- getSuffStats(epimodel$pop_mat, epimodel$ind_final_config)
+          
+          # update parameters from their univariate full conditional distributions
+          # Priors: beta ~ gamma(0.002, 1)
+          #         mu   ~ gamma(2.1, 4)
+          #         rho  ~ beta(2/3, 1)
+          proposal          <- epimodel$params # params is the vector of ALL model parameters
+          proposal["beta"]  <- rgamma(1, 0.002 + suff_stats[1], 1 + suff_stats[2])
+          proposal["mu"]    <- rgamma(1, 2.1 + suff_stats[3], 4 + suff_stats[4])
+          proposal["rho"]   <- rbeta(1, shape1 = 21 + sum(epimodel$obs_mat[,"I_observed"]), shape2 = 75 + sum(epimodel$obs_mat[,"I_augmented"] - epimodel$obs_mat[,"I_observed"]))
+          
+          ###############################################################################################
+          ### CODE FOR PRIOR REGIMES 1 AND 2. REPLACE PREVIOUS THREE LINES OF CODE WITH THE FOLLOWING:
+          
+          ### REGIME 1 - diffuse priors for the rate parameters and the binomial sampling probability 
+          # proposal["beta"]  <- rgamma(1, 0.001 + suff_stats[1], 0.001 + suff_stats[2])
+          # proposal["mu"]    <- rgamma(1, 0.001 + suff_stats[3], 0.001 + suff_stats[4])
+          # proposal["rho"]   <- rbeta(1, shape1 = 1 + sum(epimodel$obs_mat[,"I_observed"]), 
+          #                          shape2 = 1 + sum(epimodel$obs_mat[,"I_augmented"] - epimodel$obs_mat[,"I_observed"]))
+
+          ### REGIME 2 - informative priors for the rate parameters, but a diffuse prior for the binomial sampling probability 
+          # proposal["beta"]  <- rgamma(1, 0.002 + suff_stats[1], 1 + suff_stats[2])
+          # proposal["mu"]    <- rgamma(1, 2.1 + suff_stats[3], 4 + suff_stats[4])
+          # proposal["rho"]   <- rbeta(1, shape1 = 2/3 + sum(epimodel$obs_mat[,"I_observed"]), 
+          #                          shape2 = 1 + sum(epimodel$obs_mat[,"I_augmented"] - epimodel$obs_mat[,"I_observed"]))
+          
+          # update array of rate matrices
+          epimodel            <- build_new_irms(epimodel, proposal)
+          
+          # update the eigen decompositions
+          buildEigenArray(eigenvals = epimodel$eigen_values, eigenvecs = epimodel$eigen_vectors, inversevecs = epimodel$inv_eigen_vectors, irm_array = epimodel$irm)
+          
+          # get log-likelihoods under the new parameters
+          pop_likelihood_new  <- calc_pop_likelihood(epimodel, log = TRUE) #### NOTE - log = TRUE
+          obs_likelihood_new  <- calc_obs_likelihood(epimodel, params = proposal, log = TRUE) #### NOTE - log = TRUE
+          
+          # update parameters, likelihood objects, and eigen decompositions
+          epimodel            <- update_params(epimodel, params = proposal, pop_likelihood = pop_likelihood_new, obs_likelihood = obs_likelihood_new)
+          
+          return(epimodel)
+}
+```
+
+We now re-initialize the epimodel object with the dataset, set the RNG seed, and run each MCMC chain as follows. Note that these commands were called within a script that varied the value of `chain`. 
+```{r, warning = F}
+chain <- 1 # varies by chain. obviously, chain 2 has a value of 2 here. this is set by a batch script.
+set.seed(52787 + chain)
+
+# initial values for initial state parameters
+init_dist <- MCMCpack::rdirichlet(1, c(9,0.5,0.5))
+epimodel <- init_epimodel(popsize = 750,                                                       # population size
+                          states = c("S", "I", "R"),                                           # compartment names
+                          params = c(beta = rnorm(1, 2.8 / 750, 1e-3),                         # per-contact infectivity rate
+                                     mu = rnorm(1, 0.5, 0.1),                                  # recovery rate
+                                     rho = 150 / 750,                                          # binomial sampling probability
+                                     S0 = init_dist[1], I0 = init_dist[2], R0 = init_dist[3]), # initial state probabilities
+                          rates = c("beta * I", "mu"),                                         # unlumped transition rates
+                          flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T),           # flow matrix
+                          dat = dat,                                                           # dataset
+                          time_var = "time",                                                   # name of time variable in the dataset
+                          meas_vars = "I",                                                     # name of measurement var in the dataset
+                          initdist_prior = c(9,0.2,0.5), ### Parameters for the dirichlet prior distribution for the initial state probs
+                          r_meas_process = r_meas_process,
+                          d_meas_process = d_meas_process)
+
+epimodel <- init_settings(epimodel,
+                          niter = 250, # this was set to 250,000 for the paper
+                          save_params_every = 1, 
+                          save_configs_every = 5, # this was set to 250 for the chains run in the paper
+                          kernel = list(gibbs_kernel),
+                          configs_to_redraw = 10)
+
+epimodel <- fit_epimodel(epimodel, monitor = FALSE)
+
+```
+
+After running all three chains for each prior regime, we discarded the first 100 iterations of each chain as burn-in and combined the parameter samples and latent posterior samples from each chain. Posterior median estimates and 95% credible intervals were summarized for each prior regime in Figure 3 of the original paper. The latent posterior distributions were estimated from the combined latent posterior paths and are summarized in Figure 4 of the original paper. 
+
+## Simulation 2 - Selecting the proportion of subject-paths to sample in each MCMC iteration
+In this simulation, we attempted to determine whether the proportion of subject-paths that were updated per MCMC iteration affected the effective sample size per CPU time. Intuitively, the optimal number of subject-paths should vary depending on the probability that the subject whose path is being resampled will have a non-constant path (see paper for further discussion of this point). Therefore, we simulated epidemics with SIR dynamics in two populations of size 500 that differed in the proportion of immune individuals. In the first population, roughly 5% of the population had prior immunity, while in the second population about 35% of the population was immune a priori. We present code for the first of these epidemics with modifications to the code for the second case in commented blocks. 
+
+The data were simulated as follows:
+```{r, warning = F}
+set.seed(52787)
+
+# functions to simulate from and evaluate the log-density of the measurement process 
+r_meas_process <- function(state, meas_vars, params){
+          rbinom(n = nrow(state), size = state[,meas_vars], prob = params["rho"])
+}
+
+d_meas_process <- function(state, meas_vars, params, log = TRUE) {
+          dbinom(x = state[, paste0(meas_vars, "_observed")], size = state[, paste0(meas_vars, "_augmented")], prob = params["rho"], log = log)
+}
+
+# initialize the epimodel object
+epimodel <- init_epimodel(obstimes = seq(0, 20, by = 1),                              # vector of observation times
+                          popsize = 500,                                              # population size
+                          states = c("S", "I", "R"),                                  # model compartment names
+                          params = c(beta = rnorm(1, 0.0025, 1e-5),                   # infectivity parameter
+                                     mu = rnorm(1, 0.5, 1e-5),                        # recovery rate
+                                     rho = 0.5,                                       # binomial sampling parameter
+                                     S0 = 0.94, I0 = 0.01, R0 = 0.05),                # initial state probabilities
+                          rates = c("beta * I", "mu"),                                # unlumped transition rates
+                          flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T),  # flow matrix 
+                          meas_vars = "I",                                            # name of the measurement variable 
+                          initdist_prior = c(95, 1, 5),                               # prior distribution for initial state probs
+                          r_meas_process = r_meas_process,
+                          d_meas_process = d_meas_process)
+
+
+# Simulate the epidemic 
+epimodel <- simulate_epimodel(epimodel = epimodel, lump = TRUE, trim = TRUE)
+
+```
+
+As in the previous example, we create an Rcpp helper function for computing the sufficient statistics for the rate parameters, along with an MCMC kernel function for Gibbs updates to the rate parameters and binomial sampling probability.
+
+```{r, warning = F}
+
+# gibbs kernel
+Rcpp::cppFunction("Rcpp::NumericVector getSuffStats(const Rcpp::NumericMatrix& pop_mat, const int ind_final_config) {
+
+                  // initialize sufficient statistics
+                  int num_inf = 0;
+                  int num_rec = 0;
+                  double beta_suff = 0;
+                  double mu_suff = 0;
+
+                  // initialize times
+                  double cur_time = 0;
+                  double next_time = 0;
+
+                  // compute the sufficient statistics
+                  for(int j = 0; j < ind_final_config - 1; ++j) {
+
+                  cur_time = next_time;
+                  next_time = pop_mat(j+1, 0);
+
+                  beta_suff += pop_mat(j, 3) * pop_mat(j, 4) * (next_time - cur_time);
+                  mu_suff += pop_mat(j, 4) * (next_time - cur_time);
+
+                  if(pop_mat(j + 1, 2) == 1) {
+                  num_inf += 1;
+                  }
+
+                  if(pop_mat(j + 1, 2) == 2) {
+                  num_rec += 1;
+                  }
+                  }
+
+                  return Rcpp::NumericVector::create(num_inf, beta_suff, num_rec, mu_suff);
+                  }")
+
+gibbs_kernel <- function(epimodel) {
+
+          # get sufficient statistics
+          suff_stats          <- getSuffStats(epimodel$pop_mat, epimodel$ind_final_config)
+
+          # update parameters
+          # priors: beta ~ gamma(0.0024, 1)
+          #         mu   ~ gamma(0.96, 2)
+          #         rho  ~ beta(3.74, 4.25)
+          proposal          <- epimodel$params
+          proposal["beta"]  <- rgamma(1, 0.0024 + suff_stats[1], 1 + suff_stats[2])
+          proposal["mu"]    <- rgamma(1, 0.96 + suff_stats[3], 2 + suff_stats[4])
+          proposal["rho"]   <- rbeta(1, shape1 = 3.75 + sum(epimodel$obs_mat[,"I_observed"]), shape2 = 4.25 + sum(epimodel$obs_mat[,"I_augmented"] - epimodel$obs_mat[,"I_observed"]))
+
+          # update array of rate matrices
+          epimodel          <- build_new_irms(epimodel, proposal)
+
+          # update the eigen decompositions
+          buildEigenArray(eigenvals = epimodel$eigen_values, eigenvecs = epimodel$eigen_vectors, inversevecs = epimodel$inv_eigen_vectors, irm_array = epimodel$irm)
+
+          # get likelihoods under the new parameters
+          pop_likelihood_new  <- calc_pop_likelihood(epimodel, log = TRUE)
+          obs_likelihood_new  <- calc_obs_likelihood(epimodel, params = proposal, log = TRUE)
+
+          # update parameters, likelihood objects, and eigen decompositions
+          epimodel            <- update_params(epimodel, params = proposal, pop_likelihood = pop_likelihood_new, obs_likelihood = obs_likelihood_new)
+
+          return(epimodel)
+}
+
+```
+
+We ran a single MCMC chain for each of the following numbers of subject-paths to update per MCMC iteration: 1, 2, 3, 4, 5, 10, 25, 50, 100, 200, 250, 300, 350, ..., 600. 
+
+```{r, warning = F}
+# initialize the MCMC settings
+# configs_to_redraw was set within the batch script. 
+epimodel <- init_settings(epimodel,
+                          niter = 100, # this was set to 100,000 for the paper
+                          save_params_every = 1,
+                          save_configs_every = 5, # this was set to 500 for the paper
+                          kernel = list(gibbs_kernel),
+                          configs_to_redraw = 10) # this was set within a batch script, the use of 10 here is just an example.
+
+
+# Fit the epimodel
+epimodel <- fit_epimodel(epimodel, monitor = FALSE)
+```
+
+
+We then used the `coda` package to compute the effective sample size of the log-posterior, which we normalized by the simulation run-time for each chain to get the ESS per CPU time. We also used the `coda` package to compute the Raftery-Lewis diagnostic, which estimates the number of iterations required to estimate all posterior medians with accuracy of $\pm$ 0.025 with probability 0.9. We normalized this quantity by time per MCMC iteration, to get an estimate of the time required. This was accomplished for each chain as follows:
+
+```{r, warning = F}
+          # get the effective sample sizes per cpu-time
+          runtime  <- epimodel$time
+          beta_ess <- effectiveSize(epimodel$results$params[,"beta"])/ runtime
+          mu_ess   <- effectiveSize(epimodel$results$params[,"mu"])  / runtime
+          rho_ess  <- effectiveSize(epimodel$results$params[,"rho"]) / runtime
+          S0_ess   <- effectiveSize(epimodel$results$params[,"S0"])  / runtime
+          I0_ess   <- effectiveSize(epimodel$results$params[,"I0"])  / runtime
+          R0_ess   <- effectiveSize(epimodel$results$params[,"R0"])  / runtime
+          log_post <- effectiveSize(epimodel$results$log_likelihood) / runtime
+          
+          # compute the raftery-lewis diagnostic - not run here b/c number of iterations is too small.
+          # RL_diag<- max(raftery.diag(epimodel$results$params, q = 0.5, r = 0.025, s = 0.9)$resmatrix[,2]) / runtime
+```
+
+## Simulation 3 - Robustness to population size misspecification
+The third simulation in the paper examined the robustness of model parameter estimates to misspecification of the population size, in particular to assuming a smaller population size than is true for computational reasons (see paper for a discussion of why this might occur). We simulated two epidemics in a population size of 1,500 individuals.  In both epidemics, the mean recovery time was one week. The first epidemic spread much more slowly than did the second epidemic, with an $R_0 = 1.47$ vs. $R_0 = 3.675$ for the second epidemic. The data were binomially sampled with detection probability of 0.2 in both cases. We fit an SIR model using a sequence of assumed population sizes, 1,500 (the truth), 1,000, 500, 300, and 150, running five chains for 250,000 iterations each. We updated sample paths 1% of the population, rounded up, in each MCMC iteration. 
+
+We present code for a single chain in the low $R_0$ epidemic, noting where the code is adjusted for the high $R_0$ scenario in commented blocks. We simulate data as follows:
+```{r, warning = F}
+# The SIR model was simulated using an alternative function implemented in Rcpp 
+# due to the larger population size. This simulation function was necessary due 
+# to difficulties in initializing the latent path, which for some small 
+# population sizes required us to simulate many paths until a valid sample was 
+# drawn. This simulation function was only used in this example, though it was 
+# debugged by comparing to the simulation functions in the GillespieSSA package.
+set.seed(12511)
+
+obstimes  <- seq(1, 364, by=7)
+popsize   <- 1500
+params    <- c(beta = 0.00014, mu = 1/7, rho = 0.2, S0 = 0.948, I0 = 0.002, R0 = 0.05)
+
+### For the high R0 setting, the parameters were set as 
+# params  <- c(beta = 0.00035, mu = 1/7, rho = 0.2, S0 = 0.948, I0 = 0.002, R0 = 0.05)
+
+# Simulate the epidemic 
+dat <- simulate_SIR(obstimes, params, popsize, trim = TRUE)$obs_mat[,1:2]
+colnames(dat) <- c("time", "I")
+```
+
+We proceed to initialize the epidemic model as before. Here, `popsize` and `chain` were parameters that were varied by a batch script. We selected priors that were reasonably informative as to the recovery rate and infectivity rate (chosen to be close to the true value of $ R_0$), but assigned a flat prior for the binomial sampling probability. As before, we updated all model parameters from their univariate full conditional distributions. 
+```{r, warning = F}
+chain <- 1
+set.seed(52787 + chain)
+
+# matrix of initial values. popsize was varied by the batch function and is used to select the initial rate parameter values
+inits <- data.frame(popsize = c(1500, 1000, 500, 300, 150),
+                    beta = c(1.4, 1.4, 1.5, 2, 2.5) / c(1500, 1000, 500, 300, 150) / c(7.5, 7.5, 8, 15, 18),
+                    mu = 1/c(7.5, 7.5, 8, 15, 18))
+
+### For the high R0 setting, the matrix of initial values was
+# inits <- data.frame(popsize = c(1500, 1000, 500, 300, 150),
+#                     beta = c(3.7, 3.7, 3.8, 4.3, 10) / c(1500, 1000, 500, 300, 150) / c(7.5, 7.5, 8, 15, 20),
+#                     mu = 1/c(7.5, 7.5, 8, 15, 20))
+
+
+# measurement process functions
+r_meas_process <- function(state, meas_vars, params){
+          rbinom(n = nrow(state), size = state[,meas_vars], prob = params["rho"])
+}
+
+d_meas_process <- function(state, meas_vars, params, log = TRUE) {
+          dbinom(x = state[, paste0(meas_vars, "_observed")], size = state[, paste0(meas_vars, "_augmented")], prob = params["rho"], log = log) 
+}
+
+epimodel <- init_epimodel(popsize = popsize,
+                          states = c("S", "I", "R"), 
+                          params = c(beta = rnorm(1, inits[inits$popsize == popsize, 2], 1e-5), 
+                                     mu = rnorm(1, inits[inits$popsize == popsize, 3], 1e-3), 
+                                     rho = 0.45, S0 = 0.98, I0 = 0.01, R0 = 0.01), 
+                          rates = c("beta * I", "mu"), 
+                          flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T), 
+                          dat = dat,
+                          time_var = "time",
+                          meas_vars = "I",
+                          initdist_prior = c(100, 1, 5), # prior for the initial state probabilities
+                          r_meas_process = r_meas_process,
+                          d_meas_process = d_meas_process)
+
+### In the high R0 setting, the initial values for the initial state probability parameters were S0 = 0.92, I0 = 0.003, R0 = 0.077
+
+
+# helper function for computing the sufficient statistics for rate parameters
+Rcpp::cppFunction("Rcpp::NumericVector getSuffStats(const Rcpp::NumericMatrix& pop_mat, const int ind_final_config) {
+                  
+                  // initialize sufficient statistics
+                  int num_inf = 0;
+                  int num_rec = 0;
+                  double beta_suff = 0;
+                  double mu_suff = 0;
+                  
+                  // initialize times
+                  double cur_time = 0;
+                  double next_time = 0;
+                  
+                  // compute the sufficient statistics
+                  for(int j = 0; j < ind_final_config - 1; ++j) {
+                  
+                  cur_time = next_time;
+                  next_time = pop_mat(j+1, 0); 
+                  
+                  beta_suff += pop_mat(j, 3) * pop_mat(j, 4) * (next_time - cur_time);
+                  mu_suff += pop_mat(j, 4) * (next_time - cur_time);
+                  
+                  if(pop_mat(j + 1, 2) == 1) {
+                  num_inf += 1;
+                  }
+                  
+                  if(pop_mat(j + 1, 2) == 2) {
+                  num_rec += 1;
+                  }
+                  }
+                  
+                  return Rcpp::NumericVector::create(num_inf, beta_suff, num_rec, mu_suff);
+                  }")
+
+# function to perform the gibbs updates
+gibbs_kernel <- function(epimodel) {
+          
+          # get sufficient statistics
+          suff_stats          <- getSuffStats(epimodel$pop_mat, epimodel$ind_final_config)
+          
+          # update parameters
+          proposal          <- epimodel$params
+          proposal["beta"]  <- rgamma(1, 0.00018 * (1500 / epimodel$popsize) + suff_stats[1], 1 + suff_stats[2])
+          proposal["mu"]    <- rgamma(1, 0.35 + suff_stats[3], 2 + suff_stats[4])
+          proposal["rho"]   <- rbeta(1, shape1 = 1 + sum(epimodel$obs_mat[,"I_observed"]), shape2 = 1 + sum(epimodel$obs_mat[,"I_augmented"] - epimodel$obs_mat[,"I_observed"]))
+          
+          ### in the high R0 setting, the prior distribution for the infectivity rate was specified by          
+          # proposal["beta"]  <- rgamma(1, 0.0004 * (1500 / epimodel$popsize) + suff_stats[1], 1 + suff_stats[2])
+
+          
+          # update array of rate matrices
+          epimodel            <- build_new_irms(epimodel, proposal)
+          
+          # update the eigen decompositions
+          buildEigenArray(eigenvals = epimodel$eigen_values, eigenvecs = epimodel$eigen_vectors, inversevecs = epimodel$inv_eigen_vectors, irm_array = epimodel$irm)
+          
+          # get likelihoods under the new parameters
+          pop_likelihood_new  <- calc_pop_likelihood(epimodel, log = TRUE)
+          obs_likelihood_new  <- calc_obs_likelihood(epimodel, params = proposal, log = TRUE)
+          
+          # update parameters, likelihood objects, and eigen decompositions
+          epimodel            <- update_params(epimodel, params = proposal, pop_likelihood = pop_likelihood_new, obs_likelihood = obs_likelihood_new)
+          
+          return(epimodel)
+}
+
+```
+
+We proceeded to initialize the MCMC settings and to run the MCMC. Note again tha the population size parameter was varied by the batch script.
+
+```{r, warning=F}
+
+epimodel <- init_settings(epimodel,
+                          niter = 100, # this was set to 250,000 for the paper
+                          save_params_every = 1, 
+                          save_configs_every = 5, # this was set to 250 for the paper
+                          kernel = list(gibbs_kernel),
+                          configs_to_redraw = ceiling(0.01 * popsize)) # this was varied by the batch script as popsize changed
+
+epimodel <- fit_epimodel(epimodel, monitor = FALSE)
+```
+
+Having run the MCMC, we rescaled the posterior parameter samples in order to facilitate comparison of the posterior estimates across assumed population sizes, as use of the nominal estimates would have resulted in unfair comparisons of the dynamic (see paper for discussion of this point). The posterior estimates were rescaled as follows (with popsize varying appropriately):
+
+```{r, warning = F}
+# basic reproductive number - naturally scale free
+R0 <- quantile(epimodel$results$params[,"beta"] * popsize / epimodel$results$params[,"mu"], c(0.025, 0.5, 0.975))
+
+# per-contact infectivity x population size = infectivity rate
+beta <- quantile(epimodel$results$params[,"beta"] * popsize / 1500, c(0.025, 0.5, 0.975))
+
+# recovery rate
+mu <- quantile(epimodel$results$params[,"mu"], c(0.025, 0.5, 0.975))
+
+# detection probability
+rho <- quantile(epimodel$results$params[,"rho"], c(0.025, 0.5, 0.975))
+
+# expected number of detected cases
+rho_scaled <- quantile(epimodel$results$params[,"rho"] * popsize, c(0.025, 0.5, 0.975))
+```
+
