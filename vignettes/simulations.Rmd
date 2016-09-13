@@ -182,7 +182,7 @@ epimodel <- init_epimodel(popsize = 750,                                        
                           d_meas_process = d_meas_process)
 
 epimodel <- init_settings(epimodel,
-                          niter = 250, # this was set to 250,000 for the paper
+                          niter = 100, # this was set to 250,000 for the paper
                           save_params_every = 1, 
                           save_configs_every = 5, # this was set to 250 for the chains run in the paper
                           kernel = list(gibbs_kernel),
@@ -323,7 +323,7 @@ We then used the `coda` package to compute the effective sample size of the log-
 
 ```{r, warning = F}
           # get the effective sample sizes per cpu-time
-          runtime  <- epimodel$time
+          runtime  <- as.numeric(epimodel$results$time)
           beta_ess <- effectiveSize(epimodel$results$params[,"beta"])/ runtime
           mu_ess   <- effectiveSize(epimodel$results$params[,"mu"])  / runtime
           rho_ess  <- effectiveSize(epimodel$results$params[,"rho"]) / runtime
