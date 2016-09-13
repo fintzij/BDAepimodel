@@ -15,4 +15,9 @@ This package may be installed directly from GitHub using the **devtools** packag
     library(devtools)
     install_github("fintzij/BDAepimodel",build_vignettes=TRUE) 
     library(BDAepimodel)
-    vignette("BDAepimodel")
+
+There are three vignettes included in this package. The first diagrams the basic functionality of the package and is intended to serve as a how-to for setting up MCMC using our code. The second is a walk-through of the simulations presented in the original paper, while the third provides the implementation for the analysis of the influenza outbreak data that is presented in the paper. These are accessible as follows:
+
+    vignette("BDAepimodel") 
+    vignette("simulations")
+    vignette("bbs_influenza")
