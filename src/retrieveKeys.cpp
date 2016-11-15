@@ -7,6 +7,9 @@ using namespace Rcpp;
 //' Get the irm keys for the compartment counts in a population level
 //' bookkeeping matrix
 //'
+//' @param keys vector of keys to be modified in place
+//' @param append_missing indicator to be modified in place to indicate whether 
+//'   any keys are missing
 //' @param inds vector of indices, generally 1:epimodel$ind_final_config
 //' @param irm_lookup lookup matrix relating configurations to irm keys
 //' @param pop_mat population bookkeeping matrix in epimodel list
@@ -41,31 +44,29 @@ arma::uvec retrieveKeys(const arma::uvec inds, const arma::mat& irm_lookup, cons
         arma::mat p_config = pop_mat.cols(pop_index_inds); // only the columns from the pop_mat relating to the index states
         arma::mat l_config = irm_lookup.cols(arma::span(lookup_index_inds[0], lookup_index_inds[1]));
 
-        // Fill out the keys
-        // outer loop over unique configurations
-        for(int k = 0; k < n_keys; ++k) {
-
-                // Get config in the lookup matrix
-                arma::rowvec l_conf = l_config.row(k);
-                  
-                // inner loop over unmatched indices in pop_mat
-                for(int j = 0; j < n_configs; ++j) {
+          // Fill out the keys
+          // outer loop over unique configurations
+          for(int k = 0; k < n_keys; ++k) {
+          
+                    // Get config in the lookup matrix
+                    arma::rowvec l_conf = l_config.row(k);
+                    
+                    // inner loop over unmatched indices in pop_mat
+                    for(int j = 0; j < n_configs; ++j) {
                           
-                        // If the configuration has been matched
-                        if(config_inds[j] != 1) {
-                                  
-                                arma::rowvec p_conf = p_config.row(row_inds[j]);
-
-                                if(all(p_conf == l_conf)) {
-                                          
-                                        keys[j] = irm_lookup(k, 0); // assign the key
-                                        config_inds[j] = 1; // indicate that the configuration has been matched
-                                }
-                        }
-                }
-
-                if(all(config_inds) == 1) break;
-        }
-
-        return keys;
+                              // If the configuration has been matched
+                              if(config_inds[j] != 1) {
+                                        arma::rowvec p_conf = p_config.row(row_inds[j]);
+                                        
+                                        if(all(p_conf == l_conf)) {
+                                                  keys[j] = irm_lookup(k, 0); // assign the key
+                                                  config_inds[j] = 1; // indicate that the configuration has been matched
+                                        }
+                              }
+                    }
+                    
+                    if(all(config_inds) == 1) break;
+          }
+          
+          return keys;
 }

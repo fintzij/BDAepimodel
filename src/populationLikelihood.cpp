@@ -27,6 +27,7 @@ double populationLikelihood(const arma::mat& pop_mat, Rcpp::NumericVector& irm_a
           // ensure that indices (excluding obs_time_inds) start at 0
           arma::uvec pop_inds = inds - 1;
           arma::uvec init_inds = initdist_param_inds - 1;
+          arma::uvec non_zero_inits = arma::find(initdist(init_inds) != 0);
           
           arma::umat event_inds = flow_inds - 1;
           arma::uword next_event(0);
@@ -50,16 +51,13 @@ double populationLikelihood(const arma::mat& pop_mat, Rcpp::NumericVector& irm_a
           // initialize the likelihood
           arma::mat init_counts = counts.row(0);
 
-          // cout << init_counts(init_inds) << endl;
-                    
-          double pop_lik = sum(init_counts(init_inds) % log(initdist(init_inds)));
+          // get indices of any initial state probabilities that equal zero
+          double pop_lik = sum(init_counts(non_zero_inits) % log(initdist(non_zero_inits)));
           
           // compute the likelihood of the path
           for(uword j = 0; j < n_intervals - 1; ++j) {
-                    
                     next_event = event_seq[j+1];
                     pop_lik += log(irm(event_inds(next_event, 0), event_inds(next_event, 1), irm_keys[j])) + arma::accu(irm.slice(irm_keys[j]).diag() % counts.row(j).t()) * timediffs[j];
-                    
           }
           
           // Tail probability

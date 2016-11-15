@@ -10,66 +10,66 @@
 #'
 fit_epimodel <- function(epimodel, monitor = FALSE) {
         
-        # check that the simulation settings have been set
-        if(is.null(epimodel$sim_settings)) {
+          # check that the simulation settings have been set
+          if(is.null(epimodel$sim_settings)) {
                 stop(sQuote("sim_settings"), "must be specified in the epimodel object.")
-        }
-        
-        if(is.null(epimodel$meas_vars)) {
+          }
+          
+          if(is.null(epimodel$meas_vars)) {
                 stop(sQuote("meas_vars"), "must be specified within the epimodel object.")
-        }
-        
-        if(is.null(epimodel$pop_mat)) {
-                warning("An initial configuration was not provided so one has been generated.")
+          }
+          
+          if(is.null(epimodel$pop_mat)) {
                 epimodel <- init_augmentation(epimodel)
-        }
+                print("Configuration initialized. Beginning MCMC.")
+          }
         
           if(!is.null(epimodel$sim_settings$post_init_params)) {
                     epimodel$params <- epimodel$sim_settings$post_init_params
           }
         
-        epimodel <- prepare_epimodel(epimodel)
-        
-        # move some of the simulation settings to internal objects
-        niter                 <- epimodel$sim_settings$niter
-        save_params_every     <- epimodel$sim_settings$save_params_every
-        save_configs_every    <- epimodel$sim_settings$save_configs_every
-        kernel                <- epimodel$sim_settings$kernel
-        configs_to_redraw     <- epimodel$sim_settings$configs_to_redraw
-        config_replacement    <- epimodel$sim_settings$config_replacement
-        
-        # initialize list for storing results
-        results               <- init_results(epimodel)
-        
-        # set seed
-        results$seed          <- epimodel$sim_settings$seed
-        set.seed(results$seed)
-        
-        # store the initial values in the results matrix
-        results$params[1, ] <- epimodel$params
-        results$log_likelihood[1] <- epimodel$likelihoods$obs_likelihood + epimodel$likelihoods$pop_likelihood_cur
-        
-        results$configs[[1]] <- epimodel$pop_mat[1:epimodel$ind_final_config,]
-        
-        # initialize the vector for path acceptances
-        epimodel$path_accept_vec <- rep(0, configs_to_redraw)
-        
-        # build the vector of probabilities for selecting which subjects to sample
-        subj_probs <- subject_probabilities(epimodel)
-        
-        # get start time
-        start.time = Sys.time()
-        
-        # generate niter parameter samples
-        for(k in 2:niter) {
+          epimodel <- prepare_epimodel(epimodel)
+          
+          # move some of the simulation settings to internal objects
+          niter                 <- epimodel$sim_settings$niter
+          save_params_every     <- epimodel$sim_settings$save_params_every
+          save_configs_every    <- epimodel$sim_settings$save_configs_every
+          kernel                <- epimodel$sim_settings$kernel
+          configs_to_redraw     <- epimodel$sim_settings$configs_to_redraw
+          config_replacement    <- epimodel$sim_settings$config_replacement
+          
+          # initialize list for storing results
+          results               <- init_results(epimodel)
+          
+          # set seed
+          results$seed          <- epimodel$sim_settings$seed
+          set.seed(results$seed)
+          
+          # store the initial values in the results matrix
+          results$params[1, ]       <- epimodel$params
+          results$log_likelihood[1] <- epimodel$likelihoods$obs_likelihood + epimodel$likelihoods$pop_likelihood_cur
+          results$configs[[1]]      <- epimodel$pop_mat[1:epimodel$ind_final_config,]
+          
+          # initialize the vector for path acceptances
+          epimodel$path_accept_vec <- rep(0, configs_to_redraw)
+          
+          # build the vector of probabilities for selecting which subjects to sample
+          subj_probs <- subject_probabilities(epimodel)
+          
+          # get start time
+          start.time = Sys.time()
+          
+          # generate niter parameter samples
+          for(k in 2:niter) {
                     
-                    # re-compute the arrays of rate matrices and eigen
-                    # decompositions - only needs to be recomputed every time
-                    # parameters are updated.
-
                     # choose which subjects should be redrawn
-                    subjects <- sample.int(n = epimodel$popsize, size = configs_to_redraw, replace = config_replacement, prob = subj_probs)
-                    
+                    subjects <- sample.int(
+                                      n       = epimodel$popsize,
+                                      size    = configs_to_redraw,
+                                      replace = config_replacement,
+                                      prob    = subj_probs
+                            )
+                  
                     # cycle through subject-level trajectories to be re-drawn
                     for(j in 1:configs_to_redraw) {
                         
@@ -78,21 +78,37 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                               # reflect the removal.
                               epimodel <- remove_trajectory(epimodel, subject = subjects[j], save_path = TRUE)
                               
-                              # update instatiate missing IRMs, update the tpms
-                              # and tpm products, the emission probability mtx,
-                              # and the FB matrices.
-                              
                               # TPM sequence
-                              tpmSeqs(tpms = epimodel$tpms, pop_mat = epimodel$pop_mat, eigen_vals = epimodel$eigen_values, eigen_vecs = epimodel$eigen_vectors, inverse_vecs = epimodel$inv_eigen_vectors, irm_keys = epimodel$keys)
+                              tpmSeqs(
+                                        tpms            = epimodel$tpms,
+                                        pop_mat         = epimodel$pop_mat,
+                                        real_eigen_vals = epimodel$real_eigen_values,
+                                        imag_eigen_vals = epimodel$imag_eigen_values,
+                                        eigen_vecs      = epimodel$eigen_vectors,
+                                        inverse_vecs    = epimodel$inv_eigen_vectors,
+                                        irm_keys        = epimodel$keys,
+                                        n_real_eigs     = epimodel$n_real_eigs,
+                                        irms = epimodel$irm
+                              )
                               
                               # TPM product subsequences
-                              tpmProdSeqs(tpm_prods = epimodel$tpm_products, tpms = epimodel$tpms, obs_time_inds = epimodel$obs_time_inds)
+                              tpmProdSeqs(
+                                        tpm_prods     = epimodel$tpm_products,
+                                        tpms          = epimodel$tpms,
+                                        obs_time_inds = epimodel$obs_time_inds
+                              )
                               
                               # Emission matrix
                               epimodel$emission_mat <- build_emission_mat(emission_mat = epimodel$emission_mat, epimodel = epimodel)
                               
                               # FB matrices
-                              buildFBMats(epimodel$fb_mats, epimodel$tpm_products, epimodel$emission_mat, epimodel$initdist, epimodel$obs_time_inds)                        
+                              buildFBMats(
+                                        epimodel$fb_mats,
+                                        epimodel$tpm_products,
+                                        epimodel$emission_mat,
+                                        epimodel$initdist,
+                                        epimodel$obs_time_inds
+                              )
                               
                               # sample status at observation times
                               epimodel$subj_path <- sample_at_obs_times(path = epimodel$subj_path, epimodel = epimodel)
@@ -101,8 +117,12 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                               epimodel$subj_path <- sample_at_event_times(path = epimodel$subj_path, epimodel = epimodel)
                               
                               # sample paths in inter-event intervals
-                              path <- sample_path(epimodel, subject = subjects[j])
-                              epimodel$n_jumps <- ifelse(is.null(path), 0, nrow(path))
+                              path <- sample_path(epimodel, subject = subjects[j]) 
+                              epimodel$n_jumps <- if(is.null(path)) {
+                                                            0
+                                                  } else {
+                                                            nrow(path)
+                                                  }
                               
                               # insert the path
                               if(!is.null(path)) {
@@ -113,18 +133,21 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                                         }
                                         
                                         # insert the path
-                                        insertPath(path, subjects[j], epimodel$pop_mat, epimodel$subj_path, epimodel$ind_final_config)
+                                        insertPath(path,
+                                                   subjects[j],
+                                                   epimodel$pop_mat,
+                                                   epimodel$subj_path,
+                                                   epimodel$ind_final_config)
                               }
                               
                               # insert the proposed trajectory
-                              epimodel <- insert_trajectory(epimodel = epimodel, subject = subjects[j], reinsertion = FALSE)
-                              if(any(epimodel$pop_mat[!is.na(epimodel$pop_mat)] < 0)) break
-                                        
+                              epimodel <- insert_trajectory(epimodel    = epimodel,
+                                                            subject     = subjects[j],
+                                                            reinsertion = FALSE)
+                              
                               # accept or reject the proposed path
                               epimodel <- MH_accept_reject(epimodel = epimodel, subject = subjects[j], iter = j)
                     }
-                    
-                    if(any(epimodel$pop_mat[!is.na(epimodel$pop_mat)] < 0)) break
                     
                     # record the acceptance rate for trajectories
                     results$accepts[k - 1,"paths"] <- mean(epimodel$path_accept_vec)
@@ -134,15 +157,21 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                     
                     # get the current values of the parameters
                     epimodel$.params_cur <- epimodel$params
-                    epimodel$.irm_cur <- epimodel$irm
+                    epimodel$.irm_cur    <- epimodel$irm
                     
                     # retrieve the irm keys (last trajectory update could have
                     # been rejected, so keys would be incorrect)
-                    epimodel$keys <- retrieveKeys(1:epimodel$ind_final_config, epimodel$irm_key_lookup, epimodel$pop_mat, epimodel$index_state_num)
+                    epimodel$keys <-
+                              retrieveKeys(
+                                        1:epimodel$ind_final_config,
+                                        epimodel$irm_key_lookup,
+                                        epimodel$pop_mat,
+                                        epimodel$index_state_num
+                              )
                     
                     # sample new parameters
                     for(t in 1:length(kernel)) {
-                        epimodel <- kernel[[t]](epimodel)
+                              epimodel <- kernel[[t]](epimodel)
                     }
                     
                     # sample new values for the initial distribution parameters
@@ -155,8 +184,10 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                     # save parameter values and log-likelihood
                     if(k %% save_params_every == 0) {
                         
-                        results$params[k %/% save_params_every, ] <- epimodel$params
-                        results$log_likelihood[k %/% save_params_every] <- sum(epimodel$likelihoods$obs_likelihood, epimodel$likelihoods$pop_likelihood_cur)
+                        results$params[k %/% save_params_every, ]       <- epimodel$params
+                        results$log_likelihood[k %/% save_params_every] <-
+                                  sum(epimodel$likelihoods$obs_likelihood,
+                                      epimodel$likelihoods$pop_likelihood_cur)
                         
                     }
                     
@@ -171,12 +202,12 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                         # ts.plot(results$log_likelihood, xlab = "Iteration", ylab = "log-likelihood")
                     }
           }
+          
+          end.time <- Sys.time()
         
-        end.time <- Sys.time()
-        
-        results$time <- difftime(end.time, start.time, units = "hours")
-        
-        epimodel <- list(dat = epimodel$dat,
+          results$time <- difftime(end.time, start.time, units = "hours")
+          
+          epimodel <- list(dat = epimodel$dat,
                          time_var = epimodel$time_var,
                          meas_vars = epimodel$meas_vars,
                          obstimes = epimodel$obstimes,
@@ -185,6 +216,6 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                          params = apply(results$params, 2, median),
                          settings = epimodel$sim_settings,
                          results = results)
-        
+
         return(epimodel)
 }

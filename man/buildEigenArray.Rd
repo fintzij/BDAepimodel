@@ -4,17 +4,20 @@
 \alias{buildEigenArray}
 \title{Update eigen values, vectors, and inverse matrices for irms}
 \usage{
-buildEigenArray(eigenvals, eigenvecs, inversevecs, irm_array)
+buildEigenArray(real_eigenvals, imag_eigenvals, eigenvecs, inversevecs,
+  irm_array, n_real_eigs)
 }
 \arguments{
-\item{eigenvals}{matrix of eigenvalues with columns corresponding to irms}
-
 \item{eigenvecs}{array of eigenvectors with third dimension corresponding to
 irms}
 
 \item{inversevecs}{array of inverses of matrices of eigenvectors}
 
 \item{irm_array}{array of rate matrices}
+
+\item{eigenvals}{matrix of eigenvalues with columns corresponding to irms}
+
+\item{complex_eigs}{logical vector indicating whether any eigen values are complex}
 }
 \value{
 Updated eigenvalues, eigenvectors, and inverse matrices

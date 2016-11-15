@@ -6,16 +6,50 @@
 
 using namespace Rcpp;
 
-// buildEigenArray
-void buildEigenArray(arma::mat& eigenvals, Rcpp::NumericVector& eigenvecs, Rcpp::NumericVector& inversevecs, Rcpp::NumericVector& irm_array);
-RcppExport SEXP BDAepimodel_buildEigenArray(SEXP eigenvalsSEXP, SEXP eigenvecsSEXP, SEXP inversevecsSEXP, SEXP irm_arraySEXP) {
+// buildEigenArray_SIR
+void buildEigenArray_SIR(arma::mat& real_eigenvals, arma::mat& imag_eigenvals, arma::cube& eigenvecs, arma::cube& inversevecs, arma::cube& irm_array, Rcpp::IntegerVector& n_real_eigs, bool initial_calc);
+RcppExport SEXP BDAepimodel_buildEigenArray_SIR(SEXP real_eigenvalsSEXP, SEXP imag_eigenvalsSEXP, SEXP eigenvecsSEXP, SEXP inversevecsSEXP, SEXP irm_arraySEXP, SEXP n_real_eigsSEXP, SEXP initial_calcSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat& >::type eigenvals(eigenvalsSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type eigenvecs(eigenvecsSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type inversevecs(inversevecsSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type irm_array(irm_arraySEXP);
-    buildEigenArray(eigenvals, eigenvecs, inversevecs, irm_array);
+    Rcpp::traits::input_parameter< arma::mat& >::type real_eigenvals(real_eigenvalsSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type imag_eigenvals(imag_eigenvalsSEXP);
+    Rcpp::traits::input_parameter< arma::cube& >::type eigenvecs(eigenvecsSEXP);
+    Rcpp::traits::input_parameter< arma::cube& >::type inversevecs(inversevecsSEXP);
+    Rcpp::traits::input_parameter< arma::cube& >::type irm_array(irm_arraySEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type n_real_eigs(n_real_eigsSEXP);
+    Rcpp::traits::input_parameter< bool >::type initial_calc(initial_calcSEXP);
+    buildEigenArray_SIR(real_eigenvals, imag_eigenvals, eigenvecs, inversevecs, irm_array, n_real_eigs, initial_calc);
+    return R_NilValue;
+END_RCPP
+}
+// buildEigenArray_SEIR
+void buildEigenArray_SEIR(arma::mat& real_eigenvals, arma::mat& imag_eigenvals, arma::cube& eigenvecs, arma::cube& inversevecs, arma::cube& irm_array, Rcpp::IntegerVector& n_real_eigs, bool initial_calc);
+RcppExport SEXP BDAepimodel_buildEigenArray_SEIR(SEXP real_eigenvalsSEXP, SEXP imag_eigenvalsSEXP, SEXP eigenvecsSEXP, SEXP inversevecsSEXP, SEXP irm_arraySEXP, SEXP n_real_eigsSEXP, SEXP initial_calcSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type real_eigenvals(real_eigenvalsSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type imag_eigenvals(imag_eigenvalsSEXP);
+    Rcpp::traits::input_parameter< arma::cube& >::type eigenvecs(eigenvecsSEXP);
+    Rcpp::traits::input_parameter< arma::cube& >::type inversevecs(inversevecsSEXP);
+    Rcpp::traits::input_parameter< arma::cube& >::type irm_array(irm_arraySEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type n_real_eigs(n_real_eigsSEXP);
+    Rcpp::traits::input_parameter< bool >::type initial_calc(initial_calcSEXP);
+    buildEigenArray_SEIR(real_eigenvals, imag_eigenvals, eigenvecs, inversevecs, irm_array, n_real_eigs, initial_calc);
+    return R_NilValue;
+END_RCPP
+}
+// buildEigenArray
+void buildEigenArray(arma::mat& real_eigenvals, arma::mat& imag_eigenvals, arma::cube& eigenvecs, arma::cube& inversevecs, arma::cube& irm_array, Rcpp::IntegerVector& n_real_eigs);
+RcppExport SEXP BDAepimodel_buildEigenArray(SEXP real_eigenvalsSEXP, SEXP imag_eigenvalsSEXP, SEXP eigenvecsSEXP, SEXP inversevecsSEXP, SEXP irm_arraySEXP, SEXP n_real_eigsSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type real_eigenvals(real_eigenvalsSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type imag_eigenvals(imag_eigenvalsSEXP);
+    Rcpp::traits::input_parameter< arma::cube& >::type eigenvecs(eigenvecsSEXP);
+    Rcpp::traits::input_parameter< arma::cube& >::type inversevecs(inversevecsSEXP);
+    Rcpp::traits::input_parameter< arma::cube& >::type irm_array(irm_arraySEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type n_real_eigs(n_real_eigsSEXP);
+    buildEigenArray(real_eigenvals, imag_eigenvals, eigenvecs, inversevecs, irm_array, n_real_eigs);
     return R_NilValue;
 END_RCPP
 }
@@ -212,18 +246,37 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// complexTPM
+arma::mat complexTPM(const arma::vec& real_vals, const arma::vec& imag_vals, const arma::mat& vecs, const arma::mat& inv_vecs, double dt, int n_real);
+RcppExport SEXP BDAepimodel_complexTPM(SEXP real_valsSEXP, SEXP imag_valsSEXP, SEXP vecsSEXP, SEXP inv_vecsSEXP, SEXP dtSEXP, SEXP n_realSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type real_vals(real_valsSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type imag_vals(imag_valsSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type vecs(vecsSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type inv_vecs(inv_vecsSEXP);
+    Rcpp::traits::input_parameter< double >::type dt(dtSEXP);
+    Rcpp::traits::input_parameter< int >::type n_real(n_realSEXP);
+    rcpp_result_gen = Rcpp::wrap(complexTPM(real_vals, imag_vals, vecs, inv_vecs, dt, n_real));
+    return rcpp_result_gen;
+END_RCPP
+}
 // tpmSeqs
-void tpmSeqs(Rcpp::NumericVector& tpms, const arma::mat& pop_mat, const arma::mat eigen_vals, Rcpp::NumericVector& eigen_vecs, Rcpp::NumericVector& inverse_vecs, Rcpp::IntegerVector& irm_keys);
-RcppExport SEXP BDAepimodel_tpmSeqs(SEXP tpmsSEXP, SEXP pop_matSEXP, SEXP eigen_valsSEXP, SEXP eigen_vecsSEXP, SEXP inverse_vecsSEXP, SEXP irm_keysSEXP) {
+void tpmSeqs(arma::cube& tpms, const arma::mat& pop_mat, const arma::mat& real_eigen_vals, const arma::mat& imag_eigen_vals, const arma::cube& eigen_vecs, const arma::cube& inverse_vecs, const Rcpp::IntegerVector& irm_keys, const Rcpp::IntegerVector& n_real_eigs, const arma::cube& irms);
+RcppExport SEXP BDAepimodel_tpmSeqs(SEXP tpmsSEXP, SEXP pop_matSEXP, SEXP real_eigen_valsSEXP, SEXP imag_eigen_valsSEXP, SEXP eigen_vecsSEXP, SEXP inverse_vecsSEXP, SEXP irm_keysSEXP, SEXP n_real_eigsSEXP, SEXP irmsSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type tpms(tpmsSEXP);
+    Rcpp::traits::input_parameter< arma::cube& >::type tpms(tpmsSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type pop_mat(pop_matSEXP);
-    Rcpp::traits::input_parameter< const arma::mat >::type eigen_vals(eigen_valsSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type eigen_vecs(eigen_vecsSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type inverse_vecs(inverse_vecsSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type irm_keys(irm_keysSEXP);
-    tpmSeqs(tpms, pop_mat, eigen_vals, eigen_vecs, inverse_vecs, irm_keys);
+    Rcpp::traits::input_parameter< const arma::mat& >::type real_eigen_vals(real_eigen_valsSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type imag_eigen_vals(imag_eigen_valsSEXP);
+    Rcpp::traits::input_parameter< const arma::cube& >::type eigen_vecs(eigen_vecsSEXP);
+    Rcpp::traits::input_parameter< const arma::cube& >::type inverse_vecs(inverse_vecsSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type irm_keys(irm_keysSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type n_real_eigs(n_real_eigsSEXP);
+    Rcpp::traits::input_parameter< const arma::cube& >::type irms(irmsSEXP);
+    tpmSeqs(tpms, pop_mat, real_eigen_vals, imag_eigen_vals, eigen_vecs, inverse_vecs, irm_keys, n_real_eigs, irms);
     return R_NilValue;
 END_RCPP
 }

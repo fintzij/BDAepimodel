@@ -9,10 +9,10 @@
 
 sample_at_event_times <- function(path, epimodel) {
         
-        # If the model is progressive and has an absorbing state, only need to
-        # sample the discrete time skeleton where the endpoints of observation
-        # intervals indicate a jump
-        if(epimodel$absorbing_states & epimodel$progressive) {
+          # If the model is progressive and has an absorbing state, only need to
+          # sample the discrete time skeleton where the endpoints of observation
+          # intervals indicate a jump
+          if(epimodel$absorbing_states & epimodel$progressive) {
                 
                 for(t in 1:(epimodel$nobs - 1)) {
                         
@@ -34,7 +34,7 @@ sample_at_event_times <- function(path, epimodel) {
                 
                 #if the model is not progressive but has an absorbing state,
                 #no need to deal with the path after absorbtion
-        } else if(epimodel$absorbing_states & !epimodel$progressive) {
+          } else if(epimodel$absorbing_states & !epimodel$progressive) {
                 
                 for(t in 1:(epimodel$nobs - 1)) {
                         
@@ -55,17 +55,13 @@ sample_at_event_times <- function(path, epimodel) {
                 
                 # if the model is both not progressive and lacks an
                 # absorbing state, need to sample all inter-event intervals
-        } else {
+          } else {
                 for(t in 1:(epimodel$nobs - 1)) {
                         
                         if(diff(epimodel$obs_time_inds[t:(t+1)], lag = 1) != 1) {
-                                
                                  path <- sampleEventSubseq(path, epimodel$tpms, epimodel$tpm_products, epimodel$obs_time_inds[t], epimodel$obs_time_inds[t+1])
                         }
-                        
                 }
-                
-        }
-          
+          }
           return(path)
 }

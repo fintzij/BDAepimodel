@@ -45,11 +45,11 @@ d_meas_process <- function(state, meas_vars, params, log = TRUE) {
 }
 
 # initialize the stochastic epidemic model object
-epimodel <- init_epimodel(obstimes = seq(0, 15, by = 1),                              # vector of observation times
+epimodel <- init_epimodel(obstimes = seq(0, 105, by = 7),                             # vector of observation times
                           popsize = 750,                                              # population size
                           states = c("S", "I", "R"),                                  # compartment names
-                          params = c(beta = 2.5/(750 * 0.9) * 0.5,                    # infectivity parameter
-                                     mu = 0.5,                                        # recovery rate
+                          params = c(beta = 0.00035,                                   # infectivity parameter
+                                     mu = 1/7,                                        # recovery rate
                                      rho = 0.2,                                       # binomial sampling probability
                                      S0 = 0.9, I0 = 0.03, R0 = 0.07),                 # initial state probabilities
                           rates = c("beta * I", "mu"),                                # unlumped transition rates
@@ -123,8 +123,8 @@ gibbs_kernel <- function(epimodel) {
           #         mu   ~ gamma(2.1, 4)
           #         rho  ~ beta(2/3, 1)
           proposal          <- epimodel$params # params is the vector of ALL model parameters
-          proposal["beta"]  <- rgamma(1, 0.002 + suff_stats[1], 1 + suff_stats[2])
-          proposal["mu"]    <- rgamma(1, 2.1 + suff_stats[3], 4 + suff_stats[4])
+          proposal["beta"]  <- rgamma(1, 0.003 + suff_stats[1], 10 + suff_stats[2])
+          proposal["mu"]    <- rgamma(1, 1 + suff_stats[3], 8 + suff_stats[4])
           proposal["rho"]   <- rbeta(1, shape1 = 21 + sum(epimodel$obs_mat[,"I_observed"]), shape2 = 75 + sum(epimodel$obs_mat[,"I_augmented"] - epimodel$obs_mat[,"I_observed"]))
           
           ###############################################################################################
@@ -182,7 +182,7 @@ epimodel <- init_epimodel(popsize = 750,                                        
                           d_meas_process = d_meas_process)
 
 epimodel <- init_settings(epimodel,
-                          niter = 100, # this was set to 250,000 for the paper
+                          niter = 10, # this was set to 250,000 for the paper
                           save_params_every = 1, 
                           save_configs_every = 5, # this was set to 250 for the chains run in the paper
                           kernel = list(gibbs_kernel),
@@ -307,7 +307,7 @@ We ran a single MCMC chain for each of the following numbers of subject-paths to
 # initialize the MCMC settings
 # configs_to_redraw was set within the batch script. 
 epimodel <- init_settings(epimodel,
-                          niter = 100, # this was set to 100,000 for the paper
+                          niter = 10, # this was set to 100,000 for the paper
                           save_params_every = 1,
                           save_configs_every = 5, # this was set to 500 for the paper
                           kernel = list(gibbs_kernel),
@@ -476,7 +476,7 @@ We proceeded to initialize the MCMC settings and to run the MCMC. Note again tha
 ```{r, warning=F}
 
 epimodel <- init_settings(epimodel,
-                          niter = 100, # this was set to 250,000 for the paper
+                          niter = 10, # this was set to 250,000 for the paper
                           save_params_every = 1, 
                           save_configs_every = 5, # this was set to 250 for the paper
                           kernel = list(gibbs_kernel),

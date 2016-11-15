@@ -48,19 +48,60 @@ prepare_epimodel <- function(epimodel) {
 
           # initialize objects for storing rate matrices and eigen decompositions
           epimodel <- init_irm(epimodel)
-          
+
           # compute the rates
           epimodel <- build_new_irms(epimodel, epimodel$params)
           
           # update the eigen decompositions
-          buildEigenArray(eigenvals = epimodel$eigen_values, eigenvecs = epimodel$eigen_vectors, inversevecs = epimodel$inv_eigen_vectors, irm_array = epimodel$irm)
+          if(is.null(epimodel$sim_settings$analytic_eigen)) {
+                    
+                    buildEigenArray(real_eigenvals = epimodel$real_eigen_values,
+                                    imag_eigenvals = epimodel$imag_eigen_values,
+                                    eigenvecs      = epimodel$eigen_vectors, 
+                                    inversevecs    = epimodel$inv_eigen_vectors, 
+                                    irm_array      = epimodel$irm, 
+                                    n_real_eigs    = epimodel$n_real_eigs)  
+                    
+          } else if(epimodel$sim_settings$analytic_eigen == "SIR") {
+                    
+                    buildEigenArray_SIR(real_eigenvals = epimodel$real_eigen_values,
+                                        imag_eigenvals = epimodel$imag_eigen_values,
+                                        eigenvecs      = epimodel$eigen_vectors, 
+                                        inversevecs    = epimodel$inv_eigen_vectors, 
+                                        irm_array      = epimodel$irm, 
+                                        n_real_eigs    = epimodel$n_real_eigs,
+                                        initial_calc   = TRUE)
+                    
+          } else if(epimodel$sim_settings$analytic_eigen == "SEIR") {
+                    
+                    buildEigenArray_SEIR(real_eigenvals = epimodel$real_eigen_values,
+                                         imag_eigenvals = epimodel$imag_eigen_values,
+                                         eigenvecs      = epimodel$eigen_vectors, 
+                                         inversevecs    = epimodel$inv_eigen_vectors, 
+                                         irm_array      = epimodel$irm, 
+                                         n_real_eigs    = epimodel$n_real_eigs,
+                                         initial_calc   = TRUE)
+                    
+          } 
           
           # get the irm keys
           epimodel$keys <- retrieveKeys(1:epimodel$ind_final_config, epimodel$irm_key_lookup, epimodel$pop_mat, epimodel$index_state_num)
           
           # compute the population level likelihood, and the measurement
           # process likelihood
-          epimodel$likelihoods$pop_likelihood_cur <- populationLikelihood(pop_mat = epimodel$pop_mat, irm_array = epimodel$irm, initdist = epimodel$initdist, initdist_param_inds = epimodel$initdist_param_inds, flow_inds = epimodel$flow_inds, keys = epimodel$keys, inds = c(1, c(1:epimodel$ind_final_config)[-epimodel$obs_time_inds], epimodel$ind_final_config), loglik = TRUE)
+          epimodel$likelihoods$pop_likelihood_cur <-
+                    populationLikelihood(
+                              pop_mat             = epimodel$pop_mat,
+                              irm_array           = epimodel$irm,
+                              initdist            = epimodel$initdist,
+                              initdist_param_inds = epimodel$initdist_param_inds,
+                              flow_inds           = epimodel$flow_inds,
+                              keys                = epimodel$keys,
+                              inds                = c(1,
+                                                      c(1:epimodel$ind_final_config)[-epimodel$obs_time_inds],
+                                                      epimodel$ind_final_config),
+                              loglik = TRUE
+                    )
           
           epimodel$likelihoods$obs_likelihood <- calc_obs_likelihood(epimodel, log = TRUE)
 

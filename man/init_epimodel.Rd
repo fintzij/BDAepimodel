@@ -5,7 +5,7 @@
 \title{Initialize epimodel bookkeeping object.}
 \usage{
 init_epimodel(states, params, rates, flow, dat = NULL, time_var = NULL,
-  obstimes = NULL, popsize = NULL, config_mat = NULL, obs_mat = NULL,
+  obstimes = NULL, popsize = NULL, pop_mat = NULL, obs_mat = NULL,
   initdist_prior = NULL, meas_vars = NULL, r_meas_process = NULL,
   d_meas_process = NULL, covar = NULL, tcovar = NULL,
   sim_settings = NULL)
@@ -45,9 +45,6 @@ times in \code{dat}.}
 
 \item{popsize}{size of the population.}
 
-\item{config_mat}{population-level bookkeeping matrix for compartment counts 
-and the configuration of individuals at times of state transition.}
-
 \item{obs_mat}{population-level bookkeeping matrix for compartment counts at 
 observation times.}
 
@@ -77,6 +74,9 @@ not working).}
 not working).}
 
 \item{sim_settings}{bookkeeping list for simulation settings.}
+
+\item{config_mat}{population-level bookkeeping matrix for compartment counts 
+and the configuration of individuals at times of state transition.}
 }
 \value{
 list containing bookkeeping objects and model configuration objects.

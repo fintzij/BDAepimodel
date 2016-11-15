@@ -223,7 +223,7 @@ Having initialized an epimodel object, we now proceed to set our MCMC settings a
 
 ```{r, warning = FALSE}
 epimodel <- init_settings(epimodel,
-                          niter = 100,                       # Number of MCMC iterations, should be higher for an actual analysis.
+                          niter = 10,                       # Number of MCMC iterations, should be higher for an actual analysis.
                           save_params_every = 1,             # Thinning interval for the parameters.
                           save_configs_every = 5,            # Thinning interval for the full latent paths.
                           kernel = list(gibbs_kernel),       # Transition kernels, passed as a list.

@@ -6,7 +6,7 @@
 \usage{
 simulate_epimodel(epimodel, obstimes = NULL, init_state = NULL,
   meas_vars = NULL, r_meas_process = NULL, return_config = TRUE,
-  trim = TRUE, lump = TRUE)
+  trim = TRUE, lump = TRUE, ensure_pos_rates = FALSE)
 }
 \arguments{
 \item{epimodel}{list of bookkeeping and model objects.}

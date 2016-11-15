@@ -66,7 +66,7 @@
 #' rates = c("beta * I", "mu", "gamma"),
 #' flow = matrix(c(-1, 1, 0, 0, -1, 1, 1, 0, -1), ncol = 3, byrow = T))
 #' 
-init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NULL, obstimes = NULL, popsize = NULL, config_mat = NULL, obs_mat = NULL, initdist_prior = NULL, meas_vars = NULL, r_meas_process = NULL, d_meas_process = NULL, covar = NULL, tcovar = NULL, sim_settings = NULL) {
+init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NULL, obstimes = NULL, popsize = NULL, pop_mat = NULL, obs_mat = NULL, initdist_prior = NULL, meas_vars = NULL, r_meas_process = NULL, d_meas_process = NULL, covar = NULL, tcovar = NULL, sim_settings = NULL) {
 
 
           # user must specify states, parameters, flow, and rates at a minimum.
@@ -110,8 +110,8 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
           }
 
           if(sum(params[paste0(states,0)]) != 1) {
-                    stop("The vector of probabilities for the state at time t0 must sum to 1.")
-
+                    warning("The vector of probabilities for the state at time t0 has been normalized to sum to 1.")
+                    params[paste0(states,0)] <- normalize(params[paste0(states,0)])
           }
 
           # extract the rate_map
@@ -191,7 +191,7 @@ init_epimodel <- function(states, params, rates, flow, dat = NULL, time_var = NU
                            rates = rates,
                            rate_map = rate_map,
                            flow = flow,
-                           config_mat = config_mat,
+                           pop_mat = pop_mat,
                            obs_mat = obs_mat,
                            d_initdist = d_initdist,
                            r_initdist = r_initdist,

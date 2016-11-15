@@ -14,6 +14,11 @@ retrieveKeys(inds, irm_lookup, pop_mat, index_state_num)
 
 \item{pop_mat}{population bookkeeping matrix in epimodel list}
 
+\item{keys}{vector of keys to be modified in place}
+
+\item{append_missing}{indicator to be modified in place to indicate whether 
+any keys are missing}
+
 \item{index_state_number}{vector indicating which states are index states}
 }
 \value{

@@ -96,5 +96,4 @@ sim_one_event <- function(config_list, epimodel, lump) {
 
                     return(list(pop_config = .pop_config_cur, subj_config = .subj_config_cur, rate_mat = .rate_mat, dt_mat = .dt_mat, keep_going = FALSE))
           }
-
 }

@@ -69,7 +69,7 @@
 #' # simulate from model
 #' epimodel <- simulate_epimodel(epimodel)
 #'
-simulate_epimodel <- function(epimodel, obstimes = NULL, init_state = NULL, meas_vars = NULL, r_meas_process = NULL,  return_config = TRUE, trim = TRUE, lump = TRUE){
+simulate_epimodel <- function(epimodel, obstimes = NULL, init_state = NULL, meas_vars = NULL, r_meas_process = NULL,  return_config = TRUE, trim = TRUE, lump = TRUE, ensure_pos_rates = FALSE){
 
           # check function arguments and issue warnings/errors
 
@@ -127,33 +127,52 @@ simulate_epimodel <- function(epimodel, obstimes = NULL, init_state = NULL, meas
 
           config_list <- list(pop_config = pop_config, subj_config = subj_config, rate_mat = rate_mat, dt_mat = dt_mat, keep_going = TRUE)
 
+          # control objects for the simulation
+          tmax <- max(epimodel$obstimes)
+          
+          # expand the pop_mat and initialize row index
+          final_row <- epimodel$pop_mat[2, ]
+          epimodel$pop_mat <- rbind(epimodel$pop_mat[1,],
+                                    matrix(0.0,
+                                           nrow = epimodel$popsize * nrow(epimodel$flow),
+                                           ncol = ncol(epimodel$pop_mat)
+                                    ))
+          row_ind <- 1
+          
           # simulate until tmax or no more events
-          while(config_list$keep_going) {
-
+          while((config_list$pop_config[,1,drop=F] <= tmax) && config_list$keep_going) {
+                    
                     config_list <- sim_one_event(config_list, epimodel, lump)
+                    row_ind <- row_ind + 1
+                    
+                    if(row_ind > nrow(epimodel$pop_mat)) {
+                              epimodel$pop_mat <- rbind(epimodel$pop_mat, 
+                                                        matrix(0.0,
+                                                               nrow = epimodel$popsize*nrow(epimodel$flow),
+                                                               ncol = ncol(epimodel$pop_mat)))
+                    }
 
                     if(config_list$keep_going){# insert the new row
 
-                              epimodel$pop_mat <-insert_row(mat = epimodel$pop_mat,
-                                                               row_num = nrow(epimodel$pop_mat),
-                                                               vec = config_list$pop_config)
-
-                              epimodel$config_mat <- insert_row(mat = epimodel$config_mat,
-                                                                row_num = nrow(epimodel$config_mat),
-                                                                vec = config_list$subj_config)
+                              epimodel$pop_mat[row_ind,] <- config_list$pop_config
+                              
                     } else { # replace the final row
-                            epimodel$pop_mat[nrow(epimodel$pop_mat),] <- config_list$pop_config
-                            epimodel$config_mat[nrow(epimodel$config_mat),] <- config_list$subj_config
+                            epimodel$pop_mat[row_ind,] <- config_list$pop_config
+                            # epimodel$config_mat[nrow(epimodel$config_mat),] <- config_list$subj_config
                     }
           }
 
+          epimodel$pop_mat <- epimodel$pop_mat[1:row_ind,]
+          
           # initialize obs_mat
           epimodel$obs_mat <- init_obs_mat(epimodel)
 
           # sample from the measurement process
           epimodel$obs_mat[, paste(epimodel$meas_vars, "_observed", sep = "")] <-
-                    epimodel$r_meas_process(epimodel$obs_mat, paste(epimodel$meas_vars, "_augmented", sep = ""), epimodel$params)
-
+                    epimodel$r_meas_process(epimodel$obs_mat,
+                                            paste(epimodel$meas_vars, "_augmented", sep = ""),
+                                            epimodel$params)
+          
           # instatiate data matrix
           epimodel$dat <- epimodel$obs_mat[, c("time", paste(epimodel$meas_vars, "_observed", sep = ""))]
           colnames(epimodel$dat) <- c(epimodel$time_var, epimodel$meas_vars)
@@ -168,17 +187,14 @@ simulate_epimodel <- function(epimodel, obstimes = NULL, init_state = NULL, meas
                     epimodel$obstimes <- epimodel$obstimes[1:end_ind]
                     epimodel$obs_mat <- epimodel$obs_mat[1:end_ind, ]
                     epimodel$dat <- epimodel$dat[1:end_ind, ]
-
-                    # reset the final observation time in the configuration matrix
-                    epimodel$pop_mat[nrow(epimodel$config_mat),"time"] <- max(epimodel$obstimes)
           }
           
           epimodel$init_config <- epimodel$config_mat[1,]
           epimodel$config_mat <- NULL
 
-          if(return_config == FALSE) {
-                    epimodel$pop_mat <- NULL
-          }
+          # if(return_config == FALSE) {
+          #           epimodel$pop_mat <- NULL
+          # }
 
           return(epimodel)
 

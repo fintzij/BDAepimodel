@@ -19,7 +19,7 @@ sample_path_in_interval <- function(epimodel, subject, interval) {
           
           irm_key             <- epimodel$keys[interval]
           
-          path                <- matrix(nrow = 5, ncol = 3)
+          path                <- matrix(nrow = 6, ncol = 3)
           
           # if the endpoints are the same, use the forward sampling
           # algorithm until an appropriate path is generated

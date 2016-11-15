@@ -4,20 +4,25 @@
 \alias{tpmSeqs}
 \title{Update eigen values, vectors, and inverse matrices for irms}
 \usage{
-tpmSeqs(tpms, pop_mat, eigen_vals, eigen_vecs, inverse_vecs, irm_keys)
+tpmSeqs(tpms, pop_mat, real_eigen_vals, imag_eigen_vals, eigen_vecs,
+  inverse_vecs, irm_keys, n_real_eigs, irms)
 }
 \arguments{
 \item{tpms}{array of transition probability matrices to be modified}
 
 \item{pop_mat}{population level bookkeeping matrix}
 
-\item{eigen_vals}{matrix of eigen values of irms}
+\item{real_eigen_vals}{matrix with the real parts of the eigen values}
+
+\item{imag_eigen_vals}{matrix with the imaginary parts of the eigenvalues}
 
 \item{eigen_vecs}{array of eigen vectors of rate matrices}
 
 \item{inverse_vecs}{array of inverse matrices of eigen vectors}
 
 \item{irm_keys}{vector of irm array keys}
+
+\item{n_real_eigs}{integer vector indicating how many eigen values are real}
 }
 \value{
 Updated eigenvalues, eigenvectors, and inverse matrices

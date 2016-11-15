@@ -40,13 +40,19 @@
 #'   parameters from the a scale on which new parameters are proposed to the 
 #'   scale used to evaluate the process likelihood. List element names should 
 #'   correspond to exactly to the parameter names given in \code{params}.
+#' @param analytic_eigen optional. If NULL, eigenvalues, eigenvectors, and 
+#'   inverses of the eigenvector matrices of each rate transition rate matrix 
+#'   are computed numerically. If one of "SIR", or "SEIR", the eigen
+#'   decompositions will be computed analytically. It is up to the user to
+#'   ensure that the rate matrices are structured in the appropriate form (see
+#'   vignettes for examples).
 #' @param seed optional seed value. A random seed is generated and saved if none
 #'   is supplied.
 #'   
 #' @return bookkeeping list
 #' @export
 #' 
-init_settings <- function(epimodel, niter, configs_to_redraw, preferential_sampling = NULL, init_popsize = NULL, compartment_dist = NULL, save_params_every = 1, save_configs_every = niter %/% 100, kernel, post_init_params = NULL, cov_mtx = NULL, to_estimation_scale = NULL, from_estimation_scale = NULL, seed = NULL) {
+init_settings <- function(epimodel, niter, configs_to_redraw, preferential_sampling = NULL, init_popsize = NULL, compartment_dist = NULL, save_params_every = 1, save_configs_every = niter %/% 100, kernel, post_init_params = NULL, cov_mtx = NULL, to_estimation_scale = NULL, from_estimation_scale = NULL, analytic_eigen = NULL, seed = NULL) {
           
           # check that if the one of the transformation arguments was provided,
           # then its inverse should be as well.
@@ -94,6 +100,7 @@ init_settings <- function(epimodel, niter, configs_to_redraw, preferential_sampl
                                post_init_params = post_init_params,
                                to_estimation_scale = to_estimation_scale,
                                from_estimation_scale = from_estimation_scale,
+                               analytic_eigen = analytic_eigen,
                                seed = seed)
           
           return(epimodel)

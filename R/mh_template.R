@@ -57,12 +57,22 @@ mh_template <- function(epimodel) {
                     
                     # update parameters and likelihood objects - no need to 
                     # include unchanged observation or population likelihoods
-                    epimodel <- update_params(epimodel, params = proposal, pop_likelihood = pop_likelihood_new, obs_likelihood = obs_likelihood_new)
+                    epimodel <-
+                              update_params(
+                                        epimodel,
+                                        params = proposal,
+                                        pop_likelihood = pop_likelihood_new,
+                                        obs_likelihood = obs_likelihood_new
+                              )
                     
                     # update the eigen decompositions - comment out this line if
                     # the proposal parameters are unchanged
-                    buildEigenArray(eigenvals = epimodel$eigen_values, eigenvecs = epimodel$eigen_vectors, inversevecs = epimodel$inv_eigen_vectors, irm_array = epimodel$irm)
-                    
+                    buildEigenArray(real_eigenvals = epimodel$real_eigen_values,
+                                    imag_eigenvals = epimodel$imag_eigen_values,
+                                    eigenvecs      = epimodel$eigen_vectors, 
+                                    inversevecs    = epimodel$inv_eigen_vectors, 
+                                    irm_array      = epimodel$irm, 
+                                    n_real_eigs    = epimodel$n_real_eigs)                    
           } else {
                     # restore the previous array of rate matrices - comment out
                     # this line if the proposal leaves the rate parameters

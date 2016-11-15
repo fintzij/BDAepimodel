@@ -18,10 +18,9 @@ init_obs_mat <- function(epimodel){
 
           # if a config_mat is provided, compute the true counts for the latent process at observation times
           if(!is.null(epimodel$pop_mat)) {
-                    for(k in 1:nrow(obs_mat)) {
-                              obs_mat[k, paste(epimodel$meas_vars, "_augmented", sep="")] <-
-                                        epimodel$pop_mat[, epimodel$meas_vars][sum(epimodel$pop_mat[,"time"] <= obs_mat[k, "time"])]
-                    }
+                    obs_mat[,paste0(epimodel$meas_vars,"_augmented")] <- 
+                              epimodel$pop_mat[findInterval(epimodel$obstimes, epimodel$pop_mat[,"time"]),
+                                               epimodel$meas_vars]
           }
 
           # if data was provided, insert it into the appropriate observed columns

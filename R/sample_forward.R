@@ -16,7 +16,7 @@
 sample_forward <- function(path, epimodel, subject, init_time, final_time, init_state, final_state, irm_key) {
           
           valid_path          <- FALSE
-          ind_init            <- ifelse(is.na(path[1, 1]), 1, 2)
+          ind_init            <- if(is.na(path[1, 1])) {1} else {2}
           
           while(valid_path == FALSE) {
                     
@@ -48,7 +48,13 @@ sample_forward <- function(path, epimodel, subject, init_time, final_time, init_
                               } 
                               
                               # sample the next transition time
-                              .t <- .t + rexp(1, rate = abs(epimodel$irm[cur_state, cur_state, irm_key]))
+                              .dt <- if(epimodel$irm[cur_state, cur_state, irm_key] == 0) {
+                                        Inf
+                              } else {
+                                        rexp(1, rate = abs(epimodel$irm[cur_state, cur_state, irm_key]))
+                              }
+                              
+                              .t <- .t + .dt
                               
                               # if the next transition time is after the right endpoint, 
                               # stop sampling forward and determine if the path is valid

@@ -132,7 +132,7 @@ gibbs_kernel <- function(epimodel) {
 We now have everything we need to run the MCMC, so we set the MCMC settings and proceed. 
 ```{r, warning=FALSE}
 epimodel <- init_settings(epimodel,
-                          niter = 100,                 # in the paper, we used 250,000 iterations per MCMC chain
+                          niter = 10,                 # in the paper, we used 250,000 iterations per MCMC chain
                           save_params_every = 1,
                           save_configs_every = 5,      # in the paper, we saved every 500th collection of latent paths
                           kernel = list(gibbs_kernel),

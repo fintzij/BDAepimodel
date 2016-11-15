@@ -44,10 +44,25 @@ insert_trajectory <- function(epimodel, subject, reinsertion) {
           if(!reinsertion) {
                     
                     # get the vector of keys
-                    epimodel$keys <- retrieveKeys(1:epimodel$ind_final_config, epimodel$irm_key_lookup, epimodel$pop_mat, epimodel$index_state_num)
+                    epimodel$keys <-
+                              retrieveKeys(
+                                        1:epimodel$ind_final_config,
+                                        epimodel$irm_key_lookup,
+                                        epimodel$pop_mat,
+                                        epimodel$index_state_num
+                              )
+
                     
-                    epimodel$likelihoods$subj_likelihood_new <- subjectLikelihood(subject, epimodel$pop_mat, epimodel$subj_path, epimodel$irm, epimodel$initdist, epimodel$keys, TRUE)
-                    
+                    epimodel$likelihoods$subj_likelihood_new <-
+                              subjectLikelihood(
+                                        subject,
+                                        epimodel$pop_mat,
+                                        epimodel$subj_path,
+                                        epimodel$irm,
+                                        epimodel$initdist,
+                                        epimodel$keys,
+                                        TRUE
+                              )
           }
           
           # add the subject's contribution back into the compartment counts and
@@ -63,17 +78,35 @@ insert_trajectory <- function(epimodel, subject, reinsertion) {
                     # change from previous retrieval, so only update keys where
                     # subject was in an index state
                     index_contrib <- which(epimodel$subj_path %in% epimodel$index_state_num)
-                    epimodel$keys[index_contrib]<- retrieveKeys(index_contrib, epimodel$irm_key_lookup, epimodel$pop_mat, epimodel$index_state_num)
+                    epimodel$keys[index_contrib] <-
+                              retrieveKeys(
+                                        index_contrib,
+                                        epimodel$irm_key_lookup,
+                                        epimodel$pop_mat,
+                                        epimodel$index_state_num
+                              )
                     
                     # check to see if any additional irms are needed. check_irm will
                     # instatiate the required matrices and their eigen decompositions
                     if(any(epimodel$keys == 0)) {
-                              
                               epimodel <- append_missing(epimodel)
-                              
                     }
-                    
-                    epimodel$likelihoods$pop_likelihood_new <- populationLikelihood(pop_mat = epimodel$pop_mat, irm_array = epimodel$irm, initdist = epimodel$initdist, initdist_param_inds = epimodel$initdist_param_inds, flow_inds = epimodel$flow_inds, keys = epimodel$keys, inds = c(1, c(1:epimodel$ind_final_config)[-epimodel$obs_time_inds], epimodel$ind_final_config), loglik = TRUE)
+          
+                    epimodel$likelihoods$pop_likelihood_new <-
+                              populationLikelihood(
+                                        pop_mat = epimodel$pop_mat,
+                                        irm_array = epimodel$irm,
+                                        initdist = epimodel$initdist,
+                                        initdist_param_inds = epimodel$initdist_param_inds,
+                                        flow_inds = epimodel$flow_inds,
+                                        keys = epimodel$keys,
+                                        inds = c(
+                                                  1,
+                                                  c(1:epimodel$ind_final_config)[-epimodel$obs_time_inds],
+                                                  epimodel$ind_final_config
+                                        ),
+                                        loglik = TRUE
+                              )
                     
           } 
           
