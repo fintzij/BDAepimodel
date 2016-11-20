@@ -17,8 +17,13 @@ build_emission_mat <- function(emission_mat, epimodel) {
                     .add_mat <- matrix(0, nrow = epimodel$nobs, ncol = 1 + 2*epimodel$num_measured)
                     .add_mat[,1 + 2*m] <- 1
                     
-                    emission_mat[epimodel$meas_vars[m],] <- epimodel$d_meas_process(state = epimodel$obs_mat + .add_mat, meas_vars = epimodel$meas_vars, params = epimodel$params, log = FALSE)
-                    
+                    emission_mat[epimodel$meas_vars[m], ] <-
+                              epimodel$d_meas_process(
+                                        state = epimodel$obs_mat + .add_mat,
+                                        meas_vars = epimodel$meas_vars,
+                                        params = epimodel$params,
+                                        log = FALSE
+                              )
           }
           
           return(emission_mat)

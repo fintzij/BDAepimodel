@@ -20,8 +20,14 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
           }
           
           if(is.null(epimodel$pop_mat)) {
-                epimodel <- init_augmentation(epimodel)
-                print("Configuration initialized. Beginning MCMC.")
+                    epimodel <- init_augmentation(epimodel)
+                    print("Configuration initialized. Beginning MCMC.")
+          } else {
+                    # generate the initial configuration of subject labels at time t0 
+                    epimodel$init_config <- rep(1:epimodel$num_states, epimodel$pop_mat[1,epimodel$states])
+                    
+                    # initialize the observation matrix
+                    epimodel$obs_mat <- init_obs_mat(epimodel)
           }
         
           if(!is.null(epimodel$sim_settings$post_init_params)) {
