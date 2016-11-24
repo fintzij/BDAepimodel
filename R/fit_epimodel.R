@@ -92,7 +92,7 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                                         n       = epimodel$popsize,
                                         size    = configs_to_redraw,
                                         replace = config_replacement,
-                                        prob    = subj_probs
+                                        prob    = subj_probs$subj_probs
                               ) 
                     }
                   
