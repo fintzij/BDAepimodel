@@ -5,16 +5,15 @@
 #'   sampler.
 #' @param configs_to_redraw number of subject level trajectories to sample 
 #'   between parameter updates.
-#' @param preferential_sampling list with three elements in the following order:
-#'   the size of the sub-population to be preferentially sampled, the 
-#'   probability that a subject-path is sampled for an individual in the 
-#'   preferential group (so if 90% of the subject-path sampling should happen in
-#'   the preferential group, this would  be 0.9), and a logical for whether the 
-#'   preferential group should be first made up of subjects whose paths in the 
-#'   initial collection of paths are not constant. If FALSE, the preferential 
-#'   group simply consists of the first n individuals, where n is the size of 
-#'   the group. If a list is not specified (the default), subjects are drawn 
-#'   uniformly at random.
+#' @param preferential_sampling vector with two elements, given in the following
+#'   order. First the size of the group to be preferentially sampled. Second, 
+#'   the probability that a subject is sampled from the preferential group. The
+#'   IDs of subjects to be preferentially sampled will be selected uniformly at
+#'   random from among subjects with non-constant paths when the collection of
+#'   subject paths is initialized. If the size of the preferentially sampled
+#'   group is larger than the number of subjects with non-constant paths,
+#'   additional subject IDs will be added by selecting subejct IDs uniformly at
+#'   random from among the other subjects.
 #' @param init_popsize population size with which to initialize the epidemic.
 #' @param compartment_dist distribution according to which to place the 
 #'   remainder of the subjects. required if init_popsize is not equal to the 
@@ -42,9 +41,9 @@
 #'   correspond to exactly to the parameter names given in \code{params}.
 #' @param analytic_eigen optional. If NULL, eigenvalues, eigenvectors, and 
 #'   inverses of the eigenvector matrices of each rate transition rate matrix 
-#'   are computed numerically. If one of "SIR", or "SEIR", the eigen
-#'   decompositions will be computed analytically. It is up to the user to
-#'   ensure that the rate matrices are structured in the appropriate form (see
+#'   are computed numerically. If one of "SIR", or "SEIR", the eigen 
+#'   decompositions will be computed analytically. It is up to the user to 
+#'   ensure that the rate matrices are structured in the appropriate form (see 
 #'   vignettes for examples).
 #' @param seed optional seed value. A random seed is generated and saved if none
 #'   is supplied.

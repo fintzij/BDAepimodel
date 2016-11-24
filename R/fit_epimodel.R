@@ -61,6 +61,7 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
           
           # build the vector of probabilities for selecting which subjects to sample
           subj_probs <- subject_probabilities(epimodel)
+          subjects   <- integer(configs_to_redraw)
           
           # get start time
           start.time = Sys.time()
@@ -69,12 +70,31 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
           for(k in 2:niter) {
                     
                     # choose which subjects should be redrawn
-                    subjects <- sample.int(
-                                      n       = epimodel$popsize,
-                                      size    = configs_to_redraw,
-                                      replace = config_replacement,
-                                      prob    = subj_probs
-                            )
+                    if(subj_probs$preferential_sampling) {
+                              
+                              pref_group    <- as.logical(rbinom(configs_to_redraw, 1, subj_probs$pref_prob))
+                              n_pref        <- sum(pref_group) # number of subjects from the preferential group
+                              
+                              # sample IDs of subjects in the preferential and non-preferential groups
+                              subjects_pref    <- sample(x = subj_probs$pref_IDs,
+                                                         size = n_pref, 
+                                                         replace = config_replacement)
+                              subjects_nonpref <- sample(x = subj_probs$nonpref_IDs, 
+                                                         size = configs_to_redraw - n_pref, 
+                                                         replace = config_replacement)
+                              
+                              # fill out the vector of subject IDs
+                              subjects[pref_group]  <- subjects_pref
+                              subjects[!pref_group] <- subjects_nonpref
+                              
+                    } else {
+                              subjects <- sample.int(
+                                        n       = epimodel$popsize,
+                                        size    = configs_to_redraw,
+                                        replace = config_replacement,
+                                        prob    = subj_probs
+                              ) 
+                    }
                   
                     # cycle through subject-level trajectories to be re-drawn
                     for(j in 1:configs_to_redraw) {
@@ -189,17 +209,14 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                     
                     # save parameter values and log-likelihood
                     if(k %% save_params_every == 0) {
-                        
                         results$params[k %/% save_params_every, ]       <- epimodel$params
-                        results$log_likelihood[k %/% save_params_every] <-
-                                  sum(epimodel$likelihoods$obs_likelihood,
-                                      epimodel$likelihoods$pop_likelihood_cur)
+                        results$log_likelihood[k %/% save_params_every] <- sum(epimodel$likelihoods$obs_likelihood,
+                                                                               epimodel$likelihoods$pop_likelihood_cur)
                         
                     }
                     
                     # save the configuration matrix
                     if(k %% save_configs_every == 0) {
-                        
                         results$configs[[k %/% save_configs_every]] <- epimodel$pop_mat[complete.cases(epimodel$pop_mat),]
                     }
                     
