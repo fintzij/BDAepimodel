@@ -13,6 +13,7 @@ Getting started
 This package may be installed directly from GitHub using the **devtools** package:
 
     library(devtools)
+    install_github("fintzij/ECctmc",build_vignettes=TRUE) # required for simulating sample paths for endpoint conditioned CTMCs
     install_github("fintzij/BDAepimodel",build_vignettes=TRUE) 
     library(BDAepimodel)
 
