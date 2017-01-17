@@ -5,8 +5,8 @@
 \title{Simulates a stochastic epidemic model.}
 \usage{
 simulate_epimodel(epimodel, obstimes = NULL, init_state = NULL,
-  meas_vars = NULL, r_meas_process = NULL, return_config = TRUE,
-  trim = TRUE, lump = TRUE, ensure_pos_rates = FALSE)
+  meas_vars = NULL, r_meas_process = NULL, trim = TRUE, lump = TRUE,
+  ensure_pos_rates = FALSE)
 }
 \arguments{
 \item{epimodel}{list of bookkeeping and model objects.}
@@ -14,17 +14,14 @@ simulate_epimodel(epimodel, obstimes = NULL, init_state = NULL,
 \item{meas_vars}{character vector specifying which compartments are measured.}
 
 \item{r_meas_process}{function to simulate from the measurement process, with
-named arguments \code{state}, \code{meas_vars}, and \code{params}, which 
-are the current state of the process (given as a named character vector 
-with element names corresponding exactly to the names of compartments), a 
-vector with the names of the states to be measured, and a named vector of 
-process parameters. The function should return noisy measurements of the 
-process in a vector with named elements corresponding to each of the 
-measured compartments specified in \code{meas_vars}. The function must 
+named arguments \code{state}, \code{meas_vars}, and \code{params}, which
+are the current state of the process (given as a named character vector
+with element names corresponding exactly to the names of compartments), a
+vector with the names of the states to be measured, and a named vector of
+process parameters. The function should return noisy measurements of the
+process in a vector with named elements corresponding to each of the
+measured compartments specified in \code{meas_vars}. The function must
 index into the state vector and parameter vector using element names.}
-
-\item{return_config}{option specifying whether to return a matrix of
-subject-level trajectories. Defaults to \code{TRUE}.}
 
 \item{trim}{option specifying whether to trim the simulated data if the
 epidemic ends before the final observation time. Defaults to \code{TRUE}.}
@@ -36,6 +33,9 @@ for each event from the set of subjects in the risk pool for that event. A
 value of TRUE, corresponding to the lumped state space, is appropriate when
 there is no subject level heterogeneity and is significantly faster in even
 moderate sized populations.}
+
+\item{return_config}{option specifying whether to return a matrix of
+subject-level trajectories. Defaults to \code{TRUE}.}
 }
 \value{
 Data frame with columns for the observation times, and draws from the

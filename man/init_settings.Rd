@@ -4,12 +4,13 @@
 \alias{init_settings}
 \title{Initialize a bookkeeping list of MCMC settings.}
 \usage{
-init_settings(epimodel, niter, configs_to_redraw,
+init_settings(epimodel, niter, configs_to_redraw, config_replacement = FALSE,
   preferential_sampling = NULL, init_popsize = NULL,
   compartment_dist = NULL, save_params_every = 1,
   save_configs_every = niter\%/\%100, kernel, post_init_params = NULL,
   cov_mtx = NULL, to_estimation_scale = NULL,
-  from_estimation_scale = NULL, analytic_eigen = NULL, seed = NULL)
+  from_estimation_scale = NULL, analytic_eigen = NULL,
+  ecctmc_method = "mr", seed = NULL, time_limit = NULL)
 }
 \arguments{
 \item{epimodel}{epimodel object}
@@ -22,12 +23,12 @@ between parameter updates.}
 
 \item{preferential_sampling}{vector with two elements, given in the following
 order. First the size of the group to be preferentially sampled. Second, 
-the probability that a subject is sampled from the preferential group. The
-IDs of subjects to be preferentially sampled will be selected uniformly at
-random from among subjects with non-constant paths when the collection of
-subject paths is initialized. If the size of the preferentially sampled
-group is larger than the number of subjects with non-constant paths,
-additional subject IDs will be added by selecting subejct IDs uniformly at
+the probability that a subject is sampled from the preferential group. The 
+IDs of subjects to be preferentially sampled will be selected uniformly at 
+random from among subjects with non-constant paths when the collection of 
+subject paths is initialized. If the size of the preferentially sampled 
+group is larger than the number of subjects with non-constant paths, 
+additional subject IDs will be added by selecting subejct IDs uniformly at 
 random from among the other subjects.}
 
 \item{init_popsize}{population size with which to initialize the epidemic.}
@@ -71,8 +72,16 @@ decompositions will be computed analytically. It is up to the user to
 ensure that the rate matrices are structured in the appropriate form (see 
 vignettes for examples).}
 
+\item{ecctmc_method}{Method for sampling the exact times of state transition.
+Defaults to "mr" for modified rejection sampling. May also be specified as
+"unif" for uniformization.}
+
 \item{seed}{optional seed value. A random seed is generated and saved if none
 is supplied.}
+
+\item{time_limit}{optional maximum time budget for the MCMC, checked every 
+time the parameters are saved. Should be provided as a diffitme object with
+units in hours.}
 }
 \value{
 bookkeeping list

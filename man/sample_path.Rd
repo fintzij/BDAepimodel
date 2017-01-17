@@ -4,7 +4,7 @@
 \alias{sample_path}
 \title{Wrapper for sampling the path within homogeneous intervals.}
 \usage{
-sample_path(epimodel, subject)
+sample_path(epimodel)
 }
 \arguments{
 \item{subject}{character string for subject ID code}

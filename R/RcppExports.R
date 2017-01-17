@@ -117,7 +117,7 @@ joinCubes <- function(firstcube, secondcube) {
 #' bookkeeping matrix
 #'
 #' @param pop_mat population level bookkeeping matrix
-#' @param irm_array array of rate matrices
+#' @param irm array of rate matrices
 #' @param initdist vector of initial state probabilities
 #' @param initdist_param_inds vector of indices for admissible initial states
 #' @param flow_inds matrix of indices for locations in IRM for each event
@@ -127,8 +127,8 @@ joinCubes <- function(firstcube, secondcube) {
 #'     log-likelihood
 #'
 #' @return population level likelihood or log-likelihood
-populationLikelihood <- function(pop_mat, irm_array, initdist, initdist_param_inds, flow_inds, keys, inds, loglik) {
-    .Call('BDAepimodel_populationLikelihood', PACKAGE = 'BDAepimodel', pop_mat, irm_array, initdist, initdist_param_inds, flow_inds, keys, inds, loglik)
+populationLikelihood <- function(pop_mat, irm, initdist, initdist_param_inds, flow_inds, keys, inds, loglik) {
+    .Call('BDAepimodel_populationLikelihood', PACKAGE = 'BDAepimodel', pop_mat, irm, initdist, initdist_param_inds, flow_inds, keys, inds, loglik)
 }
 
 #' Reorder the rows of a matrix

@@ -5,13 +5,13 @@
 \title{Get the irm keys for the compartment counts in a population level
 bookkeeping matrix}
 \usage{
-populationLikelihood(pop_mat, irm_array, initdist, initdist_param_inds,
-  flow_inds, keys, inds, loglik)
+populationLikelihood(pop_mat, irm, initdist, initdist_param_inds, flow_inds,
+  keys, inds, loglik)
 }
 \arguments{
 \item{pop_mat}{population level bookkeeping matrix}
 
-\item{irm_array}{array of rate matrices}
+\item{irm}{array of rate matrices}
 
 \item{initdist}{vector of initial state probabilities}
 

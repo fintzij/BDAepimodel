@@ -95,7 +95,7 @@ insert_trajectory <- function(epimodel, subject, reinsertion) {
                     epimodel$likelihoods$pop_likelihood_new <-
                               populationLikelihood(
                                         pop_mat = epimodel$pop_mat,
-                                        irm_array = epimodel$irm,
+                                        irm = epimodel$irm,
                                         initdist = epimodel$initdist,
                                         initdist_param_inds = epimodel$initdist_param_inds,
                                         flow_inds = epimodel$flow_inds,

@@ -8,7 +8,7 @@ using namespace Rcpp;
 //' bookkeeping matrix
 //'
 //' @param pop_mat population level bookkeeping matrix
-//' @param irm_array array of rate matrices
+//' @param irm array of rate matrices
 //' @param initdist vector of initial state probabilities
 //' @param initdist_param_inds vector of indices for admissible initial states
 //' @param flow_inds matrix of indices for locations in IRM for each event
@@ -19,7 +19,7 @@ using namespace Rcpp;
 //'
 //' @return population level likelihood or log-likelihood
 // [[Rcpp::export]]
-double populationLikelihood(const arma::mat& pop_mat, Rcpp::NumericVector& irm_array, const arma::vec& initdist, const arma::uvec& initdist_param_inds, const arma::umat& flow_inds, const arma::uvec& keys, const arma::uvec& inds, bool loglik) {
+double populationLikelihood(const arma::mat& pop_mat, const arma::cube& irm, const arma::vec& initdist, const arma::uvec& initdist_param_inds, const arma::umat& flow_inds, const arma::uvec& keys, const arma::uvec& inds, bool loglik) {
           
           // get number of endpoints and number of intervals
           arma::uword n_intervals = inds.n_elem - 1;
@@ -31,10 +31,6 @@ double populationLikelihood(const arma::mat& pop_mat, Rcpp::NumericVector& irm_a
           
           arma::umat event_inds = flow_inds - 1;
           arma::uword next_event(0);
-          
-          // Instatiate array pointers
-          Rcpp::IntegerVector irmDims = irm_array.attr("dim");
-          arma::cube irm(irm_array.begin(), irmDims[0], irmDims[1], irmDims[2], false);
           
           // get the relevant vectors
           arma::vec times_all = pop_mat.col(0);

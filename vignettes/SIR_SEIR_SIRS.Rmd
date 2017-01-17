@@ -1,0 +1,579 @@
+---
+title: "Implementing the SEIR, SIIR, and SIRS stochastic epidemic models in the BDAepimodel package"
+author: "Jon Fintzi, Xiang Cui, Jon Wakefield, Vladimir Minin"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Additional simulations included Fintzi, Wakefield, and Minin (2016)}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+```{r load_packages, echo = F, include=F}
+library(BDAepimodel)
+library(coda)
+library(Rcpp)
+```
+
+
+This vignette contains code to reproduce the three stochastic epidemic models presented in the first simulation of Fintzi et al. (2016). We fit SIR, SEIR, and SIRS models to binomially distributed prevalence counts. Additional details on the use of the BDAepimodel package and how to extract the results from fitted objects are provided in the "BDAepimodel" vignette. 
+
+## Analyzing an epidemic with SIR dynamics
+We simulated an epidemic with SIR dynamics in a population of 750 individuals, 90% of whom were initially susceptible, 3% of whom were initially infected, and 7% of whom were immune. The per–contact infectivity rate was $\beta = 0.00035$ and the average infectious period  duration was $1/\mu = 7 $ days, which together correspond to a basic reproduction number of $R_0 = \beta N / µ = 1.84$. Binomially sampled prevalence was observed at one week intervals over a period of three months with sampling probability $\rho=0.2$. 
+
+The data are simulated as follows:
+
+```{r SIR_sim, warning=F, cache = T}
+# set the seed for reproducibility!
+set.seed(1834)
+
+# declare the functions for simulating from and evaluating the log-density of the measurement process
+r_meas_process <- function(state, meas_vars, params){
+          rbinom(n = nrow(state), 
+                 size = state[,meas_vars], # binomial sample of the unobserved prevalenc
+                 prob = params["rho"])     # sampling probability
+}
+
+d_meas_process <- function(state, meas_vars, params, log = TRUE) {
+          dbinom(x = state[, "I_observed"], 
+                 size = state[, "I_augmented"], 
+                 prob = params["rho"], log = log)
+}
+
+# initialize the stochastic epidemic model object
+epimodel <- init_epimodel(obstimes = seq(0, 105, by = 7),                             # vector of observation times
+                          popsize = 750,                                              # population size
+                          states = c("S", "I", "R"),                                  # compartment names
+                          params = c(beta = 0.00035,                                  # infectivity parameter
+                                     mu = 1/7,                                        # recovery rate
+                                     rho = 0.2,                                       # binomial sampling probability
+                                     S0 = 0.9, I0 = 0.03, R0 = 0.07),                 # initial state probabilities
+                          rates = c("beta * I", "mu"),                                # unlumped transition rates
+                          flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T),  # flow matrix
+                          meas_vars = "I",                                            # name of measurement variable
+                          r_meas_process = r_meas_process,                            # measurement process functions
+                          d_meas_process = d_meas_process)
+
+# simulate the epidemic and the dataset.  
+epimodel <- simulate_epimodel(epimodel = epimodel, lump = TRUE, trim = TRUE)
+
+# plot the epidemic and the dataset
+plot(x = epimodel$pop_mat[,"time"], y = epimodel$pop_mat[,"I"], "l", ylim = c(0, 200), xlab = "Time", ylab = "Prevalence")
+points(x = epimodel$dat[,"time"], y = epimodel$dat[,"I"])
+
+dat <- epimodel$dat 
+true_path <- epimodel$pop_mat
+
+```
+
+Having simulated a dataset, we can now proceed to fit an SIR model to the data. The first step is to define a transition kernel for the model parameters. We will update parameters from their univariate full conditional distributions via Gibbs sampling. We assign the following priors for the model parameters: $\beta\sim Gamma(0.3, 1000)$, $\mu\sim Gamma(1, 8)$, $\rho\sim Beta(2, 7)$, and $\mathbf{\mathrm{p}}_{t_1}\sim Dirichlet(90, 2, 5)$. The following code implements the transition kernel and a helper function for computing the sufficient statistics:
+
+```{r SIR_kernel, warning = F, cache=T}
+# helper function for computing the sufficient statistics for the SIR model rate parameters
+Rcpp::cppFunction("Rcpp::NumericVector getSuffStats_SIR(const Rcpp::NumericMatrix& pop_mat, const int ind_final_config) {
+                  
+          // initialize sufficient statistics
+          int num_inf = 0;       // number of infection events
+          int num_rec = 0;       // number of recovery events
+          double beta_suff = 0;  // integrated hazard for the infectivity
+          double mu_suff = 0;    // integrated hazard for the recovery
+
+          // initialize times
+          double cur_time = 0;              // current time
+          double next_time = pop_mat(0,0);  // time of the first event
+          double dt = 0;                    // time increment
+          
+          // compute the sufficient statistics - loop through the pop_mat matrix until
+          // reaching the row for the final observation time
+          for(int j = 0; j < ind_final_config - 1; ++j) {
+          
+                    cur_time = next_time;         
+                    next_time = pop_mat(j+1, 0); // grab the time of the next event
+                    dt = next_time - cur_time;   // compute the time increment
+                    
+                    beta_suff += pop_mat(j, 3) * pop_mat(j, 4) * dt; // add S*I*(t_{j+1} - t_j) to beta_suff
+                    mu_suff += pop_mat(j, 4) * dt;                   // add I*(t_{j+1} - t_j) to mu_suff
+                    
+                    // increment the count for the next event
+                    if(pop_mat(j + 1, 2) == 1) {  
+                              num_inf += 1;
+                    } else if(pop_mat(j + 1, 2) == 2) {
+                              num_rec += 1;
+                    }
+          }
+                  
+          // return the vector of sufficient statistics for the rate parameters
+          return Rcpp::NumericVector::create(num_inf, beta_suff, num_rec, mu_suff);
+}")
+
+# MCMC transition kernel for the SIR model rate parameters and the binomial
+# sampling probability. The prior distributions for the parameters are contained
+# in this function.
+
+gibbs_kernel_SIR <- function(epimodel) {
+          
+          # get sufficient statistics using the previously compiled getSuffStats_SIR function (above)
+          suff_stats <- getSuffStats_SIR(epimodel$pop_mat, epimodel$ind_final_config)
+          
+          # update parameters from their univariate full conditional distributions
+          # Priors: beta ~ gamma(0.3, 1000)
+          #         mu   ~ gamma(1, 8)
+          #         rho  ~ beta(2, 7)
+          proposal          <- epimodel$params # params is the vector of ALL model parameters
+          proposal["beta"]  <- rgamma(1, 0.3 + suff_stats[1], 1000 + suff_stats[2])
+          proposal["mu"]    <- rgamma(1, 1 + suff_stats[3], 8 + suff_stats[4])
+          proposal["rho"]   <- rbeta(1, shape1 = 2 + sum(epimodel$obs_mat[, "I_observed"]),
+                                        shape2 = 7 + sum(epimodel$obs_mat[, "I_augmented"] - epimodel$obs_mat[, "I_observed"]))
+          
+          # update array of rate matrices
+          epimodel <- build_new_irms(epimodel, proposal)
+          
+          # update the eigen decompositions (This function is built in and computes eigen decompositions analytically)
+          buildEigenArray_SIR(real_eigenvals = epimodel$real_eigen_values,
+                              imag_eigenvals = epimodel$imag_eigen_values,
+                              eigenvecs      = epimodel$eigen_vectors, 
+                              inversevecs    = epimodel$inv_eigen_vectors, 
+                              irm_array      = epimodel$irm, 
+                              n_real_eigs    = epimodel$n_real_eigs, 
+                              initial_calc   = FALSE)
+          
+          # get log-likelihood of the observations under the new parameters
+          obs_likelihood_new  <- calc_obs_likelihood(epimodel, params = proposal, log = TRUE) #### NOTE - log = TRUE
+          
+          # get the new population level CTMC log-likelihood
+          pop_likelihood_new  <- epimodel$likelihoods$pop_likelihood_cur +
+                    suff_stats[1] * (log(proposal["beta"]) - log(epimodel$params["beta"])) +
+                    suff_stats[3] * (log(proposal["mu"]) - log(epimodel$params["mu"])) -
+                    suff_stats[2] * (proposal["beta"] - epimodel$params["beta"]) - 
+                    suff_stats[4] * (proposal["mu"] - epimodel$params["mu"])
+          
+          # update parameters, likelihood objects, and eigen decompositions
+          epimodel  <-
+                    update_params(
+                              epimodel,
+                              params = proposal,
+                              pop_likelihood = pop_likelihood_new,
+                              obs_likelihood = obs_likelihood_new
+                    )
+          
+          return(epimodel)
+}
+```
+
+We now re-initialize the epimodel object with the dataset, set the RNG seed, and run each MCMC chain as follows. Note that the chain was set by a batch script that varied the value of `chain`. 
+
+```{r SIR_inference, warning=F, cache=T, messages = F}
+chain <- 1 # this was set by a batch script that ran chains 1, 2, and 3 in parallel
+set.seed(52787 + chain)
+
+# initial values for initial state parameters
+init_dist <- MCMCpack::rdirichlet(1, c(9,0.5,0.1))
+epimodel <- init_epimodel(popsize = 750,                                                       # population size
+                          states = c("S", "I", "R"),                                           # compartment names
+                          params = c(beta = abs(rnorm(1, 0.00035, 5e-5)),                      # per-contact infectivity rate
+                                     mu = abs(rnorm(1, 1/7, 0.02)),                            # recovery rate
+                                     rho = rbeta(1, 21, 75),                                   # binomial sampling probability
+                                     S0 = init_dist[1], I0 = init_dist[2], R0 = init_dist[3]), # initial state probabilities
+                          rates = c("beta * I", "mu"),                                         # unlumped transition rates
+                          flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T),           # flow matrix
+                          dat = dat,                                                           # dataset
+                          time_var = "time",                                                   # name of time variable in the dataset
+                          meas_vars = "I",                                                     # name of measurement variable
+                          initdist_prior = c(90, 2, 5), ### Parameters for the dirichlet prior distribution for the initial state probs
+                          r_meas_process = r_meas_process,
+                          d_meas_process = d_meas_process)
+
+epimodel <- init_settings(epimodel,
+                          niter = 10,  # this was set to 100,000 in the paper
+                          save_params_every = 1, 
+                          save_configs_every = 2, # this was set to 250 in the paper 
+                          kernel = list(gibbs_kernel_SIR),
+                          configs_to_redraw = 1, # this was set to 75 in the paper
+                          analytic_eigen = "SIR", # compute eigen decompositions and matrix inverses analytically
+                          ecctmc_method = "mr")   # sample subject paths in interevent intervals via modified rejection sampling
+
+epimodel <- fit_epimodel(epimodel, monitor = FALSE)
+```
+
+After running all three chains for each prior regime, we discarded the first 10 iterations of each chain as burn-in and combined the parameter samples and latent posterior samples from each chain. Posterior median estimates and 95% credible intervals of model parameters were computed, along with the pointwise posterior distribution of the latent process. These are presented in the paper and the supplement. 
+
+## Analyzing an epidemic with SEIR dynamics
+We simulated an epidemic with SEIR dynamics in a population of 500 individuals. The epidemic was initiated by a single infected individual in an otherwise completely suscpetible population. The per–contact infectivity rate was $\beta = 0.000075$, the average incubation period was $1/\gamma=14$ days, and the average infectious period  duration was $1/\mu = 28 $ days, which together correspond to a basic reproduction number of $R_0 = \beta N / µ = 1.05$. Binomially sampled prevalence was observed at one week intervals over a period of two years with sampling probability $\rho=1/3$. 
+
+The data are simulated as follows:
+
+```{r SEIR_sim, warning=F, cache = T}
+set.seed(1834)
+
+# declare the functions for simulating from and evaluating the log-density of the measurement process
+r_meas_process <- function(state, meas_vars, params){
+          rbinom(n = nrow(state), 
+                 size = state[,meas_vars],
+                 prob =  params["rho"])
+}
+
+d_meas_process <- function(state, meas_vars, params, log = TRUE) {
+          dbinom(x = state[, "I_observed"], 
+                 size = state[, "I_augmented"],
+                  prob = params["rho"], log = log)
+}
+
+# initialize the stochastic epidemic model object
+epimodel <- init_epimodel(obstimes = seq(1, 730, by = 7),                              # vector of observation times
+                          popsize = 500,                                              # population size
+                          states = c("S", "E", "I", "R"),                             # compartment names
+                          params = c(beta = 0.000075,                                   # per-contact infectivity parameter
+                                     gamma = 1/14,                                    # latent period parameter
+                                     mu = 1/28,                                       # recovery rate
+                                     rho = 1/3,                                       # binomial sampling probability
+                                     S0 = 0.99, E0 = 0.006, I0 = 0.003, R0 = 0.001),      # initial state probabilities
+                          rates = c("beta * I", "gamma", "mu"),                       # unlumped transition rates
+                          flow = matrix(c(-1, 1, 0, 0, 
+                                          0, -1, 1, 0, 
+                                          0, 0, -1, 1), ncol = 4, byrow = T),         # flow matrix
+                          meas_vars = "I",                                            # name of measurement variable
+                          r_meas_process = r_meas_process,                            # measurement process functions
+                          d_meas_process = d_meas_process)
+
+# simulate the epidemic and the dataset.  
+epimodel <- simulate_epimodel(epimodel = epimodel,
+                              init_state = c(S = 499, E = 0, I = 1, R = 0),
+                              lump = TRUE, 
+                              trim = TRUE)
+
+dat <- epimodel$dat
+true_path <- epimodel$pop_mat
+
+# plot the epidemic and the dataset
+plot(x = epimodel$pop_mat[,"time"], y = epimodel$pop_mat[,"I"], "l", ylim = c(0, 50), xlab = "Time", ylab = "Prevalence")
+points(x = epimodel$dat[,"time"], y = epimodel$dat[,"I"])
+
+```
+
+Having simulated a dataset, we can now proceed to fit an SEIR model to the data. The first step is to define a transition kernel for the model parameters. We will update parameters from their univariate full conditional distributions via Gibbs sampling. We assign the following priors for the model parameters: $\beta\sim Gamma(1, 10000)$, $\gamma \sim Gamma(1, 11)$, $\mu\sim Gamma(3.2, 100)$, $\rho\sim Beta(3.5, 6.5)$, and $\mathbf{\mathrm{p}}_{t_1}\sim Dirichlet(100, 0.1, 0.4, 0.01)$. The following code implements the transition kernel and a helper function for computing the sufficient statistics:
+
+```{r SEIR_kernel, warning = F, cache=T}
+Rcpp::cppFunction("Rcpp::NumericVector getSuffStats_SEIR(const Rcpp::NumericMatrix& pop_mat, const int ind_final_config) {
+                  
+          // initialize sufficient statistics
+          int num_exp = 0;       // number of exposure events
+          int num_inf = 0;       // number of exposed --> infectious events
+          int num_rec = 0;       // number of recovery events
+          double beta_suff  = 0; // integrated hazard for the exposure
+          double gamma_suff = 0; // integrated hazard for addition of infectives
+          double mu_suff    = 0; // integrated hazard for the recovery
+          
+          // initialize times
+          double cur_time = 0;              // current time
+          double next_time = pop_mat(0,0);  // time of the first event
+          double dt = 0;                    // time increment
+
+          // compute the sufficient statistics - loop through the pop_mat matrix until
+          // reaching the row for the final observation time
+          for(int j = 0; j < ind_final_config - 1; ++j) {
+
+                    cur_time = next_time;         
+                    next_time = pop_mat(j+1, 0); // grab the time of the next event
+                    dt = next_time - cur_time;
+
+                    beta_suff  += pop_mat(j, 3) * pop_mat(j, 5) * dt; // add S*I*(t_{j+1} - t_j) to beta_suff
+                    gamma_suff += pop_mat(j, 4) * dt;                 // add E*(t_{j+1} - t_j) to gamma_suff
+                    mu_suff    += pop_mat(j, 5) * dt;                 // add I*(t_{j+1} - t_j) to mu_suff
+                    
+                    if(pop_mat(j + 1, 2) == 1) {  
+                              num_exp += 1;            // if the next event is an exposure, increment the number of exposures
+                    } else if(pop_mat(j + 1, 2) == 2) {
+                              num_inf += 1;            // if the next event adds an infective, increment the number of infections
+                    } else if(pop_mat(j + 1, 2) == 3) {
+                              num_rec += 1;            // if the next event is a recover, increment the number of recovery
+                    }
+          }
+          
+          // return the vector of sufficient statistics for the rate parameters
+          return Rcpp::NumericVector::create(num_exp, beta_suff, num_inf, gamma_suff, num_rec, mu_suff);
+}")
+
+# MCMC transition kernel for the SIR model rate parameters and the binomial
+# sampling probability. The prior distributions for the parameters are contained
+# in this function.
+
+gibbs_kernel_SEIR <- function(epimodel) {
+          
+          # get sufficient statistics using the previously compiled getSuffStats function (above)
+          suff_stats <- getSuffStats_SEIR(epimodel$pop_mat, epimodel$ind_final_config)
+          
+          # update parameters from their univariate full conditional distributions
+          # beta  ~ Gamma(1, 10000)
+          # gamma ~ Gamma(1, 11)
+          # mu    ~ Gamma(3.2, 100)
+          # rho   ~  Beta(3.5, 6.5)
+          # p_{t_1} ~ Dirichlet(100, 0.1, 0.4, 0.01)
+          proposal          <- epimodel$params # params is the vector of ALL model parameters
+          proposal["beta"]  <- rgamma(1, 1 + suff_stats[1], 10000 + suff_stats[2])
+          proposal["gamma"] <- rgamma(1, 1 + suff_stats[3], 11 + suff_stats[4])
+          proposal["mu"]    <- rgamma(1, 3.2 + suff_stats[5], 100 + suff_stats[6])
+          proposal["rho"]   <- rbeta(1, 
+                                     shape1 = 3.5 + sum(epimodel$obs_mat[,"I_observed"]), 
+                                     shape2 = 6.5 + sum(epimodel$obs_mat[,"I_augmented"]- epimodel$obs_mat[,"I_observed"]))
+          
+          # update array of rate matrices
+          epimodel          <- build_new_irms(epimodel, proposal)
+          
+          # compute new eigendecompositions of CTMC rate matrices analytically
+          buildEigenArray_SEIR(real_eigenvals = epimodel$real_eigen_values,
+                               imag_eigenvals = epimodel$imag_eigen_values,
+                               eigenvecs      = epimodel$eigen_vectors, 
+                               inversevecs    = epimodel$inv_eigen_vectors, 
+                               irm_array      = epimodel$irm, 
+                               n_real_eigs    = epimodel$n_real_eigs, 
+                               initial_calc   = FALSE)
+          
+          # get the data log-likelihood under the new parameters
+          obs_likelihood_new <- calc_obs_likelihood(epimodel, params = proposal, log = TRUE) #### NOTE - log = TRUE
+          
+          # compute the new population level CTMC log-likelihood
+          pop_likelihood_new <- epimodel$likelihoods$pop_likelihood_cur +
+                    suff_stats[1] * (log(proposal["beta"]) - log(epimodel$params["beta"])) + 
+                    suff_stats[3] * (log(proposal["gamma"]) - log(epimodel$params["gamma"])) +
+                    suff_stats[5] * (log(proposal["mu"]) - log(epimodel$params["mu"])) -
+                    suff_stats[2] * (proposal["beta"] - epimodel$params["beta"]) - 
+                    suff_stats[4] * (proposal["gamma"] - epimodel$params["gamma"]) - 
+                    suff_stats[6] * (proposal["mu"] - epimodel$params["mu"])
+          
+          # update parameters, likelihood objects, and eigen decompositions
+          epimodel <- update_params(epimodel,
+                                    params = proposal,
+                                    pop_likelihood = pop_likelihood_new,
+                                    obs_likelihood = obs_likelihood_new
+                    )
+          
+          return(epimodel)
+}
+```
+
+We now re-initialize the epimodel object with the dataset, set the RNG seed, and run each MCMC chain as follows. Note that the chain was set by a batch script that varied the value of `chain`. 
+
+```{r SEIR_inference, warning=F, cache=T, messages = F}
+chain <- 1 # this was set by a batch script that ran chains 1, 2, and 3 in parallel
+set.seed(52787 + chain)
+
+# initial values for initial state parameters
+init_dist <- rnorm(4, c(0.99, 0.01, 0.01, 0.001) , 1e-4); init_dist <- abs(init_dist) / sum(abs(init_dist))
+epimodel  <- init_epimodel(popsize = 500,                                                       # population size
+                           states = c("S", "E", "I", "R"),                                      # compartment names
+                           params = c(beta = abs(rnorm(1, 0.00008, 1e-7)),                           # infectivity rate
+                                      gamma = abs(rnorm(1, 0.08, 0.01)),                               # latent period rate
+                                      mu = abs(rnorm(1, 0.028, 0.001)),                                  # recovery rate
+                                      rho = rbeta(1, 30, 75),                                 # binomial sampling prob
+                                      S0 = init_dist[1], E0 = init_dist[2], I0 = init_dist[3], R0 = init_dist[4]),
+                           rates = c("beta * I", "gamma", "mu"),                # unlumped transition rates
+                           flow = matrix(c(-1, 1, 0, 0,
+                                           0, -1, 1, 0,
+                                           0, 0, -1, 1), ncol = 4, byrow = T),  # flow matrix
+                           dat = dat,                                           # dataset
+                           time_var = "time",                                   # name of time variable in the dataset
+                           meas_vars = "I",                                     # name of measurement var in the dataset
+                           initdist_prior = c(100, 0.1, 0.4, 0.01), ### Parameters for the dirichlet prior distribution for the initial state probs
+                           r_meas_process = r_meas_process,
+                           d_meas_process = d_meas_process)
+
+epimodel <- init_settings(epimodel,
+                          niter = 10, # set to 100000 for the paper
+                          save_params_every = 1, 
+                          save_configs_every = 2, # this was set to 250 for the chains run in the paper
+                          kernel = list(gibbs_kernel_SEIR),
+                          configs_to_redraw = 1, # this was set to 100 in the paper
+                          analytic_eigen = "SEIR", # compute eigen decompositions analytically
+                          ecctmc_method = "unif",  # sample paths in inter-event intervals via uniformization
+                          seed = 52787 + chain)
+
+epimodel <- fit_epimodel(epimodel, monitor = FALSE)
+```
+
+After running all three chains for each prior regime, we discarded the first 10 iterations of each chain as burn-in and combined the parameter samples and latent posterior samples from each chain. Posterior median estimates and 95% credible intervals of model parameters were computed, along with the pointwise posterior distribution of the latent process. These are presented in the paper and the supplement. 
+
+## Analyzing an epidemic with SIRS dynamics
+We simulated an epidemic with SIRS dynamics in a population of 200 individuals, 1% of whom were initially infected, with the rest being suscpetible. The per–contact infectivity rate was $\beta = 0.0009$,  the average infectious period  duration was $1/\mu = 14 $ days, and the average time until loss of immunity was $1/\gamma = 150$ days, which together correspond to a basic reproduction number of $R_0 = \beta N / µ = 2.52$. Binomially sampled prevalence was observed at one week intervals over a period of one year with sampling probability $\rho=0.8$. 
+
+The data are simulated as follows:
+
+```{r SIRS_sim, warning=F, cache = T}
+r_meas_process <- function(state, meas_vars, params){
+          # in our example, rho will be the name of the binomial sampling probability parameter.
+          # this function returns a matrix of observed counts
+          rbinom(n = nrow(state), 
+                 size = state[,meas_vars],
+                 prob = params["rho"])
+}
+
+d_meas_process <- function(state, meas_vars, params, log = TRUE) {
+          # note that the names of the measurement variables are endowed with suffixes "_observed" and "_augmented". This is required.
+          # we will declare the names of the measurement variables shortly.
+          dbinom(x = state[, "I_observed"], 
+                 size = state[, "I_augmented"],
+                 prob = params["rho"], log = log)
+}
+
+# initialize the stochastic epidemic model object
+epimodel <- init_epimodel(obstimes = seq(1, 365, by = 7),                            # vector of observation times
+                          popsize = 200,                                             # population size
+                          states = c("S", "I", "R"),                                 # compartment names
+                          params = c(beta = 0.0009,                                  # per-contact infectivity parameter
+                                     mu = 1/14,                                      # recovery rate
+                                     gamma = 1/150,                                  # loss of susceptibility param
+                                     rho = 0.8,                                      # binomial sampling probability
+                                     S0 = 0.99, I0 = 0.01, R0 = 0),                  # initial state probabilities
+                          rates = c("beta * I", "mu", "gamma"),                      # unlumped transition rates
+                          flow = matrix(c(-1, 1, 0, 
+                                          0, -1, 1, 
+                                          1, 0, -1), ncol = 3, byrow = T),           # flow matrix
+                          meas_vars = "I",                                           # name of measurement variable
+                          r_meas_process = r_meas_process,                           # measurement process functions
+                          d_meas_process = d_meas_process)
+
+# simulate the epidemic and the dataset.  
+epimodel <- simulate_epimodel(epimodel = epimodel, lump = TRUE, trim = TRUE)
+
+# plot the epidemic and the dataset
+plot(x = epimodel$pop_mat[,"time"], y = epimodel$pop_mat[,"I"], "l", ylim = c(0, 100), xlab = "Time", ylab = "Prevalence")
+points(x = epimodel$dat[,"time"], y = epimodel$dat[,"I"])
+
+```
+
+Having simulated a dataset, we can now proceed to fit an SIRS model to the data. The first step is to define a transition kernel for the model parameters. We will update parameters from their univariate full conditional distributions via Gibbs sampling. We assign the following priors for the model parameters: $\beta\sim Gamma(0.1, 100)$, $\mu\sim Gamma(1.8, 14)$, $\gamma \sim Gamma(0.0625, 10)$,  $\rho\sim Beta(5, 1)$, and $\mathbf{\mathrm{p}}_{t_1}\sim Dirichlet(90, 1.5, 0.01)$. The following code implements the transition kernel and a helper function for computing the sufficient statistics:
+
+```{r SIRS_kernel, warning = F, cache=T}
+# helper function for computing the sufficient statistics for the SIR model rate parameters
+Rcpp::cppFunction("Rcpp::NumericVector getSuffStats_SIRS(const Rcpp::NumericMatrix& pop_mat, const int ind_final_config) {
+                  
+          // initialize sufficient statistics
+          int num_inf = 0;       // number of infectious events
+          int num_rec = 0;       // number of recovery events
+          int num_loss = 0;      // number of loss of immunity events
+          double beta_suff  = 0; // integrated hazard for infections
+          double mu_suff    = 0; // integrated hazard for the recovery
+          double gamma_suff = 0; // integrated hazard for loss of immunity
+          
+          // initialize times
+          double cur_time = 0;              // current time
+          double next_time = pop_mat(0,0);  // time of the first event
+          double dt = 0;                    // time increment
+          
+          // compute the sufficient statistics - loop through the pop_mat matrix until
+          // reaching the row for the final observation time
+          for(int j = 0; j < ind_final_config - 1; ++j) {
+          
+                    cur_time = next_time;         
+                    next_time = pop_mat(j+1, 0); // grab the time of the next event
+                    dt = next_time - cur_time;   // compute the time increment
+                    
+                    beta_suff  += pop_mat(j, 3) * pop_mat(j, 4) * dt; // add S*I*(t_{j+1} - t_j) to beta_suff
+                    mu_suff    += pop_mat(j, 4) * dt;                 // add I*(t_{j+1} - t_j) to mu_suff
+                    gamma_suff += pop_mat(j, 5) * dt;                 // add R*(t_{j+1} - t_j) to gamma_suff
+                    
+                    if(pop_mat(j + 1, 2) == 1) {  
+                              num_inf += 1;             // if the next event is an infection, increment the number of infections
+                    } else if(pop_mat(j + 1, 2) == 2) {
+                              num_rec += 1;             // if the next event is a recovery, increment the number of recoveries
+                    } else if(pop_mat(j + 1, 2) == 3) {
+                              num_loss += 1;             // if the next event is a loss of immunity, increment that number
+                    }
+          }
+          
+          // return the vector of sufficient statistics for the rate parameters
+          return Rcpp::NumericVector::create(num_inf, beta_suff, num_rec, mu_suff, num_loss, gamma_suff);
+}")
+
+# MCMC transition kernel for the SIR model rate parameters and the binomial
+# sampling probability. The prior distributions for the parameters are contained
+# in this function.
+
+gibbs_kernel_SIRS <- function(epimodel) {
+          
+          # get sufficient statistics using the previously compiled getSuffStats function (above)
+          suff_stats          <- getSuffStats_SIRS(epimodel$pop_mat, epimodel$ind_final_config)
+          
+          # update parameters from their univariate full conditional distributions
+          # beta  ~ Gamma(0.1, 100)
+          # gamma ~ Gamma(1.8, 14)
+          # mu    ~ Gamma(0.0625, 10)
+          # rho   ~  Beta(5, 1)
+          # p_{t_1} ~ Dirichlet(90, 1.5, 0.01)
+          proposal          <- epimodel$params # params is the vector of ALL model parameters
+          proposal["beta"]  <- rgamma(1, 0.1 + suff_stats[1], 100 + suff_stats[2])
+          proposal["mu"]    <- rgamma(1, 1.8 + suff_stats[3], 14 + suff_stats[4])
+          proposal["gamma"] <- rgamma(1, 0.0625 + suff_stats[5], 10 + suff_stats[6])
+          proposal["rho"]   <- rbeta(1, 
+                                     shape1 = 5 + sum(epimodel$obs_mat[,"I_observed"]), 
+                                     shape2 = 1 + sum(epimodel$obs_mat[,"I_augmented"]- epimodel$obs_mat[,"I_observed"]))
+          
+          # update array of rate matrices
+          epimodel <- build_new_irms(epimodel, proposal)
+          
+          # compute the eigen decompositions numerically
+          buildEigenArray(real_eigenvals = epimodel$real_eigen_values,
+                               imag_eigenvals = epimodel$imag_eigen_values,
+                               eigenvecs      = epimodel$eigen_vectors,
+                               inversevecs    = epimodel$inv_eigen_vectors,
+                               irm_array      = epimodel$irm,
+                               n_real_eigs    = epimodel$n_real_eigs)
+          
+          # get log-likelihoods under the new parameters
+          obs_likelihood_new <- calc_obs_likelihood(epimodel, params = proposal, log = TRUE) #### NOTE - log = TRUE
+          
+          # compute the new population level CTMC log-likelihood
+          pop_likelihood_new <- epimodel$likelihoods$pop_likelihood_cur +
+                    suff_stats[1] * (log(proposal["beta"]) - log(epimodel$params["beta"])) + 
+                    suff_stats[3] * (log(proposal["mu"]) - log(epimodel$params["mu"])) +
+                    suff_stats[5] * (log(proposal["gamma"]) - log(epimodel$params["gamma"])) -
+                    suff_stats[2] * (proposal["beta"] - epimodel$params["beta"]) - 
+                    suff_stats[4] * (proposal["mu"] - epimodel$params["mu"]) - 
+                    suff_stats[6] * (proposal["gamma"] - epimodel$params["gamma"])  
+          
+          # update parameters, likelihood objects, and eigen decompositions
+          epimodel <- update_params(epimodel,
+                                    params = proposal,
+                                    pop_likelihood = pop_likelihood_new,
+                                    obs_likelihood = obs_likelihood_new
+                    )
+          
+          return(epimodel)
+}
+```
+
+We now re-initialize the epimodel object with the dataset, set the RNG seed, and run each MCMC chain as follows. Note that the chain was set by a batch script that varied the value of `chain`. 
+
+```{r SIRS_inference, warning=F, cache=T}
+chain <- 1 # this was set by a batch script that ran chains 1, 2, and 3 in parallel
+
+init_dist <- c(rnorm(3, c(0.98, 0.01, 0.001), 1e-5)); init_dist <- abs(init_dist) / sum(abs(init_dist))
+epimodel  <- init_epimodel(popsize = 200,                                                    # population size
+                           states = c("S", "I", "R"),                                        # compartment names
+                           params = c(beta = abs(rnorm(1, 0.00077, 1e-4)),                   # infectivity rate
+                                      mu = abs(rnorm(1, 1/18, 1e-4)),                        # recovery rate
+                                      gamma = abs(rnorm(1, 1/140, 0.1e-4)),                  # loss of immunity rate
+                                      rho = rbeta(1, 22, 5),                                 # binomial sampling prob
+                                      S0 = init_dist[1], I0 = init_dist[2], R0 = init_dist[3]), 
+                           rates = c("beta * I", "mu", "gamma"),                # unlumped transition rates
+                           flow = matrix(c(-1, 1, 0, 
+                                           0, -1, 1,
+                                           1, 0, -1), ncol = 3, byrow = T),  # flow matrix
+                           dat = dat,                                        # dataset
+                           time_var = "time",                                # name of time variable in the dataset
+                           meas_vars = "I",                                  # name of measurement var in the dataset
+                           initdist_prior = c(90, 1.5, 0.01),                # Prior for the initial state probs
+                           r_meas_process = r_meas_process,
+                           d_meas_process = d_meas_process)
+
+epimodel <- init_settings(epimodel,
+                          niter = 10, # this was set to 300000 per chain for the paper
+                          save_params_every = 1, 
+                          save_configs_every = 2, # this was set to 1000 for the chains run in the paper
+                          kernel = list(gibbs_kernel_SIRS),
+                          configs_to_redraw = 3,
+                          ecctmc_method = "unif", # sample paths in inter-event intervals via uniformization
+                          seed = 52787 + chain)
+
+epimodel <- fit_epimodel(epimodel, monitor = FALSE)
+```
+
+After running all three chains for each prior regime, we discarded the first 10 iterations of each chain as burn-in and combined the parameter samples and latent posterior samples from each chain. Posterior median estimates and 95% credible intervals of model parameters were computed, along with the pointwise posterior distribution of the latent process. These are presented in the paper and the supplement.

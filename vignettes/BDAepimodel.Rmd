@@ -1,6 +1,6 @@
 ---
 title: "The BDAepimodel package for fitting stochastic epidemic models to disease prevalence data via Bayesian data augmentaiton"
-author: "Jon Fintzi, Jon Wakefield, Vladimir Minin"
+author: "Jon Fintzi, Xiang Cui, Jon Wakefield, Vladimir Minin"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
@@ -9,7 +9,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-This vignette demonstrates the functionality of the R package implementing the agent-based Bayesian data augmentation algorithm in Fintzi, Wakefield, and Minin (2016). The purpose of this document is to demonstrate how to simulate an epidemic and a dataset using the package, and how to implement the MCMC algorithm to perform inference. For technical details of the algorithm we refer the user to the original paper, which is available on arXiv (https://arxiv.org/abs/1606.07995). The example explored in this vignette (SIR model with binomially distributed prevalence counts) also corresponds to the stochastic epidemic model used in the original paper. The implementation is reasonably fast for progressive, non-recurrent stochastic epidemic models in populations as large as several thousand individuals, but is not yet optimized for large population inference. Future work and extensions, along with a more efficient implementation, will be made available in the 'stemr' package (https://github.com/fintzij/stemr).
+This vignette demonstrates the functionality of the R package implementing the agent-based Bayesian data augmentation algorithm in Fintzi, Wakefield, and Minin (2016). The purpose of this document is to demonstrate how to simulate an epidemic and a dataset using the package, and how to implement the MCMC algorithm to perform inference. For details of the algorithm we refer the user to the original paper, which is available on arXiv (https://arxiv.org/abs/1606.07995). The example explored in this vignette (SIR model with binomially distributed prevalence counts) also corresponds to the stochastic epidemic model used in the original paper. The implementation is reasonably fast for progressive, non-recurrent stochastic epidemic models in populations as large as several thousand individuals, but is not yet optimized for large population inference. Future work and extensions, along with a more efficient implementation, will be made available in the 'stemr' package (https://github.com/fintzij/stemr).
 
 ## Installing and loading the BDAepimodel package
 
@@ -115,43 +115,43 @@ The first function we will write will be an Rcpp helper function for computing t
 ```{r}
 Rcpp::cppFunction("Rcpp::NumericVector getSuffStats(const Rcpp::NumericMatrix& pop_mat, const int ind_final_config) {
                   
-                  // initialize sufficient statistics
-                  int num_inf = 0;       // number of infection events
-                  int num_rec = 0;       // number of recovery events
-                  double beta_suff = 0;  // integrated hazard for the infectivity
-                  double mu_suff = 0;    // integrated hazard for the recovery
+          // initialize sufficient statistics
+          int num_inf = 0;       // number of infection events
+          int num_rec = 0;       // number of recovery events
+          double beta_suff = 0;  // integrated hazard for the infectivity
+          double mu_suff = 0;    // integrated hazard for the recovery
+
+          // initialize times
+          double cur_time = 0;              // current time
+          double next_time = pop_mat(0,0);  // time of the first event
+          double dt = 0;                    // time increment
+          
+          // compute the sufficient statistics - loop through the pop_mat matrix until
+          // reaching the row for the final observation time
+          for(int j = 0; j < ind_final_config - 1; ++j) {
+          
+                    cur_time = next_time;         
+                    next_time = pop_mat(j+1, 0); // grab the time of the next event
+                    dt = next_time - cur_time;   // compute the time increment
+                    
+                    beta_suff += pop_mat(j, 3) * pop_mat(j, 4) * dt; // add S*I*(t_{j+1} - t_j) to beta_suff
+                    mu_suff += pop_mat(j, 4) * dt;                   // add I*(t_{j+1} - t_j) to mu_suff
+                    
+                    // increment the count for the next event
+                    if(pop_mat(j + 1, 2) == 1) {  
+                              num_inf += 1;
+                    } else if(pop_mat(j + 1, 2) == 2) {
+                              num_rec += 1;
+                    }
+          }
                   
-                  // initialize times
-                  double cur_time = 0;   // current time
-                  double next_time = 0;  // time of the next event
-                  
-                  // compute the sufficient statistics - loop through the pop_mat matrix until
-                  // reaching the row for the final observation time
-                  for(int j = 0; j < ind_final_config - 1; ++j) {
-                  
-                  cur_time = next_time;         
-                  next_time = pop_mat(j+1, 0); // grab the time of the next event
-                  
-                  beta_suff += pop_mat(j, 3) * pop_mat(j, 4) * (next_time - cur_time); // add S*I*(t_{j+1} - t_j) to beta_suff
-                  mu_suff += pop_mat(j, 4) * (next_time - cur_time);                   // add I*(t_{j+1} - t_j) to mu_suff
-                  
-                  // if the next event is an infection, increment the number of infections
-                  if(pop_mat(j + 1, 2) == 1) {  
-                  num_inf += 1;
-                  }
-                  
-                  // if the next event is a recovery, increment the number of recoveries
-                  if(pop_mat(j + 1, 2) == 2) {
-                  num_rec += 1;
-                  }
-                  }
-                  
-                  // return the vector of sufficient statistics for the rate parameters
-                  return Rcpp::NumericVector::create(num_inf, beta_suff, num_rec, mu_suff);
-                  }")
+          // return the vector of sufficient statistics for the rate parameters
+          return Rcpp::NumericVector::create(num_inf, beta_suff, num_rec, mu_suff);
+}")
 ```
 
 We next create a function to perform Gibbs updates for the model parameters. To see a template of such a function, call `templates("gibbs")`. This function takes the epimodel list as input and returns an updated epimodel list. Note that the priors for the parameters are implicitly defined in this function (see comments in the code below for priors). Each kernel function that updates rate parameters must include function calls to update the sequence of rate matrices for the latent process, along with their eigen decompositions, as well as the log-likelihood of the latent process (`build_new_irms`, `buildEigenArray`, `calc_pop_likelihood`). These  Each kernel function that updates measurement process parameters must include function calls to update the observed data log-likelihood (`calc_obs_likelihood`). A kernel ends with a call to the `update_params` function and returns the now updated epimodel list. 
+
 ```{r}
 gibbs_kernel <- function(epimodel) {
           
@@ -165,7 +165,7 @@ gibbs_kernel <- function(epimodel) {
           proposal          <- epimodel$params # params is the vector of ALL model parameters
           proposal["beta"]  <- rgamma(1, 0.002 + suff_stats[1], 1 + suff_stats[2])
           proposal["mu"]    <- rgamma(1, 2.1 + suff_stats[3], 4 + suff_stats[4])
-          proposal["rho"]   <- rbeta(1, shape1 = 500/epimodel$popsize + sum(epimodel$obs_mat[,"I_observed"]), shape2 = 1 + sum(epimodel$obs_mat[,"I_augmented"] - epimodel$obs_mat[,"I_observed"]))
+          proposal["rho"]   <- rbeta(1, shape1 = 2/3 + sum(epimodel$obs_mat[,"I_observed"]), shape2 = 1 + sum(epimodel$obs_mat[,"I_augmented"] - epimodel$obs_mat[,"I_observed"]))
           
           
           #### THE FOLLOWING SECTION CAN BE INCLUDED PIECEMEAL AS APPROPRIATE
@@ -173,8 +173,13 @@ gibbs_kernel <- function(epimodel) {
           epimodel            <- build_new_irms(epimodel, proposal)
           
           # update the eigen decompositions - MUST BE INCLUDED WHEN UPDATING RATE PARAMETERS
-          buildEigenArray(eigenvals = epimodel$eigen_values, eigenvecs = epimodel$eigen_vectors, inversevecs = epimodel$inv_eigen_vectors, irm_array = epimodel$irm)
-          
+          buildEigenArray_SIR(real_eigenvals = epimodel$real_eigen_values,
+                              imag_eigenvals = epimodel$imag_eigen_values,
+                              eigenvecs      = epimodel$eigen_vectors, 
+                              inversevecs    = epimodel$inv_eigen_vectors, 
+                              irm_array      = epimodel$irm, 
+                              n_real_eigs    = epimodel$n_real_eigs, 
+                              initial_calc   = FALSE)          
           # get log-likelihoods under the new parameters
           # MUST BE INCLUDED WHEN UPDATING RATE PARAMETERS
           pop_likelihood_new  <- calc_pop_likelihood(epimodel, log = TRUE) #### NOTE - log = TRUE
@@ -183,8 +188,14 @@ gibbs_kernel <- function(epimodel) {
           obs_likelihood_new  <- calc_obs_likelihood(epimodel, params = proposal, log = TRUE) #### NOTE - log = TRUE
           
           # update parameters, likelihood objects, and eigen decompositions
-          epimodel            <- update_params(epimodel, params = proposal, pop_likelihood = pop_likelihood_new, obs_likelihood = obs_likelihood_new)
-          
+          epimodel <-
+                    update_params(
+                    epimodel,
+                    params = proposal,
+                    pop_likelihood = pop_likelihood_new,
+                    obs_likelihood = obs_likelihood_new
+                    )
+                    
           return(epimodel)
 }
 
@@ -227,7 +238,8 @@ epimodel <- init_settings(epimodel,
                           save_params_every = 1,             # Thinning interval for the parameters.
                           save_configs_every = 5,            # Thinning interval for the full latent paths.
                           kernel = list(gibbs_kernel),       # Transition kernels, passed as a list.
-                          configs_to_redraw = 10)            # Number of subject-paths to sample per MCMC iteration.
+                          configs_to_redraw = 10,            # Number of subject-paths to sample per MCMC iteration.
+                          ecctmc_method = "unif")            # Endpoint conditioned CTMC paths via uniformization
 
 epimodel <- fit_epimodel(epimodel, monitor = FALSE)
 
@@ -239,10 +251,12 @@ head(epimodel$results$params)
 ts.plot(epimodel$results$params[,"beta"], ylab = expression(beta))
 plot(hist(epimodel$results$params[,"rho"]), main = "Binomial sampling probability")
 ```
+
 We may also be interested in summarizing the posterior distribution of the latent process. The function used to fit the stochastic epidemic model also caches the full latent paths at intervals specified by the `save_configs_every` argument to the MCMC settings funciton. We can plot the pointwise posterior distribution using the supplied plotting convenience function, `plot_latent_posterior`.
 
 ```{r, fig.cap=""}
 plot_latent_posterior(epimodel, 
                       states = "I", times = epimodel$obstimes, cm = "mn")
 ```
+
 Finally, we can access the log-likelihood at each MCMC iteration via `epimodel$results$log_likelihood`, and the acceptances, including the acceptances for latent path proposals, via `epimodel$results$log_likelihood`. We accepted roughly `r round(mean(epimodel$results$accepts[,"paths"]), digits = 2)*100` percent of the propossed latent path perturbations. 

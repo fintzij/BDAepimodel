@@ -118,20 +118,20 @@ BEGIN_RCPP
 END_RCPP
 }
 // populationLikelihood
-double populationLikelihood(const arma::mat& pop_mat, Rcpp::NumericVector& irm_array, const arma::vec& initdist, const arma::uvec& initdist_param_inds, const arma::umat& flow_inds, const arma::uvec& keys, const arma::uvec& inds, bool loglik);
-RcppExport SEXP BDAepimodel_populationLikelihood(SEXP pop_matSEXP, SEXP irm_arraySEXP, SEXP initdistSEXP, SEXP initdist_param_indsSEXP, SEXP flow_indsSEXP, SEXP keysSEXP, SEXP indsSEXP, SEXP loglikSEXP) {
+double populationLikelihood(const arma::mat& pop_mat, const arma::cube& irm, const arma::vec& initdist, const arma::uvec& initdist_param_inds, const arma::umat& flow_inds, const arma::uvec& keys, const arma::uvec& inds, bool loglik);
+RcppExport SEXP BDAepimodel_populationLikelihood(SEXP pop_matSEXP, SEXP irmSEXP, SEXP initdistSEXP, SEXP initdist_param_indsSEXP, SEXP flow_indsSEXP, SEXP keysSEXP, SEXP indsSEXP, SEXP loglikSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type pop_mat(pop_matSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector& >::type irm_array(irm_arraySEXP);
+    Rcpp::traits::input_parameter< const arma::cube& >::type irm(irmSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type initdist(initdistSEXP);
     Rcpp::traits::input_parameter< const arma::uvec& >::type initdist_param_inds(initdist_param_indsSEXP);
     Rcpp::traits::input_parameter< const arma::umat& >::type flow_inds(flow_indsSEXP);
     Rcpp::traits::input_parameter< const arma::uvec& >::type keys(keysSEXP);
     Rcpp::traits::input_parameter< const arma::uvec& >::type inds(indsSEXP);
     Rcpp::traits::input_parameter< bool >::type loglik(loglikSEXP);
-    rcpp_result_gen = Rcpp::wrap(populationLikelihood(pop_mat, irm_array, initdist, initdist_param_inds, flow_inds, keys, inds, loglik));
+    rcpp_result_gen = Rcpp::wrap(populationLikelihood(pop_mat, irm, initdist, initdist_param_inds, flow_inds, keys, inds, loglik));
     return rcpp_result_gen;
 END_RCPP
 }

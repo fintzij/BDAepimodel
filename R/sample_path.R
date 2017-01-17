@@ -7,52 +7,90 @@
 #' 
 #' @export
 
-sample_path <- function(epimodel, subject) {
+sample_path <- function(epimodel) {
 
-          # if the model is progressive and has an absorbing state, only need to
-          # sample times of state transition in intervals with a state change
-          if(epimodel$progressive & epimodel$absorbing_states) {
+          if(epimodel$absorbing_states) {
                     
-                    intervals <- which(diff(epimodel$subj_path[1:epimodel$ind_final_config], lag = 1) != 0)
-                    path      <- vector(mode = "list", length = length(intervals))
-                    
-                    for(s in seq_along(path)) {
+                    # instatiate the vector intervals where the subject path needs 
+                    # to be sampled and the matrix for storing the jumps
+                    if(epimodel$progressive) {
                               
-                              path[[s]] <- sample_path_in_interval(epimodel, subject, interval = intervals[s])
+                              intervals    <- which(diff(epimodel$subj_path[1:epimodel$ind_final_config], lag = 1) != 0)
+                              subject_path <- matrix(0.0, nrow = epimodel$num_states, ncol = 3)
                               
-                    }
-                    
-          
-          # if the model has an absorbing state, but is not progressive, no need
-          # to sample times of transition after absorbtion
-          } else if(epimodel$absorbing_states & !epimodel$progressive) {
-                    
-                    intervals  <- setdiff(1:(epimodel$ind_final_config - 1),
-                                        which(epimodel$subj_path[1:epimodel$ind_final_config] %in% epimodel$absorbing_states)[1]:(epimodel$ind_final_config - 1))
-                    
-                    path <- vector(mode = "list", length = length(intervals))
-                    
-                    for(s in seq_along(path)) {
-                              
-                              path[[s]] <- sample_path_in_interval(epimodel, subject, interval = intervals[s])
-                              
-                    }
-                    
-                    
-          # if the model does not have an absorbing state, sample paths in all
-          # inter-event intervals
+                    } else  {
+                              intervals <- setdiff(1:(epimodel$ind_final_config - 1),
+                                                  which(epimodel$subj_path[1:epimodel$ind_final_config] %in% 
+                                                                  epimodel$absorbing_states)[1]:(epimodel$ind_final_config - 1))
+                              subject_path <- matrix(0.0, nrow = epimodel$num_states, ncol = 3)
+                    } 
           } else {
-                    path <- vector(mode = "list", length = epimodel$ind_final_config-1)
+                    intervals    <- seq(1, epimodel$ind_final_config - 1)
+                    subject_path <- matrix(0.0, nrow = 3 * epimodel$num_states, ncol = 3)
+          }
                     
-                    for(s in 1:(epimodel$ind_final_config - 1)) {
-                              path[[s]] <- sample_path_in_interval(epimodel, subject, interval = s)
+          # initial row index
+          row_ind   <- 0
+          n_jumps   <- 0
+          path_rows <- nrow(subject_path)
+
+          # sample the path in each interval 
+          for(s in intervals) {
+                    
+                    init_state  <- epimodel$subj_path[s]
+                    final_state <- epimodel$subj_path[s + 1]
+                    
+                    init_time   <- epimodel$pop_mat[s, "time"]
+                    final_time  <- epimodel$pop_mat[s + 1, "time"]
+                    
+                    irm_key     <- epimodel$keys[s]
+                    
+                    # sample the path within the interval conditional on the state at the endpoints
+                    if(epimodel$sim_settings$ecctmc_method == "mr") {
+                              path <- ECctmc::sample_path_mr(init_state,
+                                                             final_state,
+                                                             init_time,
+                                                             final_time,
+                                                             epimodel$irm[, , irm_key])
+                    } else {
+                              path <- ECctmc::sample_path_unif3(init_state,
+                                                                final_state,
+                                                                init_time,
+                                                                final_time,
+                                                                epimodel$irm[, , irm_key],
+                                                                epimodel$tpms[, , s])
                     }
                     
+                    # compute the number of jumps
+                    n_jumps <- nrow(path) - 2
+                    
+                    # insert jumps into the subject path matrix
+                    if(n_jumps) {
+                              
+                              # add rows if necessary
+                              if(row_ind + n_jumps > nrow(subject_path)) {
+                                        subject_path <- rbind(subject_path, matrix(0.0, max(n_jumps, 2*epimodel$num_states), 3))
+                              }
+                              
+                              # get indices for the copy
+                              to_inds   <- row_ind + seq_len(n_jumps) # indices in the subject_path matrix
+                              from_inds <- seq_len(n_jumps) + 1       # indices in the path matrix
+                              
+                              # insert the transition times and states into the sample path
+                              subject_path[to_inds, c(1,3)] <- path[from_inds,]
+                              
+                              # now identify the event codes
+                              for(t in seq_len(n_jumps)) {
+                                        init_state <- path[from_inds[t] - 1, 2]
+                                        next_state <- path[from_inds[t], 2]
+                                        subject_path[to_inds[t], 2] <- which((epimodel$flow[, init_state] == -1) & 
+                                                                                       (epimodel$flow[, next_state] == 1))
+                              }
+                              
+                              # increment the row index
+                              row_ind <- row_ind + n_jumps
+                    }
           }
           
-          if(!is.null(path)) {
-                    path <- do.call(rbind, path)
-          }
-          
-          return(path)
+          return(subject_path[seq_len(row_ind),,drop = FALSE])
 }

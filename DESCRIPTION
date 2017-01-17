@@ -14,6 +14,7 @@ Imports:
     reshape2,
     pryr,
     MCMCpack,
+    ECctmc,
     MASS,
     Rcpp (>= 0.12.7),
     RcppArmadillo
