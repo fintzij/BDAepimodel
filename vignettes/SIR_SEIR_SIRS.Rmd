@@ -15,7 +15,7 @@ library(Rcpp)
 ```
 
 
-This vignette contains code to reproduce the three stochastic epidemic models presented in the first simulation of Fintzi et al. (2016). We fit SIR, SEIR, and SIRS models to binomially distributed prevalence counts. Additional details on the use of the BDAepimodel package and how to extract the results from fitted objects are provided in the "BDAepimodel" vignette. 
+This vignette contains code to reproduce the three stochastic epidemic models presented in the first simulation of Fintzi et al. (2016). We fit SIR, SEIR, and SIRS models to binomially distributed prevalence counts. Additional details on the use of the BDAepimodel package and how to extract the results from fitted objects are provided in the "BDAepimodel" vignette. Details on fitting the models in `pomp` are provided in the "SIR_SEIR_SIRS_pomp" vignette.
 
 ## Analyzing an epidemic with SIR dynamics
 We simulated an epidemic with SIR dynamics in a population of 750 individuals, 90% of whom were initially susceptible, 3% of whom were initially infected, and 7% of whom were immune. The per–contact infectivity rate was $\beta = 0.00035$ and the average infectious period  duration was $1/\mu = 7 $ days, which together correspond to a basic reproduction number of $R_0 = \beta N / µ = 1.84$. Binomially sampled prevalence was observed at one week intervals over a period of three months with sampling probability $\rho=0.2$. 
