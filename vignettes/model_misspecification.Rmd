@@ -30,7 +30,7 @@ kable(tab, caption = "Time varying dynamics. Effective reproductive numbers are 
 
 The data are simulated as follows:
 
-```{r SIR_sim, warning=F, cache = T}
+```{r SIR_sim, warning=F, cache = F}
 library(BDAepimodel)
 library(Rcpp)
 set.seed(1834)
@@ -203,7 +203,7 @@ abline(v = c(183, 729, 1163), col = "red")
 
 Having simulated a dataset, we can now proceed to fit SIR and SEIR models to the data. In fitting each model, the first step is to define a transition kernel for the model parameters. The parameters are updated from their univariate full conditional distributions via Gibbs sampling (prior distributions indicated in comments in the code below). The following code implements the transition kernel and a helper function for computing the sufficient statistics:
 
-```{r SIR_kernel, warning = F, cache=T}
+```{r SIR_kernel, warning = F, cache=F}
 # helper function for computing the sufficient statistics for the SIR model rate parameters
 Rcpp::cppFunction("Rcpp::NumericVector getSuffStats_SIR(const Rcpp::NumericMatrix& pop_mat, const int ind_final_config) {
                   
@@ -382,7 +382,7 @@ gibbs_kernel_SEIR <- function(epimodel) {
 
 We now re-initialize an epimodel object with the dataset, set the RNG seed, and run each MCMC chain as follows. Note that the chain was set by a batch script that varied the value of `chain` (chain = 1,2,3). 
 
-```{r SIR_inference, warning=F, cache=T, messages = F}
+```{r SIR_inference, warning=F, cache=F, messages = F}
 chain <- 1 # this was set by a batch script that ran chains 1, 2, and 3 in parallel
 set.seed(52787 + chain)
 
