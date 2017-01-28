@@ -1,5 +1,5 @@
 ---
-title: "Fitting misspecified SIR and SEIR stochastic epidemic models"
+title: "Effect of population size misspecification on inference"
 author: "Jon Fintzi, Xiang Cui, Jon Wakefield, Vladimir Minin"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
