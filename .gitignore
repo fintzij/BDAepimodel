@@ -7,3 +7,9 @@ Simulations/
 *.o
 *.so
 *.dll
+*.RData
+*.rdb
+*.rdx
+*.pdf
+vignettes/model_misspecification_cache/html/__packages
+vignettes/popsize_misspecification_cache/html/__packages
