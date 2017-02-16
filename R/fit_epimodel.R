@@ -7,7 +7,6 @@
 #'
 #' @return list containing the epimodel object and a results list.
 #' @export
-#'
 fit_epimodel <- function(epimodel, monitor = FALSE) {
 
           # check that the simulation settings have been set
@@ -110,8 +109,7 @@ fit_epimodel <- function(epimodel, monitor = FALSE) {
                               # and obs_mat, and update the tpm sequences to
                               # reflect the removal.
                               epimodel <- remove_trajectory(epimodel, subject = subjects[j], save_path = TRUE)
-
-                              if(any(epimodel$pop_mat[2:epimodel$ind_final_config-1,"I"] == 0)) stop()
+                              
                               # TPM sequence
                               tpmSeqs(
                                         tpms            = epimodel$tpms,

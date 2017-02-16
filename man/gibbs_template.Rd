@@ -16,4 +16,3 @@ Template for Gibbs updates - example given for SIR model
 Template for writing a MH transition kernel, example based on SIR model with
 Gibbs updates for the sampling parameter.
 }
-

@@ -25,4 +25,3 @@ list containing the unordered eigenvalues, the matrix of
 Compute the eigen decomposition for a rate matrix, and either instatiate it 
 or update an existing decomposition.
 }
-

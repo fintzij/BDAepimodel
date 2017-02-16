@@ -19,4 +19,3 @@ of log(R_0), and log(mu). See package vignette for additional details. The
 function for transforming from the estimation scale back to the model scale
 should be similarly specified.
 }
-

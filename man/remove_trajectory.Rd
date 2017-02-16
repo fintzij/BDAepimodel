@@ -22,4 +22,3 @@ remove_trajectory(epimodel, subject, save_path)
 Remove the contribution of a subject from the compartment counts in the
 \code{config_mat} and \code{obs_mat} objects.
 }
-

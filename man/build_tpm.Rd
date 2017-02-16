@@ -24,4 +24,3 @@ transition probability matrix
 If (t1 - t0) is small, there could be numerical underflow leading to negative
 entries in the tpm. If so, the negative values are set to 0.
 }
-

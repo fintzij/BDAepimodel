@@ -20,4 +20,3 @@ character vector of keys
 \description{
 Generate the keys for indexing into the .irm and .eigen environments.
 }
-

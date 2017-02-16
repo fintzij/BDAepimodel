@@ -32,4 +32,3 @@ popsize <- 100
 
 epidemic <- simulate_SIR(obstimes, params, popsize)
 }
-

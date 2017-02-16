@@ -18,4 +18,3 @@ Instatiated rate matrix in the .irm environment and its eigen
 Checks that all of the IRMs that are required exist in the irm array
 by checking keys against the irm object list.
 }
-

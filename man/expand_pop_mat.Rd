@@ -25,4 +25,3 @@ configuration matrix. This function is designed to operate within an epimodel
 environment and therefore makes multiple replacements within that 
 environment.
 }
-

@@ -22,4 +22,3 @@ measurement process likelihood or log-likelihood.
 Calculate likelihood for the population level trajectory and the measurement
 process.
 }
-

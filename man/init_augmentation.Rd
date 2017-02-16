@@ -17,4 +17,3 @@ initialized epimodel object
 Generate an initial configuration that is concordant with the data, updating 
 the configuration and observation matrices.
 }
-

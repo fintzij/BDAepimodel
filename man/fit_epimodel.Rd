@@ -20,4 +20,3 @@ list containing the epimodel object and a results list.
 Main wrapper to fit a stochastic epimodel using the Bayesian data
 augmentation algorithm.
 }
-

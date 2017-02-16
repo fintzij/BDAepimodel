@@ -8,9 +8,7 @@
 #' @param direction "removal" or "insertion"
 #'   
 #' @return updated lists of tpms within the .epimodel environment
-#' 
 #' @export
-
 update_tpms <- function(epimodel, subject, direction) {
           
           # get indices for subject-related events in the configuration matrix
@@ -50,6 +48,5 @@ update_tpms <- function(epimodel, subject, direction) {
                     
                     # update the transition probability matrix sequences
                     build_tpm_seqs(epimodel)
-          
           }
 }

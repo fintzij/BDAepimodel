@@ -15,4 +15,3 @@ character vector for mapping state codes to compartment names.
 \description{
 Insert a lookup table to map subjects at risk for each transition to the appropriate rate code label
 }
-

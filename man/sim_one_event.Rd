@@ -28,4 +28,3 @@ Internal function for \code{simulate_epimodel}, which is its parent
 environment. This function uses the rate_mat, t, and epimodel objects in its
 parent environment, modifying them there.
 }
-

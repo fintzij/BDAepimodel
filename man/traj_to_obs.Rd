@@ -15,4 +15,3 @@ data matrix for compartment counts at observation times.
 \description{
 Instatiates a data matrix based on a configuration matrix. The code in this
 }
-

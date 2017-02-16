@@ -65,7 +65,7 @@ points(x = epimodel$dat[,"time"], y = epimodel$dat[,"I"])
 
 The next step is to define a transition kernel for the model parameters. The parameters are updated from their univariate full conditional distributions via Gibbs sampling (prior distributions presented in the code below). The prior regimes were set using an external batch function. The following code implements the transition kernel and a helper function for computing the sufficient statistics:
 
-```{r SIR_kernel, warning = F, cache=T}
+```{r SIR_kernel, warning = F, cache=F}
 # define the hyperprior parameters for the rates and sampling probability
 beta_prior <- matrix(c(3, 10000, 0.3, 1000), nrow = 2); colnames(beta_prior) <- c("informative", "diffuse")
 mu_prior   <- matrix(c(3, 20, 0.1, 0.8), nrow = 2); colnames(mu_prior) <- c("informative", "diffuse")
@@ -170,7 +170,7 @@ gibbs_kernel <- function(epimodel) {
 
 We now initialize an epimodel object with the dataset, set the RNG seed, and run each MCMC chain as follows. Note that the value for chain (chain = 1,2,3) was set by an external batch script. 
 
-```{r SIR_inference, warning=F, cache=T, messages = F}
+```{r SIR_inference, warning=F, cache=F, messages = F}
 chain <- 1 # set by an external script
 
 set.seed(52787 + chain)

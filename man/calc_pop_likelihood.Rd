@@ -21,4 +21,3 @@ vector with log-likelihood of the population level trajectory and
 \description{
 Calculate likelihood for the population level trajectory
 }
-

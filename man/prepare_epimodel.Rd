@@ -15,4 +15,3 @@ epimodel environment
 \description{
 Prepares an epimodel environment.
 }
-

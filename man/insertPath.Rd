@@ -25,4 +25,3 @@ updated bookeeping objects
 Insert subject transitions into the population-level and subject level 
 bookkeeping matrices.
 }
-

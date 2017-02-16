@@ -16,4 +16,3 @@ template for Metropolis-Hastings updates - example given for SIR model
 Template for writing a MH transition kernel, example based on SIR model with
 MH proposals for infectivity and recovery parameters on log transformed scale.
 }
-

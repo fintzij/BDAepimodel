@@ -23,4 +23,3 @@ Updated eigenvalues, eigenvectors, and inverse matrices
 Construct a transition probability matrix for a rate matrix with complex 
 eigenvalues using the real canonical form of the decomposition.
 }
-

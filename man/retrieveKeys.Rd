@@ -28,4 +28,3 @@ Vector of keys to index into an IRM array.
 Get the irm keys for the compartment counts in a population level
 bookkeeping matrix
 }
-

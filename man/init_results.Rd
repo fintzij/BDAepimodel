@@ -18,4 +18,3 @@ list containing the matrix of posterior parameter draws,
 \description{
 Initialize list for storing results
 }
-

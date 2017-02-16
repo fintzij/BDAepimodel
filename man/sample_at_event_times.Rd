@@ -8,6 +8,8 @@ sample_at_event_times(path, epimodel)
 }
 \arguments{
 \item{path}{vector corresponding to a subject path.}
+
+\item{epimodel}{list of bookkeeping and model objects.}
 }
 \value{
 updated path vector of subject level trajectories
@@ -15,4 +17,3 @@ updated path vector of subject level trajectories
 \description{
 Sample the infection status at times of state transition of other subjects
 }
-

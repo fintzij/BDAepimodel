@@ -28,4 +28,3 @@ extended path vector
 Insert subject transitions into the population-level and subject level 
 bookkeeping matrices.
 }
-

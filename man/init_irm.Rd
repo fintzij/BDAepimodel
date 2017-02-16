@@ -15,4 +15,3 @@ epimodel object with initialized objects
 \description{
 Initialize an arrays for storing matrices of rates, eigenvectors, and inverse matrices for eigenvectors, along with a matrix of eigenvalues.
 }
-

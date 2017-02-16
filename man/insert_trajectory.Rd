@@ -8,6 +8,8 @@ reflected in the configuration matrix.}
 insert_trajectory(epimodel, subject, reinsertion)
 }
 \arguments{
+\item{epimodel}{list of bookkeeping and model objects.}
+
 \item{subject}{character string for subject ID code}
 
 \item{reinsertion}{TRUE/FALSE for whether the trajectory is to be be
@@ -19,4 +21,3 @@ updated epimodel object
 \description{
 This function also updates several bookkeeping objects - .ind_final_config
 }
-

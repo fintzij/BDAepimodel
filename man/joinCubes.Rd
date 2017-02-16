@@ -15,4 +15,3 @@ new array joining cubes
 \description{
 Join two armadillo cubes
 }
-

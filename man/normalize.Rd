@@ -15,4 +15,3 @@ normalized object
 \description{
 x <- x/sum(x)
 }
-

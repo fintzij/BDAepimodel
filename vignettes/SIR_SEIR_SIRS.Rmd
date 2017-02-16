@@ -22,7 +22,7 @@ We simulated an epidemic with SIR dynamics in a population of 750 individuals, 9
 
 The data are simulated as follows:
 
-```{r SIR_sim, warning=F, cache = T}
+```{r SIR_sim, warning=F, cache = F}
 # set the seed for reproducibility!
 set.seed(1834)
 
@@ -67,7 +67,7 @@ true_path <- epimodel$pop_mat
 
 Having simulated a dataset, we can now proceed to fit an SIR model to the data. The first step is to define a transition kernel for the model parameters. We will update parameters from their univariate full conditional distributions via Gibbs sampling. We assign the following priors for the model parameters: $\beta\sim Gamma(0.3, 1000)$, $\mu\sim Gamma(1, 8)$, $\rho\sim Beta(2, 7)$, and $\mathbf{\mathrm{p}}_{t_1}\sim Dirichlet(90, 2, 5)$. The following code implements the transition kernel and a helper function for computing the sufficient statistics:
 
-```{r SIR_kernel, warning = F, cache=T}
+```{r SIR_kernel, warning = F, cache=F}
 # helper function for computing the sufficient statistics for the SIR model rate parameters
 Rcpp::cppFunction("Rcpp::NumericVector getSuffStats_SIR(const Rcpp::NumericMatrix& pop_mat, const int ind_final_config) {
                   
@@ -161,7 +161,7 @@ gibbs_kernel_SIR <- function(epimodel) {
 
 We now re-initialize the epimodel object with the dataset, set the RNG seed, and run each MCMC chain as follows. Note that the chain was set by a batch script that varied the value of `chain`. 
 
-```{r SIR_inference, warning=F, cache=T, messages = F}
+```{r SIR_inference, warning=F, cache=F, messages = F}
 chain <- 1 # this was set by a batch script that ran chains 1, 2, and 3 in parallel
 set.seed(52787 + chain)
 
@@ -201,7 +201,7 @@ We simulated an epidemic with SEIR dynamics in a population of 500 individuals. 
 
 The data are simulated as follows:
 
-```{r SEIR_sim, warning=F, cache = T}
+```{r SEIR_sim, warning=F, cache = F}
 set.seed(1834)
 
 # declare the functions for simulating from and evaluating the log-density of the measurement process
@@ -251,7 +251,7 @@ points(x = epimodel$dat[,"time"], y = epimodel$dat[,"I"])
 
 Having simulated a dataset, we can now proceed to fit an SEIR model to the data. The first step is to define a transition kernel for the model parameters. We will update parameters from their univariate full conditional distributions via Gibbs sampling. We assign the following priors for the model parameters: $\beta\sim Gamma(1, 10000)$, $\gamma \sim Gamma(1, 11)$, $\mu\sim Gamma(3.2, 100)$, $\rho\sim Beta(3.5, 6.5)$, and $\mathbf{\mathrm{p}}_{t_1}\sim Dirichlet(100, 0.1, 0.4, 0.01)$. The following code implements the transition kernel and a helper function for computing the sufficient statistics:
 
-```{r SEIR_kernel, warning = F, cache=T}
+```{r SEIR_kernel, warning = F, cache=F}
 Rcpp::cppFunction("Rcpp::NumericVector getSuffStats_SEIR(const Rcpp::NumericMatrix& pop_mat, const int ind_final_config) {
                   
           // initialize sufficient statistics
@@ -352,7 +352,7 @@ gibbs_kernel_SEIR <- function(epimodel) {
 
 We now re-initialize the epimodel object with the dataset, set the RNG seed, and run each MCMC chain as follows. Note that the chain was set by a batch script that varied the value of `chain`. 
 
-```{r SEIR_inference, warning=F, cache=T, messages = F}
+```{r SEIR_inference, warning=F, cache=F, messages = F}
 chain <- 1 # this was set by a batch script that ran chains 1, 2, and 3 in parallel
 set.seed(52787 + chain)
 
@@ -396,7 +396,7 @@ We simulated an epidemic with SIRS dynamics in a population of 200 individuals, 
 
 The data are simulated as follows:
 
-```{r SIRS_sim, warning=F, cache = T}
+```{r SIRS_sim, warning=F, cache = F}
 r_meas_process <- function(state, meas_vars, params){
           # in our example, rho will be the name of the binomial sampling probability parameter.
           # this function returns a matrix of observed counts
@@ -441,7 +441,7 @@ points(x = epimodel$dat[,"time"], y = epimodel$dat[,"I"])
 
 Having simulated a dataset, we can now proceed to fit an SIRS model to the data. The first step is to define a transition kernel for the model parameters. We will update parameters from their univariate full conditional distributions via Gibbs sampling. We assign the following priors for the model parameters: $\beta\sim Gamma(0.1, 100)$, $\mu\sim Gamma(1.8, 14)$, $\gamma \sim Gamma(0.0625, 10)$,  $\rho\sim Beta(5, 1)$, and $\mathbf{\mathrm{p}}_{t_1}\sim Dirichlet(90, 1.5, 0.01)$. The following code implements the transition kernel and a helper function for computing the sufficient statistics:
 
-```{r SIRS_kernel, warning = F, cache=T}
+```{r SIRS_kernel, warning = F, cache=F}
 # helper function for computing the sufficient statistics for the SIR model rate parameters
 Rcpp::cppFunction("Rcpp::NumericVector getSuffStats_SIRS(const Rcpp::NumericMatrix& pop_mat, const int ind_final_config) {
                   
@@ -542,7 +542,7 @@ gibbs_kernel_SIRS <- function(epimodel) {
 
 We now re-initialize the epimodel object with the dataset, set the RNG seed, and run each MCMC chain as follows. Note that the chain was set by a batch script that varied the value of `chain`. 
 
-```{r SIRS_inference, warning=F, cache=T}
+```{r SIRS_inference, warning=F, cache=F}
 chain <- 1 # this was set by a batch script that ran chains 1, 2, and 3 in parallel
 
 init_dist <- c(rnorm(3, c(0.98, 0.01, 0.001), 1e-5)); init_dist <- abs(init_dist) / sum(abs(init_dist))

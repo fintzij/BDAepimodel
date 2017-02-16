@@ -95,4 +95,3 @@ epimodel <- simulate_epimodel(epimodel)
   Gillespie DT (1977). “Exact stochastic simulation of coupled chemical
   reactions.” The Journal of Physical Chemistry, *81*(25), pp. 2340- 2361.}
 }
-

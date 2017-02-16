@@ -19,4 +19,3 @@ updated bookkeeping matrix with a valid path (no update if constant
 \description{
 Forward path sampling.
 }
-

@@ -16,4 +16,3 @@ updated observation matrix and obs_time_inds vector in the epimodel
 \description{
 Update the observation matrix and the indices of observation times.
 }
-

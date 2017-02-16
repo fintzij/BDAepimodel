@@ -19,4 +19,3 @@ to be all FALSE. The elements of this vector needing to be updated are then
 set to true as each subject level trajectory is re-drawn, and when parameters
 are updated.
 }
-

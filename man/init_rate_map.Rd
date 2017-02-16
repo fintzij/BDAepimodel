@@ -23,4 +23,3 @@ binary index matrix indicating which changes in each compartment
 Called internally before rates are parsed when an epimodel object is 
 initialized.
 }
-

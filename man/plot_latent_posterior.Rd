@@ -32,4 +32,3 @@ plot of the posterior distribution of the latent paths
 \description{
 Plot the posterior distribution of the latent paths for measured states.
 }
-

@@ -24,4 +24,3 @@ param_names <- c("beta", "mu")
 extract_rate_fcns(rates, states, param_names)      
        
 }
-

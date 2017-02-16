@@ -28,4 +28,3 @@ tmax <- 5
 init_pop_traj(init_state, tmax)
 
 }
-

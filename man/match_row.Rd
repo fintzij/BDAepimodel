@@ -24,4 +24,3 @@ vector of logicals or indices
 Returns either a logical vector of indices for which row(s) in a table match 
 a given vector or rows in a matrix.
 }
-

@@ -19,4 +19,3 @@ The empirical covariance matrix is tuned either by taking weighted averages
 or by re-tuning the scale multiple until the acceptance rate is within the
 desired range.
 }
-

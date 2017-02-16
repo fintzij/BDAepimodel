@@ -6,6 +6,9 @@
 \usage{
 reinsert_path(epimodel, subject)
 }
+\arguments{
+\item{epimodel}{list of bookkeeping and model objects.}
+}
 \value{
 updated configuration matrix
 }
@@ -13,4 +16,3 @@ updated configuration matrix
 Note that this gets called after the proposed path has been removed.
 Therefore, .ind_final_config is already updated.
 }
-

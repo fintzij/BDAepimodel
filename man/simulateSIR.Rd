@@ -23,4 +23,3 @@ updated bookeeping objects
 simulateSIR function, included in this file because of difficulty including sample.h in two separate files.
 Rcpp code to simulate a general stochastic epidemic and binomial counts.
 }
-

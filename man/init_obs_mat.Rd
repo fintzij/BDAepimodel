@@ -15,4 +15,3 @@ Bookkeeping object for observed and true counts at observation times.
 \description{
 Initializes a bookkeeping object for the observed and augmented data.
 }
-

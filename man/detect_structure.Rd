@@ -23,4 +23,3 @@ never returns to a previous state. Therefore, if the model is progressive and
 has an absorbing state, only the transition times in intervals where the
 state has changed need to be resampled.
 }
-

@@ -19,4 +19,3 @@ updated array of rate matrices
 \description{
 Update an array of rate matrices with the current rates
 }
-

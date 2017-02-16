@@ -6,10 +6,12 @@
 \usage{
 init_trajectories(epimodel)
 }
+\arguments{
+\item{epimodel}{list of bookkeeping and model objects.}
+}
 \value{
 epimodel object with initialized configuration matrix
 }
 \description{
 Initialize a set of trajectories if an initial set of paths not provided.
 }
-

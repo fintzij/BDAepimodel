@@ -17,4 +17,3 @@ vector of indices
 \description{
 Get the indices for the transition probability matrices to be rebuilt
 }
-

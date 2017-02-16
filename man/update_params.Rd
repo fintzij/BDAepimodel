@@ -21,4 +21,3 @@ Replace the vector of parameters in an epimodel object with new values and
 update the population level likelihood, the measurement process 
 likelihood, and the eigen decomposition objects for irms.
 }
-

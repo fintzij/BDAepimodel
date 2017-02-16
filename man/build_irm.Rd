@@ -16,4 +16,3 @@ environment with rate matrices
 \description{
 Each rate matrix in the array has dimension \code{num_states x num_states}.
 }
-

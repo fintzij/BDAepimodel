@@ -23,4 +23,3 @@ Updated array of FB matrices
 \description{
 Construct forward-backward matrices
 }
-

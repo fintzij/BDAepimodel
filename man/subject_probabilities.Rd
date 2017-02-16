@@ -17,4 +17,3 @@ vector of probabilities according to which subject IDs are sampled
 Build a vector of probabilities according to which subjects should be
 resampled.
 }
-

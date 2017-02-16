@@ -17,4 +17,3 @@ epimodel object with updated rate array
 \description{
 Build a new array of rate matrices
 }
-

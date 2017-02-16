@@ -17,4 +17,3 @@ updated matrix of emission probabilities
 \description{
 Updates the matrix of emission probabilities
 }
-

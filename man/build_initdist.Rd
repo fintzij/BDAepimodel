@@ -17,4 +17,3 @@ vector of initial state probabilities for a single subject
 Construct the vector with initial state probabilities for a single subject at
 time t0.
 }
-

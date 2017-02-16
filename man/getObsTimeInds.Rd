@@ -17,4 +17,3 @@ indices of observation times
 \description{
 Get the indices of observation times in the population level bookkeeping mtx.
 }
-

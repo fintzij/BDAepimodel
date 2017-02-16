@@ -7,6 +7,8 @@
 draw_trajec(epimodel, subject, iter)
 }
 \arguments{
+\item{epimodel}{list of bookkeeping and model objects.}
+
 \item{iter}{iteration number}
 }
 \value{
@@ -20,4 +22,3 @@ transition times of other subjects. 3) Sample exact times of transition
 within inter-event intervals where needed. 4) Accept/Reject the proposed 
 trajectory via Metropolis-Hastings.
 }
-

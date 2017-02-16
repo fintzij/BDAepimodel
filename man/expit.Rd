@@ -15,4 +15,3 @@ expit of x
 \description{
 expit(x) = 1/(1+exp(x))
 }
-

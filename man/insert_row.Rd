@@ -24,4 +24,3 @@ x <- matrix(1:9, nrow = 3)
 insert_row(x, 2, c(5, 27, 87))
 
 }
-

@@ -17,4 +17,3 @@ matrix with rows permuted according to ord
 \description{
 Reorder the rows of a matrix
 }
-

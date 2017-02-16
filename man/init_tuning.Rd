@@ -57,4 +57,3 @@ Initialize tuning for M-H kernels.
                  tunewt = 0,
                  target_accept = 0.15, 0.5)}
 }
-

@@ -22,4 +22,3 @@ plot of trajectories and/or data
 \description{
 Plot the current trajectory and data in an epimodel object (uses ggplot2)
 }
-

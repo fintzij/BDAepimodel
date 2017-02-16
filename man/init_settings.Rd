@@ -89,4 +89,3 @@ bookkeeping list
 \description{
 Initialize a bookkeeping list of MCMC settings.
 }
-

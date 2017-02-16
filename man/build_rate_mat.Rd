@@ -38,4 +38,3 @@ rate matrix of dimension \code{num_states x num_states}
 \description{
 Construct a single rate matrix from a vector of rates and a flow matrix.
 }
-

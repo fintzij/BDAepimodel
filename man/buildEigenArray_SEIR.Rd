@@ -30,4 +30,3 @@ Updated eigenvalues, eigenvectors, and inverse matrices
 Update eigen values, vectors, and inverse matrices analytically for the SEIR 
 model
 }
-

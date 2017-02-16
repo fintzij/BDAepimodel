@@ -21,4 +21,3 @@ Updated eigenvalues, eigenvectors, and inverse matrices
 \description{
 Update eigen values, vectors, and inverse matrices for irms
 }
-

@@ -8,6 +8,8 @@ of a subject-level trajectory.}
 update_tpms(epimodel, subject, direction)
 }
 \arguments{
+\item{epimodel}{list of bookkeeping and model objects.}
+
 \item{direction}{"removal" or "insertion"}
 }
 \value{
@@ -17,4 +19,3 @@ updated lists of tpms within the .epimodel environment
 Gets called before \code{remove_trajectory} in the removal direction, and
 after \code{draw_trajec} in the insertion direction.
 }
-

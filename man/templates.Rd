@@ -19,4 +19,3 @@ template
 Generates a template script for specifying a transition kernel or functions 
 to and from the estimation scale.
 }
-

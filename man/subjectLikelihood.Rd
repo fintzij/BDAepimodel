@@ -27,4 +27,3 @@ subject level likelihood or log-likelihood
 Get the irm keys for the compartment counts in a population level
 bookkeeping matrix
 }
-

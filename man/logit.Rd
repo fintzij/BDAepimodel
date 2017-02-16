@@ -15,4 +15,3 @@ logit of x
 \description{
 logit(x) = log(x/(1-x))
 }
-
