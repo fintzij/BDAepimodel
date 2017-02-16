@@ -17,8 +17,20 @@ This package may be installed directly from GitHub using the **devtools** packag
     install_github("fintzij/BDAepimodel",build_vignettes=TRUE) 
     library(BDAepimodel)
 
-There are three vignettes included in this package. The first diagrams the basic functionality of the package and is intended to serve as a how-to for setting up MCMC using our code. The second is a walk-through of the simulations presented in the original paper, while the third provides the implementation for the analysis of the influenza outbreak data that is presented in the paper. These are accessible as follows:
+There are several vignettes included in this package. The first diagrams the basic functionality of the package and is intended to serve as a how-to for setting up MCMC using our code. The others contain walk-throughs of the simulations presented in the original paper, and of the analysis of the influenza outbreak data that is presented in the paper. These are accessible as follows:
 
     vignette("BDAepimodel") 
-    vignette("simulations")
+    vignette("SIR_SEIR_SIRS")
+    vignette("model_misspecification")
+    vignette("popsize_misspecification")
+    vignette("prior_effect")
     vignette("bbs_influenza")
+    
+We also provide vignettes that demonstrate how to fit the models in the first and second simulations, along with the boarding school examples, using the pomp package. These are accessible as follows:
+
+    vignette("SIR_pomp_simulation")
+    vignette("SEIR_pomp_simulation")
+    vignette("SIRS_pomp_simulation")
+    vignette("model_misspecification_pomp")
+    vignette("bbs_pomp_binom_vignette")
+    vignette("bbs_pomp_negbinom_vignette")
