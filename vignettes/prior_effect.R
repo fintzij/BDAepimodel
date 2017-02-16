@@ -1,27 +1,9 @@
----
-title: "Effect of prior specification on posterior inference"
-author: "Jon Fintzi, Xiang Cui, Jon Wakefield, Vladimir Minin"
-date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{Additional simulations included Fintzi, Wakefield, and Minin (2016)}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
-```{r load_packages, echo = F, include=F}
+## ----load_packages, echo = F, include=F----------------------------------
 library(BDAepimodel)
 library(coda)
 library(Rcpp)
-```
 
-This vignette contains code to reproduce the simulation examining the prior strength in the fourth simulation of Fintzi et al. (2016). Additional details on the use of the BDAepimodel package and how to extract the results from fitted objects are provided in the "BDAepimodel" vignette. 
-
-## Simualting the epidemic
-We simulated an epidemic with SIR dynamics in a population of 750 individuals, 3% of whom were initially infected, and 7% of whom had prior immunity. The per-contact infectivity rate was $\beta = 0.00035$ and the mean infectious period duration was $1/\mu = 7$ days, which combined for a basic reproductive number of $R_0 = 1.837$. We fit four SIR models to binomially distributed weekly prevalence data, sampled with detection probability $ \rho = 0.2$, under the following four prior regimes: Regime 1 --- informative priors for all model parameters; Regime 2 --- vague priors for the rate parameters and an informative prior for the sampling probability; Regime 3 --- informative priors for the rate parameters and a flat prior for the sampling probability; Regime 4 --- vague priors for the rate parameters and a flat prior for the sampling probability. 
-
-The data are simulated as follows:
-
-```{r SIR_sim, warning=F, cache = F}
+## ----SIR_sim, warning=F, cache = F---------------------------------------
 set.seed(52787)
 
 # declare the functions for simulating from and evaluating the log-density of the measurement process
@@ -63,11 +45,8 @@ true_path <- epimodel$pop_mat
 
 plot(x = epimodel$pop_mat[,"time"], y = epimodel$pop_mat[,"I"], xlim = c(0,85), "l", xlab = "Time", ylab = "Prevalence")
 points(x = epimodel$dat[,"time"], y = epimodel$dat[,"I"])
-```
 
-The next step is to define a transition kernel for the model parameters. The parameters are updated from their univariate full conditional distributions via Gibbs sampling (prior distributions presented in the code below). The prior regimes were set using an external batch function. The following code implements the transition kernel and a helper function for computing the sufficient statistics:
-
-```{r SIR_kernel, warning = F, cache=F}
+## ----SIR_kernel, warning = F, cache=F------------------------------------
 # define the hyperprior parameters for the rates and sampling probability
 beta_prior <- matrix(c(3, 10000, 0.3, 1000), nrow = 2); colnames(beta_prior) <- c("informative", "diffuse")
 mu_prior   <- matrix(c(3, 20, 0.1, 0.8), nrow = 2); colnames(mu_prior) <- c("informative", "diffuse")
@@ -169,11 +148,8 @@ gibbs_kernel <- function(epimodel) {
           
           return(epimodel)
 }
-```
 
-We now initialize an epimodel object with the dataset, set the RNG seed, and run each MCMC chain as follows. Note that the value for chain (chain = 1,2,3) was set by an external batch script. 
-
-```{r SIR_inference, warning=F, cache=F, messages = F}
+## ----SIR_inference, warning=F, cache=F, messages = F---------------------
 chain <- 1 # set by an external script
 
 set.seed(52787 + chain)
@@ -205,6 +181,4 @@ epimodel <- init_settings(epimodel,
 
 epimodel <- fit_epimodel(epimodel, monitor = FALSE)
 
-```
 
-After running all three chains for each prior regime, we discarded the burn-in and combined the parameter samples and latent posterior samples from each chain. Posterior median estimates and 95% credible intervals of model parameters were computed, along with the pointwise posterior distribution of the latent process. These are presented in the paper and the supplement. 

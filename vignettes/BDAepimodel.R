@@ -16,27 +16,27 @@ r_meas_process <- function(state, meas_vars, params){
           # in our example, rho will be the name of the binomial sampling probability parameter.
           # this function returns a matrix of observed counts
           rbinom(n = nrow(state), 
-                 size = state[,meas_vars],
-                 prob = params["rho"])
+                 size = state[,meas_vars], # binomial sample of the unobserved prevalenc
+                 prob = params["rho"])     # sampling probability
 }
 
 d_meas_process <- function(state, meas_vars, params, log = TRUE) {
           # note that the names of the measurement variables are endowed with suffixes "_observed" and "_augmented". This is required.
           # we will declare the names of the measurement variables shortly.
-          dbinom(x = state[, paste0(meas_vars, "_observed")], 
-                 size = state[, paste0(meas_vars, "_augmented")], 
-                 prob = params["rho"], log = log) 
+          dbinom(x = state[, "I_observed"], 
+                 size = state[, "I_augmented"], 
+                 prob = params["rho"], log = log)
 }
 
 ## ------------------------------------------------------------------------
-epimodel <- init_epimodel(obstimes = seq(0, 15, by = 1),                              # vector of observation times
+epimodel <- init_epimodel(obstimes = seq(0, 105, by = 7),                             # vector of observation times
                           popsize = 750,                                              # population size
                           states = c("S", "I", "R"),                                  # compartment names
-                          params = c(beta = 2.5/(750 * 0.9) * 0.5,                    # infectivity parameter
-                                     mu = 0.5,                                        # recovery rate
+                          params = c(beta = 0.00035,                                  # infectivity parameter
+                                     mu = 1/7,                                        # recovery rate
                                      rho = 0.2,                                       # binomial sampling probability
                                      S0 = 0.9, I0 = 0.03, R0 = 0.07),                 # initial state probabilities
-                          rates = c("beta * I", "mu"),                                # transition rates
+                          rates = c("beta * I", "mu"),                                # unlumped transition rates
                           flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T),  # flow matrix
                           meas_vars = "I",                                            # name of measurement variable
                           r_meas_process = r_meas_process,                            # measurement process functions
@@ -58,7 +58,7 @@ head(epimodel$init_config)
 head(epimodel$pop_mat)
 
 ## ------------------------------------------------------------------------
-Rcpp::cppFunction("Rcpp::NumericVector getSuffStats(const Rcpp::NumericMatrix& pop_mat, const int ind_final_config) {
+Rcpp::cppFunction("Rcpp::NumericVector getSuffStats_SIR(const Rcpp::NumericMatrix& pop_mat, const int ind_final_config) {
                   
           // initialize sufficient statistics
           int num_inf = 0;       // number of infection events
@@ -95,74 +95,98 @@ Rcpp::cppFunction("Rcpp::NumericVector getSuffStats(const Rcpp::NumericMatrix& p
 }")
 
 ## ------------------------------------------------------------------------
-gibbs_kernel <- function(epimodel) {
+gibbs_kernel_SIR <- function(epimodel) {
           
-          # get sufficient statistics using the previously compiled getSuffStats function (above)
-          suff_stats          <- getSuffStats(epimodel$pop_mat, epimodel$ind_final_config)
+          # get sufficient statistics using the previously compiled getSuffStats_SIR function (above)
+          suff_stats <- getSuffStats_SIR(epimodel$pop_mat, epimodel$ind_final_config)
           
           # update parameters from their univariate full conditional distributions
-          # Priors: beta ~ gamma(0.002, 1)
-          #         mu   ~ gamma(2.1, 4)
-          #         rho  ~ beta(2/3, 1)
+          # Priors: beta ~ gamma(0.3, 1000)
+          #         mu   ~ gamma(1, 8)
+          #         rho  ~ beta(2, 7)
           proposal          <- epimodel$params # params is the vector of ALL model parameters
-          proposal["beta"]  <- rgamma(1, 0.002 + suff_stats[1], 1 + suff_stats[2])
-          proposal["mu"]    <- rgamma(1, 2.1 + suff_stats[3], 4 + suff_stats[4])
-          proposal["rho"]   <- rbeta(1, shape1 = 2/3 + sum(epimodel$obs_mat[,"I_observed"]), shape2 = 1 + sum(epimodel$obs_mat[,"I_augmented"] - epimodel$obs_mat[,"I_observed"]))
+          proposal["beta"]  <- rgamma(1, 0.3 + suff_stats[1], 1000 + suff_stats[2])
+          proposal["mu"]    <- rgamma(1, 1 + suff_stats[3], 8 + suff_stats[4])
+          proposal["rho"]   <- rbeta(1, shape1 = 2 + sum(epimodel$obs_mat[, "I_observed"]),
+                                        shape2 = 7 + sum(epimodel$obs_mat[, "I_augmented"] - epimodel$obs_mat[, "I_observed"]))
           
+          # update array of rate matrices
+          epimodel <- build_new_irms(epimodel, proposal)
           
-          #### THE FOLLOWING SECTION CAN BE INCLUDED PIECEMEAL AS APPROPRIATE
-          # update array of rate matrices - MUST BE INCLUDED WHEN UPDATING RATE PARAMETERS
-          epimodel            <- build_new_irms(epimodel, proposal)
-          
-          # update the eigen decompositions - MUST BE INCLUDED WHEN UPDATING RATE PARAMETERS
+          # update the eigen decompositions (This function is built in and computes eigen decompositions analytically)
           buildEigenArray_SIR(real_eigenvals = epimodel$real_eigen_values,
                               imag_eigenvals = epimodel$imag_eigen_values,
                               eigenvecs      = epimodel$eigen_vectors, 
                               inversevecs    = epimodel$inv_eigen_vectors, 
                               irm_array      = epimodel$irm, 
                               n_real_eigs    = epimodel$n_real_eigs, 
-                              initial_calc   = FALSE)          
-          # get log-likelihoods under the new parameters
-          # MUST BE INCLUDED WHEN UPDATING RATE PARAMETERS
-          pop_likelihood_new  <- calc_pop_likelihood(epimodel, log = TRUE) #### NOTE - log = TRUE
+                              initial_calc   = FALSE)
           
-          # MUST BE INCLUDED WHEN UPDATING SAMPLING PARAMETERS
+          # get log-likelihood of the observations under the new parameters
           obs_likelihood_new  <- calc_obs_likelihood(epimodel, params = proposal, log = TRUE) #### NOTE - log = TRUE
           
+          # get the new population level CTMC log-likelihood
+          pop_likelihood_new  <- epimodel$likelihoods$pop_likelihood_cur +
+                    suff_stats[1] * (log(proposal["beta"]) - log(epimodel$params["beta"])) +
+                    suff_stats[3] * (log(proposal["mu"]) - log(epimodel$params["mu"])) -
+                    suff_stats[2] * (proposal["beta"] - epimodel$params["beta"]) - 
+                    suff_stats[4] * (proposal["mu"] - epimodel$params["mu"])
+          
           # update parameters, likelihood objects, and eigen decompositions
-          epimodel <-
+          epimodel  <-
                     update_params(
-                    epimodel,
-                    params = proposal,
-                    pop_likelihood = pop_likelihood_new,
-                    obs_likelihood = obs_likelihood_new
+                              epimodel,
+                              params = proposal,
+                              pop_likelihood = pop_likelihood_new,
+                              obs_likelihood = obs_likelihood_new
                     )
-                    
+          
           return(epimodel)
 }
-
 
 ## ------------------------------------------------------------------------
 # grab the data that was simulated previously. No need to redefine the measurement process functions, they remain unchanged.
 dat <- epimodel$dat 
 
-# initial values for the initial state probability parameters
-init_dist <- MCMCpack::rdirichlet(1, c(9,0.5,0.5))
+chain <- 1 # this was set by a batch script that ran chains 1, 2, and 3 in parallel
+set.seed(52787 + chain)
 
-# initialize the epimodel object
+# initial values for initial state parameters
+init_dist <- MCMCpack::rdirichlet(1, c(9,0.5,0.1))
 epimodel <- init_epimodel(popsize = 750,                                                       # population size
                           states = c("S", "I", "R"),                                           # compartment names
-                          params = c(beta = rnorm(1, 2.8 / 750, 1e-3),                         # per-contact infectivity rate
-                                     mu = rnorm(1, 0.5, 0.1),                                  # recovery rate
-                                     rho = 150 / 750,                                          # binomial sampling probability
+                          params = c(beta = abs(rnorm(1, 0.00035, 5e-5)),                      # per-contact infectivity rate
+                                     mu = abs(rnorm(1, 1/7, 0.02)),                            # recovery rate
+                                     rho = rbeta(1, 21, 75),                                   # binomial sampling probability
                                      S0 = init_dist[1], I0 = init_dist[2], R0 = init_dist[3]), # initial state probabilities
                           rates = c("beta * I", "mu"),                                         # unlumped transition rates
                           flow = matrix(c(-1, 1, 0, 0, -1, 1), ncol = 3, byrow = T),           # flow matrix
                           dat = dat,                                                           # dataset
                           time_var = "time",                                                   # name of time variable in the dataset
-                          meas_vars = "I",                                                     # name of measurement var in the dataset
-                          initdist_prior = c(9,0.2,0.5), ### Parameters for the dirichlet prior distribution for the initial state probs
+                          meas_vars = "I",                                                     # name of measurement variable
+                          initdist_prior = c(90, 2, 5), ### Parameters for the dirichlet prior distribution for the initial state probs
                           r_meas_process = r_meas_process,
                           d_meas_process = d_meas_process)
 
+## ---- warning = FALSE----------------------------------------------------
+epimodel <- init_settings(epimodel,
+                          niter = 10,  # this was set to 100,000 in the paper
+                          save_params_every = 1, 
+                          save_configs_every = 2, # this was set to 250 in the paper 
+                          kernel = list(gibbs_kernel_SIR),
+                          configs_to_redraw = 1, # this was set to 75 in the paper
+                          analytic_eigen = "SIR", # compute eigen decompositions and matrix inverses analytically
+                          ecctmc_method = "unif")   # sample subject paths in interevent intervals via modified rejection sampling
+
+epimodel <- fit_epimodel(epimodel, monitor = FALSE)
+
+
+## ------------------------------------------------------------------------
+head(epimodel$results$params)
+ts.plot(epimodel$results$params[,"beta"], ylab = expression(beta))
+plot(hist(epimodel$results$params[,"rho"]), main = "Binomial sampling probability")
+
+## ---- fig.cap=""---------------------------------------------------------
+plot_latent_posterior(epimodel, 
+                      states = "I", times = epimodel$obstimes, cm = "mn")
 

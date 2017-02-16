@@ -1,36 +1,17 @@
----
-title: "Fitting misspecified SIR and SEIR stochastic epidemic models"
-author: "Jon Fintzi, Xiang Cui, Jon Wakefield, Vladimir Minin"
-date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{Additional simulations included Fintzi, Wakefield, and Minin (2016)}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
-```{r load_packages, echo = F, include=F}
+## ----load_packages, echo = F, include=F----------------------------------
 library(BDAepimodel)
 library(coda)
 library(Rcpp)
-```
 
-This vignette contains code to reproduce the simulation examining the effects of model misspecfication presented in the second simulation of Fintzi et al. (2016). We fit SIR and SEIR models to binomially distributed prevalence counts sampled from an epidemic with time-varying dynamics. Additional details on the use of the BDAepimodel package and how to extract the results from fitted objects are provided in the "BDAepimodel" vignette. Details on fitting the models in pomp are provided in the "model_misspecification_pomp" vignette.
-
-## Simualting the epidemic
-We simulated an epidemic with SEIR dynamics in a population of 400 individuals, 397 of whom were initially susceptible, 2 of whom were initially exposed, and 1 of whom were initially infectious. The dynamics of the epidemic varied over four different epochs and are presented in the table below:
-
-```{r dynamics, echo = FALSE, results = 'asis'}
+## ----dynamics, echo = FALSE, results = 'asis'----------------------------
 library(knitr)
 tab <- t(data.frame("Effective R0" = c(14.9, 9.2, 0.1, 0),
                     "Incubation period" = c(210,210,90,180),
                     "Infectious period" = c(150,330,300,70)))
 colnames(tab) = paste("Epoch", 1:4)
 kable(tab, caption = "Time varying dynamics. Effective reproductive numbers are computed as the product of the per-contact infectivity rate, the mean infectious period, and the number of susceptibles at the beginning of the epoch.")
-```
 
-The data are simulated as follows:
-
-```{r SEIR_sim, warning=F, cache = F}
+## ----SEIR_sim, warning=F, cache = F--------------------------------------
 set.seed(1834)
 
 # declare the functions for simulating from and evaluating the log-density of the measurement process
@@ -197,11 +178,8 @@ true_path <- rbind(true_path1[-nrow(true_path1),c(1,4:7)],
 plot(true_path[,1], true_path[,c("I")], "l"); points(dat)
 abline(v = c(183, 729, 1163), col = "red")
 
-```
 
-Having simulated a dataset, we can now proceed to fit SIR and SEIR models to the data. In fitting each model, the first step is to define a transition kernel for the model parameters. The parameters are updated from their univariate full conditional distributions via Gibbs sampling (prior distributions indicated in comments in the code below). The following code implements the transition kernel and a helper function for computing the sufficient statistics:
-
-```{r SIR_kernel, warning = F, cache=F}
+## ----SIR_kernel, warning = F, cache=F------------------------------------
 # helper function for computing the sufficient statistics for the SIR model rate parameters
 Rcpp::cppFunction("Rcpp::NumericVector getSuffStats_SIR(const Rcpp::NumericMatrix& pop_mat, const int ind_final_config) {
                   
@@ -376,11 +354,8 @@ gibbs_kernel_SEIR <- function(epimodel) {
           
           return(epimodel)
 }
-```
 
-We now re-initialize an epimodel objects with the dataset, set the RNG seed, and run each MCMC chain as follows. Note that the chain was set by a batch script that varied the value of `chain` (chain = 1,2,3). 
-
-```{r SIR_inference, warning=F, cache=F, messages = F}
+## ----SIR_inference, warning=F, cache=F, messages = F---------------------
 chain <- 1 # this was set by a batch script that ran chains 1, 2, and 3 in parallel
 
 # generate the measurement process
@@ -423,9 +398,8 @@ epimodel_SIR <- init_settings(epimodel_SIR,
 
 epimodel_SIR <- fit_epimodel(epimodel_SIR, monitor = TRUE)
 
-```
 
-```{r SEIR_sim2, include=FALSE, warning=F, cache = F}
+## ----SEIR_sim2, include=FALSE, warning=F, cache = F----------------------
 set.seed(1834)
 
 # declare the functions for simulating from and evaluating the log-density of the measurement process
@@ -589,9 +563,8 @@ true_path <- rbind(true_path1[-nrow(true_path1),c(1,4:7)],
                    true_path3[-c(1, nrow(true_path3)), c(1,4:7)],
                    true_path4[-1, c(1,4:7)])
 
-```
 
-```{r SEIR_inference, warning=F, cache=F, messages = F}
+## ----SEIR_inference, warning=F, cache=F, messages = F--------------------
 chain <- 1 # this was set by a batch script that ran chains 1, 2, and 3 in parallel
 
 # generate the measurement process
@@ -638,5 +611,4 @@ epimodel_SEIR <- init_settings(epimodel_SEIR,
 
 epimodel_SEIR <- fit_epimodel(epimodel_SEIR, monitor = TRUE)
 
-```
-After running all three chains for each model, we discarded the burn-in and combined the parameter samples and latent posterior samples from each chain. Posterior median estimates and 95% credible intervals of model parameters were computed, along with the pointwise posterior distribution of the latent process. These are presented in the paper and the supplement. 
+
