@@ -4,6 +4,9 @@
 packrat/lib*/
 inst/doc
 Simulations/
+src/*.o
+src/*.so
+src/*.dll
 *.o
 *.so
 *.dll
