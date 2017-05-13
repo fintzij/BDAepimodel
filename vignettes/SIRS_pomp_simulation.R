@@ -253,3 +253,20 @@ pmcmc1 <- pmcmc(
           max.scaling = 1.1)
 )
 
+## ----echo=T,eval=T,warning=F---------------------------------------------
+start_time <- Sys.time();  #calculation of time
+pmcmc1 <- pmcmc(
+          pmcmc1,
+          #given the prior function
+          start = param.initial,
+          #given the initial value of the parameters
+          Nmcmc = 10,
+          max.fail = Inf,
+          proposal = mvn.rw(covmat(pmcmc1))
+)
+
+end_time <- Sys.time(); #calculation of time
+run_time <- difftime(end_time, start_time, units = "hours") #calculation of time
+
+pomp_results <- list(time = run_time, results = pmcmc1) 
+

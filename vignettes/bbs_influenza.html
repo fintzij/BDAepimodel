@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="Jon Fintzi, Xiang Cui, Jon Wakefield, Vladimir Minin" />
+
+<meta name="date" content="2017-05-12" />
+
+<title>Fitting misspecified SIR and SEIR stochastic epidemic models</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+
+
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%20code%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Fitting misspecified SIR and SEIR stochastic epidemic models</h1>
+<h4 class="author"><em>Jon Fintzi, Xiang Cui, Jon Wakefield, Vladimir Minin</em></h4>
+<h4 class="date"><em>2017-05-12</em></h4>
+
+
+
+<p>In this vignette, we will demonstrate how to fit SIR and SEIR models under binomial and negative binomial emission distributions to prevalence counts from an outbreak of influenza in a British boarding school. This dataset was pulled from the pomp package, and was described and analyzed in Fintzi, Wakefield, and Minin (2016).</p>
+<div id="influenza-in-a-british-boarding-school" class="section level2">
+<h2>Influenza in a British boarding school</h2>
+<p>We begin by loading and plotting in the dataset.</p>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>The first step to fitting the models is to define the measurement processes. Thus, we initialize functions to evaluate the binomial and negative binomial emission densities.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># binomial emissions</span>
+d_meas_process_binom &lt;-<span class="st"> </span>function(state, meas_vars, params, <span class="dt">log =</span> <span class="ot">TRUE</span>) {
+          <span class="kw">dbinom</span>(<span class="dt">x =</span> state[, <span class="st">&quot;I_observed&quot;</span>], 
+                 <span class="dt">size =</span> state[, <span class="st">&quot;I_augmented&quot;</span>],
+                 <span class="dt">prob =</span> params[<span class="st">&quot;rho&quot;</span>], <span class="dt">log =</span> log)
+}
+
+<span class="co"># negative binomial emissions</span>
+d_meas_process_negbinom &lt;-<span class="st"> </span>function(state, meas_vars, params, <span class="dt">log =</span> <span class="ot">TRUE</span>) {
+          <span class="kw">dnbinom</span>(<span class="dt">x =</span> state[, <span class="st">&quot;I_observed&quot;</span>], 
+                  <span class="dt">size =</span> params[<span class="st">&quot;phi&quot;</span>], 
+                  <span class="dt">mu =</span> state[, <span class="st">&quot;I_augmented&quot;</span>] *<span class="st"> </span>params[<span class="st">&quot;rho&quot;</span>], <span class="dt">log =</span> log)
+}
+
+r_meas_process_binom &lt;-<span class="st"> </span>function(state, meas_vars, params){
+          <span class="kw">rbinom</span>(<span class="dt">n =</span> <span class="kw">nrow</span>(state),
+                 <span class="dt">size =</span> state[, meas_vars],
+                 <span class="dt">prob =</span> params[<span class="st">&quot;rho&quot;</span>])
+}
+
+r_meas_process_negbinom &lt;-<span class="st"> </span>function(state, meas_vars, params){
+          <span class="kw">rnbinom</span>(<span class="dt">n =</span> <span class="kw">nrow</span>(state), 
+                  <span class="dt">size =</span> params[<span class="st">&quot;phi&quot;</span>],
+                  <span class="dt">mu =</span> state[,meas_vars] *<span class="st"> </span>params[<span class="st">&quot;rho&quot;</span>])
+}</code></pre></div>
+<p>Having created functions for evaluating the emission probability, we instatiate the epimodel objects for the SIR and SEIR models, under binomial and negative binomial emissions.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">SIR_binom &lt;-<span class="st"> </span><span class="kw">init_epimodel</span>(<span class="dt">popsize =</span> <span class="dv">763</span>,
+                          <span class="dt">states =</span> <span class="kw">c</span>(<span class="st">&quot;S&quot;</span>, <span class="st">&quot;I&quot;</span>, <span class="st">&quot;R&quot;</span>),
+                          <span class="dt">params =</span> <span class="kw">c</span>(
+                                    <span class="dt">beta =</span> <span class="kw">rnorm</span>(<span class="dv">1</span>, <span class="fl">0.002</span>, <span class="fl">1e-4</span>),
+                                    <span class="dt">mu =</span> <span class="kw">rnorm</span>(<span class="dv">1</span>, <span class="fl">0.35</span>, <span class="fl">1e-3</span>),
+                                    <span class="dt">rho =</span> <span class="kw">rbeta</span>(<span class="dv">1</span>, <span class="dv">100</span>, <span class="dv">10</span>),
+                                    <span class="dt">S0 =</span> <span class="fl">0.99</span>,
+                                    <span class="dt">I0 =</span> <span class="fl">0.005</span>,
+                                    <span class="dt">R0 =</span> <span class="fl">0.005</span>),
+                          <span class="dt">rates =</span> <span class="kw">c</span>(<span class="st">&quot;beta * I&quot;</span>, <span class="st">&quot;mu&quot;</span>),
+                          <span class="dt">flow =</span> <span class="kw">matrix</span>(<span class="kw">c</span>(-<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>, -<span class="dv">1</span>, <span class="dv">1</span>), <span class="dt">ncol =</span> <span class="dv">3</span>, <span class="dt">byrow =</span> T),
+                          <span class="dt">dat =</span> dat,
+                          <span class="dt">time_var =</span> <span class="st">&quot;time&quot;</span>,
+                          <span class="dt">meas_vars =</span> <span class="st">&quot;I&quot;</span>,
+                          <span class="dt">initdist_prior =</span> <span class="kw">c</span>(<span class="dv">900</span>, <span class="dv">3</span>, <span class="dv">9</span>),
+                          <span class="dt">r_meas_process =</span> r_meas_process_binom,
+                          <span class="dt">d_meas_process =</span> d_meas_process_binom)
+
+SEIR_binom &lt;-<span class="st"> </span><span class="kw">init_epimodel</span>(<span class="dt">popsize =</span> <span class="dv">763</span>,
+                          <span class="dt">states =</span> <span class="kw">c</span>(<span class="st">&quot;S&quot;</span>, <span class="st">&quot;E&quot;</span>, <span class="st">&quot;I&quot;</span>, <span class="st">&quot;R&quot;</span>),
+                          <span class="dt">params =</span> <span class="kw">c</span>(
+                                    <span class="dt">beta =</span> <span class="kw">rnorm</span>(<span class="dv">1</span>, <span class="fl">0.002</span>, <span class="fl">1e-4</span>),
+                                    <span class="dt">gamma =</span> <span class="kw">rnorm</span>(<span class="dv">1</span>, <span class="dv">5</span>, <span class="fl">1e-1</span>),
+                                    <span class="dt">mu =</span> <span class="kw">rnorm</span>(<span class="dv">1</span>, <span class="fl">0.35</span>, <span class="fl">1e-3</span>),
+                                    <span class="dt">rho =</span> <span class="kw">rbeta</span>(<span class="dv">1</span>, <span class="dv">100</span>, <span class="dv">10</span>),
+                                    <span class="dt">S0 =</span> <span class="fl">0.99</span>,
+                                    <span class="dt">E0 =</span> <span class="fl">0.007</span>,
+                                    <span class="dt">I0 =</span> <span class="fl">0.005</span>,
+                                    <span class="dt">R0 =</span> <span class="fl">0.005</span>),
+                          <span class="dt">rates =</span> <span class="kw">c</span>(<span class="st">&quot;beta * I&quot;</span>, <span class="st">&quot;gamma&quot;</span>, <span class="st">&quot;mu&quot;</span>),
+                          <span class="dt">flow =</span> <span class="kw">matrix</span>(<span class="kw">c</span>(-<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>, 
+                                          <span class="dv">0</span>, -<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>, 
+                                          <span class="dv">0</span>, <span class="dv">0</span>, -<span class="dv">1</span>, <span class="dv">1</span>), <span class="dt">ncol =</span> <span class="dv">4</span>, <span class="dt">byrow =</span> T),
+                          <span class="dt">dat =</span> dat,
+                          <span class="dt">time_var =</span> <span class="st">&quot;time&quot;</span>,
+                          <span class="dt">meas_vars =</span> <span class="st">&quot;I&quot;</span>,
+                          <span class="dt">initdist_prior =</span> <span class="kw">c</span>(<span class="dv">900</span>, <span class="dv">6</span>, <span class="dv">3</span>, <span class="dv">9</span>),
+                          <span class="dt">r_meas_process =</span> r_meas_process_binom,
+                          <span class="dt">d_meas_process =</span> d_meas_process_binom)</code></pre></div>
+<pre><code>## Warning in init_epimodel(popsize = 763, states = c(&quot;S&quot;, &quot;E&quot;, &quot;I&quot;, &quot;R&quot;), :
+## The vector of probabilities for the state at time t0 has been normalized to
+## sum to 1.</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">SIR_negbinom &lt;-<span class="st"> </span><span class="kw">init_epimodel</span>(<span class="dt">popsize =</span> <span class="dv">763</span>,
+                          <span class="dt">states =</span> <span class="kw">c</span>(<span class="st">&quot;S&quot;</span>, <span class="st">&quot;I&quot;</span>, <span class="st">&quot;R&quot;</span>),
+                          <span class="dt">params =</span> <span class="kw">c</span>(
+                                    <span class="dt">beta =</span> <span class="kw">rnorm</span>(<span class="dv">1</span>, <span class="fl">0.002</span>, <span class="fl">1e-4</span>),
+                                    <span class="dt">mu =</span> <span class="kw">rnorm</span>(<span class="dv">1</span>, <span class="fl">0.35</span>, <span class="fl">1e-3</span>),
+                                    <span class="dt">rho =</span> <span class="kw">rbeta</span>(<span class="dv">1</span>, <span class="dv">25</span>, <span class="fl">0.3</span>),
+                                    <span class="dt">phi =</span> <span class="kw">runif</span>(<span class="dv">1</span>, <span class="dv">1</span>,<span class="dv">10</span>),
+                                    <span class="dt">S0 =</span> <span class="fl">0.99</span>,
+                                    <span class="dt">I0 =</span> <span class="fl">0.005</span>,
+                                    <span class="dt">R0 =</span> <span class="fl">0.005</span>),
+                          <span class="dt">rates =</span> <span class="kw">c</span>(<span class="st">&quot;beta * I&quot;</span>, <span class="st">&quot;mu&quot;</span>),
+                          <span class="dt">flow =</span> <span class="kw">matrix</span>(<span class="kw">c</span>(-<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>, -<span class="dv">1</span>, <span class="dv">1</span>), <span class="dt">ncol =</span> <span class="dv">3</span>, <span class="dt">byrow =</span> T),
+                          <span class="dt">dat =</span> dat,
+                          <span class="dt">time_var =</span> <span class="st">&quot;time&quot;</span>,
+                          <span class="dt">meas_vars =</span> <span class="st">&quot;I&quot;</span>,
+                          <span class="dt">initdist_prior =</span> <span class="kw">c</span>(<span class="dv">900</span>, <span class="dv">3</span>, <span class="dv">9</span>),
+                          <span class="dt">r_meas_process =</span> r_meas_process_negbinom,
+                          <span class="dt">d_meas_process =</span> d_meas_process_negbinom)
+
+
+SEIR_negbinom &lt;-<span class="st"> </span><span class="kw">init_epimodel</span>(<span class="dt">popsize =</span> <span class="dv">763</span>,
+                          <span class="dt">states =</span> <span class="kw">c</span>(<span class="st">&quot;S&quot;</span>, <span class="st">&quot;E&quot;</span>, <span class="st">&quot;I&quot;</span>, <span class="st">&quot;R&quot;</span>),
+                          <span class="dt">params =</span> <span class="kw">c</span>(
+                                    <span class="dt">beta =</span> <span class="kw">rnorm</span>(<span class="dv">1</span>, <span class="fl">0.002</span>, <span class="fl">1e-4</span>),
+                                    <span class="dt">gamma =</span> <span class="kw">rnorm</span>(<span class="dv">1</span>, <span class="dv">5</span>, <span class="fl">1e-1</span>),
+                                    <span class="dt">mu =</span> <span class="kw">rnorm</span>(<span class="dv">1</span>, <span class="fl">0.35</span>, <span class="fl">1e-3</span>),
+                                    <span class="dt">rho =</span> <span class="kw">rbeta</span>(<span class="dv">1</span>, <span class="dv">100</span>, <span class="dv">10</span>),
+                                    <span class="dt">phi =</span> <span class="kw">runif</span>(<span class="dv">1</span>, <span class="dv">1</span>,<span class="dv">10</span>),
+                                    <span class="dt">S0 =</span> <span class="fl">0.99</span>,
+                                    <span class="dt">E0 =</span> <span class="fl">0.007</span>,
+                                    <span class="dt">I0 =</span> <span class="fl">0.005</span>,
+                                    <span class="dt">R0 =</span> <span class="fl">0.005</span>),
+                          <span class="dt">rates =</span> <span class="kw">c</span>(<span class="st">&quot;beta * I&quot;</span>, <span class="st">&quot;gamma&quot;</span>, <span class="st">&quot;mu&quot;</span>),
+                          <span class="dt">flow =</span> <span class="kw">matrix</span>(<span class="kw">c</span>(-<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>, 
+                                          <span class="dv">0</span>, -<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>, 
+                                          <span class="dv">0</span>, <span class="dv">0</span>, -<span class="dv">1</span>, <span class="dv">1</span>), <span class="dt">ncol =</span> <span class="dv">4</span>, <span class="dt">byrow =</span> T),
+                          <span class="dt">dat =</span> dat,
+                          <span class="dt">time_var =</span> <span class="st">&quot;time&quot;</span>,
+                          <span class="dt">meas_vars =</span> <span class="st">&quot;I&quot;</span>,
+                          <span class="dt">initdist_prior =</span> <span class="kw">c</span>(<span class="dv">900</span>, <span class="dv">6</span>, <span class="dv">3</span>, <span class="dv">9</span>),
+                          <span class="dt">r_meas_process =</span> r_meas_process_negbinom,
+                          <span class="dt">d_meas_process =</span> d_meas_process_negbinom)</code></pre></div>
+<pre><code>## Warning in init_epimodel(popsize = 763, states = c(&quot;S&quot;, &quot;E&quot;, &quot;I&quot;, &quot;R&quot;), :
+## The vector of probabilities for the state at time t0 has been normalized to
+## sum to 1.</code></pre>
+<p>We need to define transition kernels. All model parameters for the SIR and SEIR models with binomial emissions were updated from their full univariate conditionals via Gibbs sampling. For the models fit under negative binomial emissions, the sampling probability and negative binomial overdispersion were updated via random walk Metropolis-Hastings, with the sampling probability updated on the logit scale and the overdispersion updated on the log scale. The following code creates helper functions for computing the sufficient statistics and generates functions for the Gibbs kernels (priors are specified within the code):</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># helper function for computing the sufficient statistics for the SIR model rate parameters</span>
+Rcpp::<span class="kw">cppFunction</span>(<span class="st">&quot;Rcpp::NumericVector getSuffStats_SIR(const Rcpp::NumericMatrix&amp; pop_mat, const int ind_final_config) {</span>
+<span class="st">                  </span>
+<span class="st">          // initialize sufficient statistics</span>
+<span class="st">          int num_inf = 0;       // number of infection events</span>
+<span class="st">          int num_rec = 0;       // number of recovery events</span>
+<span class="st">          double beta_suff = 0;  // integrated hazard for the infectivity</span>
+<span class="st">          double mu_suff = 0;    // integrated hazard for the recovery</span>
+
+<span class="st">          // initialize times</span>
+<span class="st">          double cur_time = 0;              // current time</span>
+<span class="st">          double next_time = pop_mat(0,0);  // time of the first event</span>
+<span class="st">          double dt = 0;                    // time increment</span>
+<span class="st">          </span>
+<span class="st">          // compute the sufficient statistics - loop through the pop_mat matrix until</span>
+<span class="st">          // reaching the row for the final observation time</span>
+<span class="st">          for(int j = 0; j &lt; ind_final_config - 1; ++j) {</span>
+<span class="st">          </span>
+<span class="st">                    cur_time = next_time;         </span>
+<span class="st">                    next_time = pop_mat(j+1, 0); // grab the time of the next event</span>
+<span class="st">                    dt = next_time - cur_time;   // compute the time increment</span>
+<span class="st">                    </span>
+<span class="st">                    beta_suff += pop_mat(j, 3) * pop_mat(j, 4) * dt; // add S*I*(t_{j+1} - t_j) to beta_suff</span>
+<span class="st">                    mu_suff += pop_mat(j, 4) * dt;                   // add I*(t_{j+1} - t_j) to mu_suff</span>
+<span class="st">                    </span>
+<span class="st">                    // increment the count for the next event</span>
+<span class="st">                    if(pop_mat(j + 1, 2) == 1) {  </span>
+<span class="st">                              num_inf += 1;</span>
+<span class="st">                    } else if(pop_mat(j + 1, 2) == 2) {</span>
+<span class="st">                              num_rec += 1;</span>
+<span class="st">                    }</span>
+<span class="st">          }</span>
+<span class="st">                  </span>
+<span class="st">          // return the vector of sufficient statistics for the rate parameters</span>
+<span class="st">          return Rcpp::NumericVector::create(num_inf, beta_suff, num_rec, mu_suff);</span>
+<span class="st">}&quot;</span>)
+
+### Helper function for computing the SEIR model sufficient statistics
+Rcpp::<span class="kw">cppFunction</span>(<span class="st">&quot;Rcpp::NumericVector getSuffStats_SEIR(const Rcpp::NumericMatrix&amp; pop_mat, const int ind_final_config) {</span>
+<span class="st">                  </span>
+<span class="st">          // initialize sufficient statistics</span>
+<span class="st">          int num_exp = 0;       // number of exposure events</span>
+<span class="st">          int num_inf = 0;       // number of exposed --&gt; infectious events</span>
+<span class="st">          int num_rec = 0;       // number of recovery events</span>
+<span class="st">          double beta_suff  = 0; // integrated hazard for the exposure</span>
+<span class="st">          double gamma_suff = 0; // integrated hazard for addition of infectives</span>
+<span class="st">          double mu_suff    = 0; // integrated hazard for the recovery</span>
+<span class="st">          </span>
+<span class="st">          // initialize times</span>
+<span class="st">          double cur_time = 0;              // current time</span>
+<span class="st">          double next_time = pop_mat(0,0);  // time of the first event</span>
+<span class="st">          double dt = 0;                    // time increment</span>
+
+<span class="st">          // compute the sufficient statistics - loop through the pop_mat matrix until</span>
+<span class="st">          // reaching the row for the final observation time</span>
+<span class="st">          for(int j = 0; j &lt; ind_final_config - 1; ++j) {</span>
+
+<span class="st">                    cur_time = next_time;         </span>
+<span class="st">                    next_time = pop_mat(j+1, 0); // grab the time of the next event</span>
+<span class="st">                    dt = next_time - cur_time;</span>
+
+<span class="st">                    beta_suff  += pop_mat(j, 3) * pop_mat(j, 5) * dt; // add S*I*(t_{j+1} - t_j) to beta_suff</span>
+<span class="st">                    gamma_suff += pop_mat(j, 4) * dt;                 // add E*(t_{j+1} - t_j) to gamma_suff</span>
+<span class="st">                    mu_suff    += pop_mat(j, 5) * dt;                 // add I*(t_{j+1} - t_j) to mu_suff</span>
+<span class="st">                    </span>
+<span class="st">                    if(pop_mat(j + 1, 2) == 1) {  </span>
+<span class="st">                              num_exp += 1;            // if the next event is an exposure, increment the number of exposures</span>
+<span class="st">                    } else if(pop_mat(j + 1, 2) == 2) {</span>
+<span class="st">                              num_inf += 1;            // if the next event adds an infective, increment the number of infections</span>
+<span class="st">                    } else if(pop_mat(j + 1, 2) == 3) {</span>
+<span class="st">                              num_rec += 1;            // if the next event is a recover, increment the number of recovery</span>
+<span class="st">                    }</span>
+<span class="st">          }</span>
+<span class="st">          </span>
+<span class="st">          // return the vector of sufficient statistics for the rate parameters</span>
+<span class="st">          return Rcpp::NumericVector::create(num_exp, beta_suff, num_inf, gamma_suff, num_rec, mu_suff);</span>
+<span class="st">}&quot;</span>)
+
+<span class="co"># MCMC transition kernel for the SIR model rate parameters and the binomial</span>
+<span class="co"># sampling probability. The prior distributions for the parameters are contained</span>
+<span class="co"># in this function.</span>
+SIR_binom_kernel &lt;-<span class="st"> </span>function(epimodel) {
+
+          <span class="co"># get sufficient statistics</span>
+          suff_stats          &lt;-<span class="st"> </span><span class="kw">getSuffStats_SIR</span>(epimodel$pop_mat, epimodel$ind_final_config)
+
+          <span class="co"># update parameters</span>
+          proposal          &lt;-<span class="st"> </span>epimodel$params
+          proposal[<span class="st">&quot;beta&quot;</span>]  &lt;-<span class="st"> </span><span class="kw">rgamma</span>(<span class="dv">1</span>, <span class="fl">0.001</span> +<span class="st"> </span>suff_stats[<span class="dv">1</span>], <span class="dv">1</span> +<span class="st"> </span>suff_stats[<span class="dv">2</span>])
+          proposal[<span class="st">&quot;mu&quot;</span>]    &lt;-<span class="st"> </span><span class="kw">rgamma</span>(<span class="dv">1</span>, <span class="dv">1</span> +<span class="st"> </span>suff_stats[<span class="dv">3</span>], <span class="dv">2</span> +<span class="st"> </span>suff_stats[<span class="dv">4</span>])
+          proposal[<span class="st">&quot;rho&quot;</span>]   &lt;-<span class="st"> </span><span class="kw">rbeta</span>(<span class="dv">1</span>, <span class="dt">shape1 =</span> <span class="dv">2</span> +<span class="st"> </span><span class="kw">sum</span>(epimodel$obs_mat[, <span class="st">&quot;I_observed&quot;</span>]),
+                                        <span class="dt">shape2 =</span> <span class="dv">1</span> +<span class="st"> </span><span class="kw">sum</span>(epimodel$obs_mat[, <span class="st">&quot;I_augmented&quot;</span>] -<span class="st"> </span>epimodel$obs_mat[, <span class="st">&quot;I_observed&quot;</span>]))
+          
+          <span class="co"># update array of rate matrices</span>
+          epimodel            &lt;-<span class="st"> </span><span class="kw">build_new_irms</span>(epimodel, proposal)
+
+          <span class="co"># update the eigen decompositions</span>
+          <span class="kw">buildEigenArray_SIR</span>(<span class="dt">real_eigenvals =</span> epimodel$real_eigen_values,
+                              <span class="dt">imag_eigenvals =</span> epimodel$imag_eigen_values,
+                              <span class="dt">eigenvecs      =</span> epimodel$eigen_vectors, 
+                              <span class="dt">inversevecs    =</span> epimodel$inv_eigen_vectors, 
+                              <span class="dt">irm_array      =</span> epimodel$irm, 
+                              <span class="dt">n_real_eigs    =</span> epimodel$n_real_eigs, 
+                              <span class="dt">initial_calc   =</span> <span class="ot">FALSE</span>)
+          
+          <span class="co"># get likelihoods under the new parameters</span>
+          <span class="co"># get log-likelihood of the observations under the new parameters</span>
+          obs_likelihood_new  &lt;-<span class="st"> </span><span class="kw">calc_obs_likelihood</span>(epimodel, <span class="dt">params =</span> proposal, <span class="dt">log =</span> <span class="ot">TRUE</span>) #### NOTE - log = TRUE
+          
+          <span class="co"># get the new population level CTMC log-likelihood</span>
+          pop_likelihood_new  &lt;-<span class="st"> </span>epimodel$likelihoods$pop_likelihood_cur +
+<span class="st">                    </span>suff_stats[<span class="dv">1</span>] *<span class="st"> </span>(<span class="kw">log</span>(proposal[<span class="st">&quot;beta&quot;</span>]) -<span class="st"> </span><span class="kw">log</span>(epimodel$params[<span class="st">&quot;beta&quot;</span>])) +
+<span class="st">                    </span>suff_stats[<span class="dv">3</span>] *<span class="st"> </span>(<span class="kw">log</span>(proposal[<span class="st">&quot;mu&quot;</span>]) -<span class="st"> </span><span class="kw">log</span>(epimodel$params[<span class="st">&quot;mu&quot;</span>])) -
+<span class="st">                    </span>suff_stats[<span class="dv">2</span>] *<span class="st"> </span>(proposal[<span class="st">&quot;beta&quot;</span>] -<span class="st"> </span>epimodel$params[<span class="st">&quot;beta&quot;</span>]) -<span class="st"> </span>
+<span class="st">                    </span>suff_stats[<span class="dv">4</span>] *<span class="st"> </span>(proposal[<span class="st">&quot;mu&quot;</span>] -<span class="st"> </span>epimodel$params[<span class="st">&quot;mu&quot;</span>])
+          
+          <span class="co"># update parameters, likelihood objects, and eigen decompositions</span>
+          epimodel &lt;-<span class="st"> </span><span class="kw">update_params</span>(
+                              epimodel,
+                              <span class="dt">params =</span> proposal,
+                              <span class="dt">pop_likelihood =</span> pop_likelihood_new,
+                              <span class="dt">obs_likelihood =</span> obs_likelihood_new
+                    )
+          
+          <span class="kw">return</span>(epimodel)
+}
+
+<span class="co"># MCMC transition kernel for the SEIR model rate parameters and the binomial</span>
+<span class="co"># sampling probability. The prior distributions for the parameters are contained</span>
+<span class="co"># in this function.</span>
+SEIR_binom_kernel &lt;-<span class="st"> </span>function(epimodel) {
+          
+          <span class="co"># get sufficient statistics using the previously compiled getSuffStats function (above)</span>
+          suff_stats &lt;-<span class="st"> </span><span class="kw">getSuffStats_SEIR</span>(epimodel$pop_mat, epimodel$ind_final_config)
+          
+          <span class="co"># update parameters from their univariate full conditional distributions</span>
+          proposal          &lt;-<span class="st"> </span>epimodel$params <span class="co"># params is the vector of ALL model parameters</span>
+          proposal[<span class="st">&quot;beta&quot;</span>]  &lt;-<span class="st"> </span><span class="kw">rgamma</span>(<span class="dv">1</span>, <span class="fl">0.001</span> +<span class="st"> </span>suff_stats[<span class="dv">1</span>], <span class="dv">1</span> +<span class="st"> </span>suff_stats[<span class="dv">2</span>])
+          proposal[<span class="st">&quot;gamma&quot;</span>] &lt;-<span class="st"> </span><span class="kw">rgamma</span>(<span class="dv">1</span>, <span class="fl">0.001</span> +<span class="st"> </span>suff_stats[<span class="dv">3</span>], <span class="dv">1</span> +<span class="st"> </span>suff_stats[<span class="dv">4</span>])
+          proposal[<span class="st">&quot;mu&quot;</span>]    &lt;-<span class="st"> </span><span class="kw">rgamma</span>(<span class="dv">1</span>, <span class="dv">1</span> +<span class="st"> </span>suff_stats[<span class="dv">5</span>], <span class="dv">2</span> +<span class="st"> </span>suff_stats[<span class="dv">6</span>])
+          proposal[<span class="st">&quot;rho&quot;</span>]   &lt;-<span class="st"> </span><span class="kw">rbeta</span>(<span class="dv">1</span>, 
+                                     <span class="dt">shape1 =</span> <span class="dv">2</span> +<span class="st"> </span><span class="kw">sum</span>(epimodel$obs_mat[,<span class="st">&quot;I_observed&quot;</span>]), 
+                                     <span class="dt">shape2 =</span> <span class="dv">1</span> +<span class="st"> </span><span class="kw">sum</span>(epimodel$obs_mat[,<span class="st">&quot;I_augmented&quot;</span>]-<span class="st"> </span>epimodel$obs_mat[,<span class="st">&quot;I_observed&quot;</span>]))
+          
+          <span class="co"># update array of rate matrices</span>
+          epimodel          &lt;-<span class="st"> </span><span class="kw">build_new_irms</span>(epimodel, proposal)
+          
+          <span class="co"># update the eigen decompositions</span>
+          <span class="kw">buildEigenArray_SEIR</span>(<span class="dt">real_eigenvals =</span> epimodel$real_eigen_values,
+                               <span class="dt">imag_eigenvals =</span> epimodel$imag_eigen_values,
+                               <span class="dt">eigenvecs      =</span> epimodel$eigen_vectors, 
+                               <span class="dt">inversevecs    =</span> epimodel$inv_eigen_vectors, 
+                               <span class="dt">irm_array      =</span> epimodel$irm, 
+                               <span class="dt">n_real_eigs    =</span> epimodel$n_real_eigs, 
+                               <span class="dt">initial_calc   =</span> <span class="ot">FALSE</span>)
+          
+          <span class="co"># get the data log-likelihood under the new parameters</span>
+          obs_likelihood_new &lt;-<span class="st"> </span><span class="kw">calc_obs_likelihood</span>(epimodel, <span class="dt">params =</span> proposal, <span class="dt">log =</span> <span class="ot">TRUE</span>) #### NOTE - log = TRUE
+          
+          <span class="co"># compute the new population level CTMC log-likelihood</span>
+          pop_likelihood_new &lt;-<span class="st"> </span>epimodel$likelihoods$pop_likelihood_cur +
+<span class="st">                    </span>suff_stats[<span class="dv">1</span>] *<span class="st"> </span>(<span class="kw">log</span>(proposal[<span class="st">&quot;beta&quot;</span>]) -<span class="st"> </span><span class="kw">log</span>(epimodel$params[<span class="st">&quot;beta&quot;</span>])) +<span class="st"> </span>
+<span class="st">                    </span>suff_stats[<span class="dv">3</span>] *<span class="st"> </span>(<span class="kw">log</span>(proposal[<span class="st">&quot;gamma&quot;</span>]) -<span class="st"> </span><span class="kw">log</span>(epimodel$params[<span class="st">&quot;gamma&quot;</span>])) +
+<span class="st">                    </span>suff_stats[<span class="dv">5</span>] *<span class="st"> </span>(<span class="kw">log</span>(proposal[<span class="st">&quot;mu&quot;</span>]) -<span class="st"> </span><span class="kw">log</span>(epimodel$params[<span class="st">&quot;mu&quot;</span>])) -
+<span class="st">                    </span>suff_stats[<span class="dv">2</span>] *<span class="st"> </span>(proposal[<span class="st">&quot;beta&quot;</span>] -<span class="st"> </span>epimodel$params[<span class="st">&quot;beta&quot;</span>]) -<span class="st"> </span>
+<span class="st">                    </span>suff_stats[<span class="dv">4</span>] *<span class="st"> </span>(proposal[<span class="st">&quot;gamma&quot;</span>] -<span class="st"> </span>epimodel$params[<span class="st">&quot;gamma&quot;</span>]) -<span class="st"> </span>
+<span class="st">                    </span>suff_stats[<span class="dv">6</span>] *<span class="st"> </span>(proposal[<span class="st">&quot;mu&quot;</span>] -<span class="st"> </span>epimodel$params[<span class="st">&quot;mu&quot;</span>])
+          
+          <span class="co"># update parameters, likelihood objects, and eigen decompositions</span>
+          epimodel &lt;-<span class="st"> </span><span class="kw">update_params</span>(epimodel,
+                                    <span class="dt">params =</span> proposal,
+                                    <span class="dt">pop_likelihood =</span> pop_likelihood_new,
+                                    <span class="dt">obs_likelihood =</span> obs_likelihood_new
+          )
+          
+          <span class="kw">return</span>(epimodel)
+}
+
+<span class="co"># MCMC transition kernel for the SIR model rate parameters. The prior distributions for the parameters are contained</span>
+<span class="co"># in this function.</span>
+SIR_negbinom_rates_kernel &lt;-<span class="st"> </span>function(epimodel) {
+          
+          <span class="co"># get sufficient statistics using the previously compiled getSuffStats function (above)</span>
+          suff_stats          &lt;-<span class="st"> </span><span class="kw">getSuffStats_SIR</span>(epimodel$pop_mat, epimodel$ind_final_config)
+          
+          <span class="co"># update parameters from their univariate full conditional distributions</span>
+          <span class="co"># Priors: beta ~ gamma(0.003, 10)</span>
+          <span class="co">#         mu   ~ gamma(1, 8)</span>
+          proposal          &lt;-<span class="st"> </span>epimodel$params <span class="co"># params is the vector of ALL model parameters</span>
+          proposal[<span class="st">&quot;beta&quot;</span>]  &lt;-<span class="st"> </span><span class="kw">rgamma</span>(<span class="dv">1</span>, <span class="fl">0.001</span> +<span class="st"> </span>suff_stats[<span class="dv">1</span>], <span class="dv">1</span> +<span class="st"> </span>suff_stats[<span class="dv">2</span>])
+          proposal[<span class="st">&quot;mu&quot;</span>]    &lt;-<span class="st"> </span><span class="kw">rgamma</span>(<span class="dv">1</span>, <span class="dv">1</span> +<span class="st"> </span>suff_stats[<span class="dv">3</span>], <span class="dv">2</span> +<span class="st"> </span>suff_stats[<span class="dv">4</span>])
+          
+          <span class="co"># update array of rate matrices</span>
+          epimodel &lt;-<span class="st"> </span><span class="kw">build_new_irms</span>(epimodel, proposal)
+          
+          <span class="co"># update the eigen decompositions</span>
+          <span class="kw">buildEigenArray_SIR</span>(<span class="dt">real_eigenvals =</span> epimodel$real_eigen_values,
+                              <span class="dt">imag_eigenvals =</span> epimodel$imag_eigen_values,
+                              <span class="dt">eigenvecs      =</span> epimodel$eigen_vectors, 
+                              <span class="dt">inversevecs    =</span> epimodel$inv_eigen_vectors, 
+                              <span class="dt">irm_array      =</span> epimodel$irm, 
+                              <span class="dt">n_real_eigs    =</span> epimodel$n_real_eigs, 
+                              <span class="dt">initial_calc   =</span> <span class="ot">FALSE</span>)
+          
+          <span class="co"># get the new population level CTMC log-likelihood</span>
+          pop_likelihood_new  &lt;-<span class="st"> </span>epimodel$likelihoods$pop_likelihood_cur +
+<span class="st">                    </span>suff_stats[<span class="dv">1</span>] *<span class="st"> </span>(<span class="kw">log</span>(proposal[<span class="st">&quot;beta&quot;</span>]) -<span class="st"> </span><span class="kw">log</span>(epimodel$params[<span class="st">&quot;beta&quot;</span>])) +
+<span class="st">                    </span>suff_stats[<span class="dv">3</span>] *<span class="st"> </span>(<span class="kw">log</span>(proposal[<span class="st">&quot;mu&quot;</span>]) -<span class="st"> </span><span class="kw">log</span>(epimodel$params[<span class="st">&quot;mu&quot;</span>])) -
+<span class="st">                    </span>suff_stats[<span class="dv">2</span>] *<span class="st"> </span>(proposal[<span class="st">&quot;beta&quot;</span>] -<span class="st"> </span>epimodel$params[<span class="st">&quot;beta&quot;</span>]) -<span class="st"> </span>
+<span class="st">                    </span>suff_stats[<span class="dv">4</span>] *<span class="st"> </span>(proposal[<span class="st">&quot;mu&quot;</span>] -<span class="st"> </span>epimodel$params[<span class="st">&quot;mu&quot;</span>])
+          
+          <span class="co"># update parameters, likelihood objects, and eigen decompositions</span>
+          epimodel &lt;-<span class="st"> </span><span class="kw">update_params</span>(epimodel, <span class="dt">params =</span> proposal, <span class="dt">pop_likelihood =</span> pop_likelihood_new)
+          
+          <span class="kw">return</span>(epimodel)
+}
+
+<span class="co"># MCMC transition kernel for the SIR model rate parameters. The prior distributions for the parameters are contained</span>
+<span class="co"># in this function.</span>
+SEIR_negbinom_rates_kernel &lt;-<span class="st"> </span>function(epimodel) {
+          
+          <span class="co"># get sufficient statistics using the previously compiled getSuffStats function (above)</span>
+          suff_stats          &lt;-<span class="st"> </span><span class="kw">getSuffStats_SEIR</span>(epimodel$pop_mat, epimodel$ind_final_config)
+          
+          <span class="co"># update parameters from their univariate full conditional distributions</span>
+          <span class="co"># Priors: beta ~ gamma(0.003, 10)</span>
+          <span class="co">#         mu   ~ gamma(1, 8)</span>
+          proposal          &lt;-<span class="st"> </span>epimodel$params <span class="co"># params is the vector of ALL model parameters</span>
+          proposal[<span class="st">&quot;beta&quot;</span>]  &lt;-<span class="st"> </span><span class="kw">rgamma</span>(<span class="dv">1</span>, <span class="fl">0.001</span> +<span class="st"> </span>suff_stats[<span class="dv">1</span>], <span class="dv">1</span> +<span class="st"> </span>suff_stats[<span class="dv">2</span>])
+          proposal[<span class="st">&quot;gamma&quot;</span>] &lt;-<span class="st"> </span><span class="kw">rgamma</span>(<span class="dv">1</span>, <span class="fl">0.001</span> +<span class="st"> </span>suff_stats[<span class="dv">3</span>], <span class="dv">1</span> +<span class="st"> </span>suff_stats[<span class="dv">4</span>])
+          proposal[<span class="st">&quot;mu&quot;</span>]    &lt;-<span class="st"> </span><span class="kw">rgamma</span>(<span class="dv">1</span>, <span class="dv">1</span> +<span class="st"> </span>suff_stats[<span class="dv">5</span>], <span class="dv">2</span> +<span class="st"> </span>suff_stats[<span class="dv">6</span>])
+          
+          <span class="co"># update array of rate matrices</span>
+          epimodel          &lt;-<span class="st"> </span><span class="kw">build_new_irms</span>(epimodel, proposal)
+          
+          <span class="co"># update the eigen decompositions</span>
+          <span class="kw">buildEigenArray_SEIR</span>(<span class="dt">real_eigenvals =</span> epimodel$real_eigen_values,
+                               <span class="dt">imag_eigenvals =</span> epimodel$imag_eigen_values,
+                               <span class="dt">eigenvecs      =</span> epimodel$eigen_vectors, 
+                               <span class="dt">inversevecs    =</span> epimodel$inv_eigen_vectors, 
+                               <span class="dt">irm_array      =</span> epimodel$irm, 
+                               <span class="dt">n_real_eigs    =</span> epimodel$n_real_eigs, 
+                               <span class="dt">initial_calc   =</span> <span class="ot">FALSE</span>)
+          
+          <span class="co"># get the new population level CTMC log-likelihood</span>
+          pop_likelihood_new &lt;-<span class="st"> </span>epimodel$likelihoods$pop_likelihood_cur +
+<span class="st">                    </span>suff_stats[<span class="dv">1</span>] *<span class="st"> </span>(<span class="kw">log</span>(proposal[<span class="st">&quot;beta&quot;</span>]) -<span class="st"> </span><span class="kw">log</span>(epimodel$params[<span class="st">&quot;beta&quot;</span>])) +<span class="st"> </span>
+<span class="st">                    </span>suff_stats[<span class="dv">3</span>] *<span class="st"> </span>(<span class="kw">log</span>(proposal[<span class="st">&quot;gamma&quot;</span>]) -<span class="st"> </span><span class="kw">log</span>(epimodel$params[<span class="st">&quot;gamma&quot;</span>])) +
+<span class="st">                    </span>suff_stats[<span class="dv">5</span>] *<span class="st"> </span>(<span class="kw">log</span>(proposal[<span class="st">&quot;mu&quot;</span>]) -<span class="st"> </span><span class="kw">log</span>(epimodel$params[<span class="st">&quot;mu&quot;</span>])) -
+<span class="st">                    </span>suff_stats[<span class="dv">2</span>] *<span class="st"> </span>(proposal[<span class="st">&quot;beta&quot;</span>] -<span class="st"> </span>epimodel$params[<span class="st">&quot;beta&quot;</span>]) -<span class="st"> </span>
+<span class="st">                    </span>suff_stats[<span class="dv">4</span>] *<span class="st"> </span>(proposal[<span class="st">&quot;gamma&quot;</span>] -<span class="st"> </span>epimodel$params[<span class="st">&quot;gamma&quot;</span>]) -<span class="st"> </span>
+<span class="st">                    </span>suff_stats[<span class="dv">6</span>] *<span class="st"> </span>(proposal[<span class="st">&quot;mu&quot;</span>] -<span class="st"> </span>epimodel$params[<span class="st">&quot;mu&quot;</span>])
+          
+          <span class="co"># update parameters, likelihood objects, and eigen decompositions</span>
+          epimodel &lt;-<span class="st"> </span><span class="kw">update_params</span>(epimodel, <span class="dt">params =</span> proposal, <span class="dt">pop_likelihood =</span> pop_likelihood_new)
+          
+          <span class="kw">return</span>(epimodel)
+}
+
+## RWMH transition ernels for the negative binomial parameters
+<span class="co"># functions for converting rho and phi to and from the estimation scale for the negative binomial parameters</span>
+to_estimation_scale &lt;-<span class="st"> </span>function(params, epimodel) {
+          params[<span class="st">&quot;rho&quot;</span>] &lt;-<span class="st"> </span><span class="kw">logit</span>(params[<span class="st">&quot;rho&quot;</span>])
+          params[<span class="st">&quot;phi&quot;</span>] &lt;-<span class="st"> </span><span class="kw">log</span>(params[<span class="st">&quot;phi&quot;</span>])
+          <span class="kw">return</span>(params)
+}
+
+from_estimation_scale &lt;-<span class="st"> </span>function(params_est, epimodel) {
+          params_est[<span class="st">&quot;rho&quot;</span>] &lt;-<span class="st"> </span><span class="kw">expit</span>(params_est[<span class="st">&quot;rho&quot;</span>])
+          params_est[<span class="st">&quot;phi&quot;</span>] &lt;-<span class="st"> </span><span class="kw">exp</span>(params_est[<span class="st">&quot;phi&quot;</span>])
+          <span class="kw">return</span>(params_est)
+}
+
+RWMH_kernel &lt;-<span class="st"> </span>function(epimodel) {
+          
+          <span class="co"># get existing parameter values - proposal will contain the parameters on the estimation scale</span>
+          <span class="co"># while proposal_nat contains the proposal on the natural scale</span>
+          proposal_est &lt;-<span class="st"> </span>proposal_nat &lt;-<span class="st"> </span>epimodel$params
+          
+          <span class="co"># set log likelihood function</span>
+          log_likelihood_cur &lt;-<span class="st"> </span>epimodel$likelihoods$obs_likelihood
+          
+          <span class="co"># make proposal - edit this line appropriately</span>
+          proposal_est[<span class="kw">c</span>(<span class="st">&quot;rho&quot;</span>, <span class="st">&quot;phi&quot;</span>)] &lt;-<span class="st"> </span>epimodel$sim_settings$<span class="kw">to_estimation_scale</span>(proposal_nat[<span class="kw">c</span>(<span class="st">&quot;rho&quot;</span>, <span class="st">&quot;phi&quot;</span>)], epimodel)
+          
+          <span class="co"># compute the prior probability of the current parameter values</span>
+          prior_prob_cur &lt;-<span class="st"> </span><span class="kw">sum</span>(
+                    <span class="kw">dbeta</span>(proposal_nat[<span class="st">&quot;rho&quot;</span>], <span class="dv">2</span>, <span class="dv">1</span>, <span class="dt">log =</span> <span class="ot">TRUE</span>) -<span class="st"> </span>proposal_est[<span class="st">&quot;rho&quot;</span>] -<span class="st"> </span><span class="dv">2</span>*<span class="kw">log</span>(<span class="dv">1</span> +<span class="st"> </span><span class="kw">exp</span>(-proposal_est[<span class="st">&quot;rho&quot;</span>])),
+                    <span class="kw">dgamma</span>(proposal_nat[<span class="st">&quot;phi&quot;</span>], <span class="dv">1</span>, <span class="fl">0.1</span>, <span class="dt">log =</span> <span class="ot">TRUE</span>) +<span class="st"> </span>proposal_est[<span class="st">&quot;phi&quot;</span>]
+          )
+          
+          <span class="co"># make proposal</span>
+          proposal_est[<span class="kw">c</span>(<span class="st">&quot;rho&quot;</span>, <span class="st">&quot;phi&quot;</span>)] &lt;-<span class="st"> </span>MASS::<span class="kw">mvrnorm</span>(<span class="dt">n =</span> <span class="dv">1</span>, <span class="dt">mu =</span> proposal_est[<span class="kw">c</span>(<span class="st">&quot;rho&quot;</span>, <span class="st">&quot;phi&quot;</span>)], <span class="dt">Sigma =</span> epimodel$sim_settings$cov_mtx)
+          
+          <span class="co"># transform back to the natural scale</span>
+          proposal_nat[<span class="kw">c</span>(<span class="st">&quot;rho&quot;</span>, <span class="st">&quot;phi&quot;</span>)] &lt;-<span class="st"> </span>epimodel$sim_settings$<span class="kw">from_estimation_scale</span>(proposal_est[<span class="kw">c</span>(<span class="st">&quot;rho&quot;</span>, <span class="st">&quot;phi&quot;</span>)], epimodel)
+          
+          <span class="co"># get prior likelihood for proposed parameters - edit appropriately</span>
+          prior_prob_new &lt;-<span class="st"> </span><span class="kw">sum</span>(
+                    <span class="kw">dbeta</span>(proposal_nat[<span class="st">&quot;rho&quot;</span>], <span class="dv">2</span>, <span class="dv">1</span>, <span class="dt">log =</span> <span class="ot">TRUE</span>) -<span class="st"> </span>proposal_est[<span class="st">&quot;rho&quot;</span>] -<span class="st"> </span><span class="dv">2</span>*<span class="kw">log</span>(<span class="dv">1</span> +<span class="st"> </span><span class="kw">exp</span>(-proposal_est[<span class="st">&quot;rho&quot;</span>])),
+                    <span class="kw">dgamma</span>(proposal_nat[<span class="st">&quot;phi&quot;</span>], <span class="dv">1</span>, <span class="fl">0.1</span>, <span class="dt">log =</span> <span class="ot">TRUE</span>) +<span class="st"> </span>proposal_est[<span class="st">&quot;phi&quot;</span>]
+          )
+          
+          <span class="co"># get population level complete data likelihood for the new parameters</span>
+          <span class="co"># if the population-level CTMC likelihood or the measurement process</span>
+          <span class="co"># is unchanged, comment out the corresponding line</span>
+          obs_likelihood_new  &lt;-<span class="st"> </span><span class="kw">calc_obs_likelihood</span>(<span class="dt">epimodel =</span> epimodel, <span class="dt">params =</span> proposal_nat, <span class="dt">log =</span> <span class="ot">TRUE</span>)
+          log_likelihood_new  &lt;-<span class="st"> </span>obs_likelihood_new
+          
+          <span class="co"># compute the acceptance probability and accept or reject proposal </span>
+          accept_prob &lt;-<span class="st"> </span>log_likelihood_new -<span class="st"> </span>log_likelihood_cur +<span class="st"> </span>prior_prob_new -<span class="st"> </span>prior_prob_cur
+          
+          if(accept_prob &gt;=<span class="st"> </span><span class="dv">0</span> ||<span class="st"> </span>accept_prob &gt;=<span class="st"> </span><span class="kw">log</span>(<span class="kw">runif</span>(<span class="dv">1</span>))) {
+                    
+                    <span class="co"># update parameters and likelihood objects</span>
+                    epimodel &lt;-
+<span class="st">                              </span><span class="kw">update_params</span>(
+                                        epimodel,
+                                        <span class="dt">params =</span> proposal_nat,
+                                        <span class="dt">obs_likelihood =</span> obs_likelihood_new
+                              )
+          } 
+          
+          <span class="kw">return</span>(epimodel)
+}</code></pre></div>
+<p>We now re-initialize each epimodel object with its transition kernel, set the RNG seed, and run each MCMC chain as follows. Note that the chain was set by a batch script that varied the value of <code>chain</code> (chain = 1,2,3).</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">chain &lt;-<span class="st"> </span><span class="dv">1</span> <span class="co"># this was set by a batch script that ran chains 1, 2, and 3 in parallel</span>
+<span class="kw">set.seed</span>(<span class="dv">52787</span> +<span class="st"> </span>chain)
+
+
+SIR_binom &lt;-<span class="st"> </span><span class="kw">init_settings</span>(SIR_binom,
+                          <span class="dt">niter =</span> <span class="dv">10</span>, <span class="co"># this was set to 100000 for the paper</span>
+                          <span class="dt">save_params_every =</span> <span class="dv">1</span>,
+                          <span class="dt">save_configs_every =</span> <span class="dv">250</span>,
+                          <span class="dt">kernel =</span> <span class="kw">list</span>(SIR_binom_kernel),
+                          <span class="dt">configs_to_redraw =</span> <span class="dv">10</span>, <span class="co"># this was set to 100 for the paper</span>
+                          <span class="dt">ecctmc_method =</span> <span class="st">&quot;unif&quot;</span>,
+                          <span class="dt">analytic_eigen =</span> <span class="st">&quot;SIR&quot;</span>)
+
+SEIR_binom &lt;-<span class="st"> </span><span class="kw">init_settings</span>(SEIR_binom,
+                          <span class="dt">niter =</span> <span class="dv">10</span>, <span class="co"># this was set to 100000 for the paper</span>
+                          <span class="dt">save_params_every =</span> <span class="dv">1</span>,
+                          <span class="dt">save_configs_every =</span> <span class="dv">250</span>,
+                          <span class="dt">kernel =</span> <span class="kw">list</span>(SEIR_binom_kernel),
+                          <span class="dt">configs_to_redraw =</span> <span class="dv">10</span>, <span class="co"># this was set to 100 for the paper</span>
+                          <span class="dt">ecctmc_method =</span> <span class="st">&quot;unif&quot;</span>,
+                          <span class="dt">analytic_eigen =</span> <span class="st">&quot;SEIR&quot;</span>)
+
+SIR_negbinom &lt;-<span class="st"> </span><span class="kw">init_settings</span>(SIR_negbinom,
+                          <span class="dt">niter =</span> <span class="dv">10</span>, <span class="co"># this was set to 100000 for the paper</span>
+                          <span class="dt">save_params_every =</span> <span class="dv">1</span>,
+                          <span class="dt">save_configs_every =</span> <span class="dv">250</span>,
+                          <span class="dt">kernel =</span> <span class="kw">list</span>(SIR_negbinom_rates_kernel, RWMH_kernel), 
+                          <span class="dt">cov_mtx =</span> <span class="fl">0.5</span> *<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">c</span>(<span class="fl">5.779382</span>, -<span class="fl">1.0413166</span>,
+                                             -<span class="fl">1.0413166</span>,  <span class="fl">0.7541288</span>), <span class="dv">2</span>),
+                          <span class="dt">configs_to_redraw =</span> <span class="dv">10</span>, <span class="co"># this was set to 100 for the ppaer </span>
+                          <span class="dt">to_estimation_scale =</span> to_estimation_scale,
+                          <span class="dt">from_estimation_scale =</span> from_estimation_scale,
+                          <span class="dt">ecctmc_method =</span> <span class="st">&quot;unif&quot;</span>,
+                          <span class="dt">analytic_eigen =</span> <span class="st">&quot;SIR&quot;</span>)
+
+SEIR_negbinom &lt;-<span class="st"> </span><span class="kw">init_settings</span>(SEIR_negbinom,
+                          <span class="dt">niter =</span> <span class="dv">10</span>, <span class="co"># this was set to 100000 for the paper</span>
+                          <span class="dt">save_params_every =</span> <span class="dv">1</span>,
+                          <span class="dt">save_configs_every =</span> <span class="dv">250</span>,
+                          <span class="dt">kernel =</span> <span class="kw">list</span>(SEIR_negbinom_rates_kernel, RWMH_kernel), 
+                          <span class="dt">cov_mtx =</span> <span class="fl">0.5</span> *<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">c</span>(<span class="fl">5.779382</span>, -<span class="fl">1.0413166</span>,
+                                             -<span class="fl">1.0413166</span>,  <span class="fl">0.7541288</span>), <span class="dv">2</span>),
+                          <span class="dt">configs_to_redraw =</span> <span class="dv">10</span>, <span class="co"># this was set to 100000 for the paper </span>
+                          <span class="dt">to_estimation_scale =</span> to_estimation_scale,
+                          <span class="dt">from_estimation_scale =</span> from_estimation_scale,
+                          <span class="dt">ecctmc_method =</span> <span class="st">&quot;unif&quot;</span>,
+                          <span class="dt">analytic_eigen =</span> <span class="st">&quot;SEIR&quot;</span>)
+
+<span class="co"># Fit the models --------------------------------------------------------</span>
+
+SIR_binom_results     &lt;-<span class="st"> </span><span class="kw">fit_epimodel</span>(SIR_binom, <span class="dt">monitor =</span> <span class="ot">TRUE</span>)</code></pre></div>
+<pre><code>## [1] &quot;Configuration initialized. Beginning MCMC.&quot;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">SEIR_binom_results    &lt;-<span class="st"> </span><span class="kw">fit_epimodel</span>(SEIR_binom, <span class="dt">monitor =</span> <span class="ot">TRUE</span>)</code></pre></div>
+<pre><code>## [1] &quot;Initialization attempt 10&quot;
+## [1] &quot;Configuration initialized. Beginning MCMC.&quot;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">SIR_negbinom_results  &lt;-<span class="st"> </span><span class="kw">fit_epimodel</span>(SIR_negbinom, <span class="dt">monitor =</span> <span class="ot">TRUE</span>)</code></pre></div>
+<pre><code>## [1] &quot;Configuration initialized. Beginning MCMC.&quot;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">SEIR_negbinom_results &lt;-<span class="st"> </span><span class="kw">fit_epimodel</span>(SEIR_negbinom, <span class="dt">monitor =</span> <span class="ot">TRUE</span>)</code></pre></div>
+<pre><code>## [1] &quot;Configuration initialized. Beginning MCMC.&quot;</code></pre>
+<p>After running all three chains for each model, we discarded the burn-in and combined the parameter samples and latent posterior samples from each chain. Posterior median estimates and 95% credible intervals of model parameters were computed, along with the pointwise posterior distribution of the latent process. These are presented in the paper and the supplement.</p>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
