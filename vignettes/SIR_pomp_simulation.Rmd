@@ -1,6 +1,12 @@
 ---
-title: "Analyzing an epidemic with SIR dynamics"
-output: pdf_document
+title: "Analyzing an epidemic with SIR dynamics using the pomp package"
+author: "Jon Fintzi, Xiang Cui, Jon Wakefield, Vladimir Minin"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Analyzing an epidemic with SIR dynamics using the pomp package}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r,echo=T,eval=T}

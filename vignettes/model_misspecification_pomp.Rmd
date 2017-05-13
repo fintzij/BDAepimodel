@@ -1,6 +1,12 @@
 ---
-title: "Model_Misspecification"
-output: pdf_document
+title: "Fitting SIR and SEIR models to binomially distributed prevalence counts sampled from an epidemic with time-varying dynamics using the pomp package"
+author: "Jon Fintzi, Xiang Cui, Jon Wakefield, Vladimir Minin"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Fitting SIR and SEIR models to binomially distributed prevalence counts sampled from an epidemic with time-varying dynamics using the pomp package}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r,echo=T,eval=T}

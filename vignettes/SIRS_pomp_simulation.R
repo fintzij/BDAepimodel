@@ -1,54 +1,23 @@
----
-title: "Analyzing an epidemic with SIRS dynamics using the pomp package"
-author: "Jon Fintzi, Xiang Cui, Jon Wakefield, Vladimir Minin"
-date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{Analyzing an epidemic with SIRS dynamics using the pomp package}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
-
-```{r,echo=T,eval=T}
+## ----echo=T,eval=T-------------------------------------------------------
 library(BDAepimodel)
 library(coda)
 library(Rcpp)
 library(pomp)
 library(gtools)
 library(ggplot2)
-```
 
-#Analyzing an epidemic with SIRS dynamics
-
-In this vignette, we will demonstrate how to implement the Particle Marginal Metropolis-Hastings (PMMH) algorithm (which has been implemented in the pomp package) for analyzing simulated prevalence counts. We fit SIRS models to binomially distributed prevalence counts. 
-
-We simulated an epidemic with SIRS dynamics in a population of 200 individuals, 1% of whom were initially infected, with the rest being suscpetible. The per–contact infectivity rate was $\beta = 0.0009$, the average infectious period duration was $1/\mu = 14$ days, and the average time until loss of immunity was $1/\gamma = 150$ days, which together correspond to a basic reproduction number of $R_0 = \beta N / \mu = 2.52$. Binomially sampled prevalence was observed at one week intervals over a period of one year with sampling probability $\rho=0.8$.
-
-The data simulation code is in "SIR_SEIR_SIRS" vignettes. And the data is shown below.
-
-
-```{r,echo=T,eval=T}
+## ----echo=T,eval=T-------------------------------------------------------
 data<-c(1,4,6,6,4,9,12,23,29,32,29,48,32,22,15,13,8,7,3,2,1,0,0,1,3,1,0,1,3,3,3,1,5,3,5,3,2,1,0,6,2,3,6,3,6,5,5,8,15,17,14,8,8)
-```
 
-#Using Approximate Tau-leaping Algorithm:
-
-We use the SIRS model to model the dataset. The hosts are divided into three classes, according to their status. The susceptible class (S) contains those that have not yet been infected and are thereby still susceptible to it; the infected class (I) comprises those who are currently infected and, by assumption, infectious; the removed class (R) includes those who are recovered or quarantined as a result of the infection. Individuals in R are assumed to lose immunity  after a few days of the recovery. It is natural to formulate this model as a continuous-time Markov process. To start with, we need to specify the measurement model.
-
-```{r,echo=T,eval=T}
+## ----echo=T,eval=T-------------------------------------------------------
 rmeas<-"
 cases=rbinom(I,exp(rho)/(1+exp(rho)));//represent the data
 "
 dmeas<-"
 lik=dbinom(cases,I,exp(rho)/(1+exp(rho)),give_log); //return the loglikelihood
 "
-```
 
-Here, we are using the $\textbf{cases}$ to refer to the data (number of reported cases) and $\textbf{I}$ to refer to the true incidence over the reporting interval. The binomial simulator rbinom and density function dbinom are provided by R. Notice that, in these snippets, we never declare the variables; pomp will ensure tht the state variable ($\textbf{I}$), observables ($\textbf{cases}$), parameters ($\textbf{rho}$, $\textbf{phi}$) and likelihood ($\textbf{lik}$) are defined in the contexts within which these snippets are executed.
-
-And for the transition of the SIRS model, we use a approximating tau-leaping algorithm, one version of which is implemented in the pomp package via the $\bf{euler.sim}$ plug-in. The algorithm holds the transition rates constant over a small interval of time and simulates the numbers of transitions that occur over the interval. The functions $\textbf{reulermultinom}$ draw random deviates from such distributions. Then we need to first specify a function that advances the states from $t$ to $t+\triangle t$, and we give the trantition of the SIRS model code below: 
-
-```{r,echo=T,eval=T}
+## ----echo=T,eval=T-------------------------------------------------------
 sirs.step<-"
 double rate[3];
 double dN[3];
@@ -63,11 +32,8 @@ S+=-dN[0]+dN[2];  //update the number of Susceptible
 I+=dN[0]-dN[1];   //update the number of Infection
 R+=dN[1]-dN[2];   //update the number of Recovery
 "
-```
 
-The pomp will ensure that the undeclared state variables and parameters are defined in the context within which the snippet is executed. And the $\textbf{rate}$ and $\textbf{dN}$ arrays hold the rates and numbers of transition events, respectively. Then we could construct the pomp objects below:
-
-```{r,echo=T,eval=T}
+## ----echo=T,eval=T-------------------------------------------------------
 sirs <- pomp(
   data = data.frame(cases = data, time = seq(1, 365, by = 7)), #"cases" is the dataset, "time" is the observation time
   times = "time",
@@ -93,11 +59,8 @@ sirs <- pomp(
             theta2 = log(0.00000001)
   )
 )
-```
 
-To carry out Bayesian inference we need to specify a prior distribution on unknown parame- ters. The pomp constructor function provides the rprior and dprior arguments, which can be filled with functions that simulate from and evaluate the prior density, respectively. Methods based on random walk Metropolis-Hastings require evaluation of the prior density (dprior), so we specify dprior for the SIRS model as follows.
-
-```{r,echo=T,eval=T}
+## ----echo=T,eval=T-------------------------------------------------------
 sirs.dprior <- function(params, ..., log) {
           f <- (
                     dgamma(exp(params[1]), 0.1, 100, log = TRUE) + params[1] + #log prior for log(infection rate) "beta"
@@ -117,11 +80,8 @@ sirs.dprior <- function(params, ..., log) {
                     exp(f)
           }
 }
-```
 
-And starting value of the PMMH is specified below:
-
-```{r,echo=T,eval=T}
+## ----echo=T,eval=T-------------------------------------------------------
 param.initial <- c(
           beta = log(abs(rnorm(1, 0.00077, 1e-4))),
           mu = log(abs(rnorm(1, 1/18, 1e-4))),
@@ -130,11 +90,8 @@ param.initial <- c(
           theta1 = 3,
           theta2 = -5
 )
-```
 
-And the following runs 1 PMMH chain for 5000 tunning steps (using 500 particles) to get a suitable multivariate normal random walk proposal diagonal variance-covariance matrix value.
-
-```{r,echo=T,eval=T,warning=F}
+## ----echo=T,eval=T,warning=F---------------------------------------------
 pmcmc1 <- pmcmc(
           pomp(sirs, dprior = sirs.dprior),
           #given the prior function
@@ -155,11 +112,8 @@ pmcmc1 <- pmcmc(
           scale.start = 100, 
           shape.start = 100)
 )
-```
 
-And the following runs 1 PMMH chain for 100000 steps (using 500 particles) with suitable multivariate normal random walk proposal diagonal variance-covariance matrix value we get above to get the posterior distribution of the interested parameters.
-
-```{r,echo=T,eval=T,warning=F}
+## ----echo=T,eval=T,warning=F---------------------------------------------
 start_time <- Sys.time();  #calculation of time
 pmcmc1 <- pmcmc(
           pmcmc1,
@@ -175,26 +129,16 @@ end_time <- Sys.time(); #calculation of time
 run_time <- difftime(end_time, start_time, units = "hours") #calculation of time
 
 pomp_results <- list(time = run_time, results = pmcmc1) 
-```
 
-#Using Exact Gillespie Algorithm:
-
-We use the SIRS model to model the dataset. The hosts are divided into three classes, according to their status. The susceptible class (S) contains those that have not yet been infected and are thereby still susceptible to it; the infected class (I) comprises those who are currently infected and, by assumption, infectious; the removed class (R) includes those who are recovered or quarantined as a result of the infection. Individuals in R are assumed to lose immunity  after a few days of the recovery. It is natural to formulate this model as a continuous-time Markov process. To start with, we need to specify the measurement model.
-
-```{r,echo=T,eval=T}
+## ----echo=T,eval=T-------------------------------------------------------
 rmeas<-"
 cases=rbinom(I,exp(rho)/(1+exp(rho)));//represent the data
 "
 dmeas<-"
 lik=dbinom(cases,I,exp(rho)/(1+exp(rho)),give_log); //return the loglikelihood
 "
-```
 
-Here, we are using the $\textbf{cases}$ to refer to the data (number of reported cases) and $\textbf{I}$ to refer to the true incidence over the reporting interval. The binomial simulator rbinom and density function dbinom are provided by R. Notice that, in these snippets, we never declare the variables; pomp will ensure tht the state variable ($\textbf{I}$), observables ($\textbf{cases}$), parameters ($\textbf{rho}$, $\textbf{phi}$) and likelihood ($\textbf{lik}$) are defined in the contexts within which these snippets are executed.
-
-And for the transition of the SIRS model, we use an exact gillespie algorithm, one version of which is implemented in the pomp package via the $\bf{gillespie.sim}$ plug-in. We give the trantition of the SIR model code below: 
-
-```{r,echo=T,eval=T}
+## ----echo=T,eval=T-------------------------------------------------------
 # define the rate function, stoichiometry matrix, and rate-event dependency matrix
 SIRS_stoich <- cbind(infection = c(-1, 1, 0), # infections yield S-1, I+1
                      recovery  = c(0, -1, 1), # recoveries yield I-1, R+1
@@ -221,11 +165,8 @@ SIRS_rates <- function(j, x, t, params, ...) {
 SIRS_sim <- gillespie.sim(rate.fun = SIRS_rates,
                           v = SIRS_stoich,
                           d = SIRS_depmat)
-```
 
-The pomp will ensure that the undeclared state variables and parameters are defined in the context within which the snippet is executed. And the $\textbf{rate}$ and $\textbf{dN}$ arrays hold the rates and numbers of transition events, respectively. Then we could construct the pomp objects below:
-
-```{r,echo=T,eval=T}
+## ----echo=T,eval=T-------------------------------------------------------
 # initialize the pomp object
 sirs <- pomp(
           data = data.frame(time = seq(1, 365, by = 7), cases = data),  #"cases" is the dataset, "time" is the observation time
@@ -252,11 +193,8 @@ sirs <- pomp(
                     theta2 = log(0.00000001)
           )
 )
-```
 
-To carry out Bayesian inference we need to specify a prior distribution on unknown parame- ters. The pomp constructor function provides the rprior and dprior arguments, which can be filled with functions that simulate from and evaluate the prior density, respectively. Methods based on random walk Metropolis-Hastings require evaluation of the prior density (dprior), so we specify dprior for the SIRS model as follows.
-
-```{r,echo=T,eval=T}
+## ----echo=T,eval=T-------------------------------------------------------
 sirs.dprior <- function(params, ..., log) {
           f <- (
           dgamma(exp(params[1]), 0.1, 100, log = TRUE) + params[1] + #log prior for log(infection rate) "beta"
@@ -276,11 +214,8 @@ sirs.dprior <- function(params, ..., log) {
                     exp(f)
           }
 }
-```
 
-And starting value of the PMMH is specified below:
-
-```{r,echo=T,eval=T}
+## ----echo=T,eval=T-------------------------------------------------------
 param.initial <- c(
   beta = log(abs(rnorm(1, 0.00077, 1e-4))),
   mu = log(abs(rnorm(1, 1/18, 1e-4))),
@@ -289,11 +224,8 @@ param.initial <- c(
   theta1 = 3,
   theta2 = -5
 )
-```
 
-And the following runs 1 PMMH chain for 5000 tunning steps (using 500 particles) to get a suitable multivariate normal random walk proposal diagonal variance-covariance matrix value.
-
-```{r,echo=T,eval=T,warning=F}
+## ----echo=T,eval=T,warning=F---------------------------------------------
 pmcmc1 <- pmcmc(
           pomp(sirs, dprior = sirs.dprior),
           #given the prior function
@@ -320,25 +252,4 @@ pmcmc1 <- pmcmc(
           shape.start = 100, 
           max.scaling = 1.1)
 )
-```
-
-And the following runs 1 PMMH chain for 100000 steps (using 500 particles) with suitable multivariate normal random walk proposal diagonal variance-covariance matrix value we get above to get the posterior distribution of the interested parameters.
-
-```{r,echo=T,eval=T,warning=F}
-start_time <- Sys.time();  #calculation of time
-pmcmc1 <- pmcmc(
-          pmcmc1,
-          #given the prior function
-          start = param.initial,
-          #given the initial value of the parameters
-          Nmcmc = 10,
-          max.fail = Inf,
-          proposal = mvn.rw(covmat(pmcmc1))
-)
-
-end_time <- Sys.time(); #calculation of time
-run_time <- difftime(end_time, start_time, units = "hours") #calculation of time
-
-pomp_results <- list(time = run_time, results = pmcmc1) 
-```
 

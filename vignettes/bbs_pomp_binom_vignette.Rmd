@@ -1,6 +1,12 @@
 ---
-title: "Analyzing an epidemic with SEIR and SIR dynamics"
-output: pdf_document
+title: "Analyzing an outbreak of influenza in a British boarding school under binomial emissions using the pomp package"
+author: "Jon Fintzi, Xiang Cui, Jon Wakefield, Vladimir Minin"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Analyzing an outbreak of influenza in a British boarding school using the pomp package}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 In this vignette, we will demonstrate how to implement the Particle Marginal Metropolis-Hastings (PMMH) algorithm (which has been implemented in the pomp package) for analyzing prevalence counts from an outbreak of influenza in a British boarding school. This dataset was pulled from the pomp package, and was described and analyzed in Fintzi, Cui, Wakefield, and Minin (2016).

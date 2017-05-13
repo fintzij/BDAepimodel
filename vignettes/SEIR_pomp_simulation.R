@@ -1,54 +1,24 @@
----
-title: "Analyzing an epidemic with SEIR dynamics using the pomp package"
-author: "Jon Fintzi, Xiang Cui, Jon Wakefield, Vladimir Minin"
-date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{Analyzing an epidemic with SEIR dynamics using the pomp package}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
-
-```{r,echo=T,eval=T}
+## ----echo=T,eval=T-------------------------------------------------------
 library(BDAepimodel)
 library(coda)
 library(Rcpp)
 library(pomp)
 library(gtools)
 library(ggplot2)
-```
 
-#Analyzing an epidemic with SEIR dynamics
-
-In this vignette, we will demonstrate how to implement the Particle Marginal Metropolis-Hastings (PMMH) algorithm (which has been implemented in the pomp package) for analyzing simulated prevalence counts. We fit SEIR models to binomially distributed prevalence counts. 
-
-We simulated an epidemic with SEIR dynamics in a population of 500 individuals. The epidemic was initiated by a single infected individual in an otherwise completely suscpetible population. The per–contact infectivity rate was $\beta = 0.000075$, the average incubation period was $1/\gamma=14$ days, and the average infectious period duration was $1/\mu = 28$ days, which together correspond to a basic reproduction number of $R_0 = \beta N / µ = 1.05$. Binomially sampled prevalence was observed at one week intervals over a period of two years with sampling probability $\rho=1/3$.
-
-The data simulation code is in "SIR_SEIR_SIRS" vignettes. And the data is shown below.
-
-```{r,echo=T,eval=T}
+## ----echo=T,eval=T-------------------------------------------------------
 set.seed(1834)
 data<-c(0,0,0,1,0,1,1,1,2,1,2,1,0,3,1,0,2,0,2,1,2,2,2,1,0,2,1,0,0,2,0,1,1,0,1,1,1,0,1,2,2,1,1,2,4,2,4,3,5,3,1,1,5,5,4,3,1,1,3,2,0,0,2,2,2,3,2,5,4,1,3,1,4,3,1,2,2,5,2,4,2,1,2,1,3,1,1,3,1,1,0,2,2,3,5,1,0,1,0,1,0,0,0,0,1)
-```
 
-#Using Approximate Tau-leaping Algorithm:
-
-We use the SEIR model to model the dataset. The hosts are divided into four classes, according to their status. The susceptible class (S); the exposed class (E); the infected class (I); and the removed class (R). Individuals in R are assumed to be immune against reinfection. It is natural to formulate this model as a continuous-time Markov process. To start with, we need to specify the measurement model.
-
-```{r,echo=T,eval=T}
+## ----echo=T,eval=T-------------------------------------------------------
 rmeas<-"
 cases=rbinom(I,exp(rho)/(1+exp(rho)));//represent the data
 "
 dmeas<-"
 lik=dbinom(cases,I,exp(rho)/(1+exp(rho)),give_log); //return the loglikelihood
 "
-```
 
-Here, we are using the $\textbf{cases}$ to refer to the data (number of reported cases) and $\textbf{I}$ to refer to the true incidence over the reporting interval. The binomial simulator rbinom and density function dbinom are provided by R. Notice that, in these snippets, we never declare the variables; pomp will ensure tht the state variable ($\textbf{I}$), observables ($\textbf{cases}$), parameters ($\textbf{rho}$, $\textbf{phi}$) and likelihood ($\textbf{lik}$) are defined in the contexts within which these snippets are executed.
-
-And for the transition of the SEIR model, we use a approximating tau-leaping algorithm, one version of which is implemented in the pomp package via the $\bf{euler.sim}$ plug-in. The algorithm holds the transition rates constant over a small interval of time and simulates the numbers of transitions that occur over the interval. The functions $\textbf{reulermultinom}$ draw random deviates from such distributions. Then we need to first specify a function that advances the states from $t$ to $t+\triangle t$, and we give the trantition of the SIR model code below: 
-
-```{r,echo=T,eval=T}
+## ----echo=T,eval=T-------------------------------------------------------
 seir.step<-"
 double rate[3];
 double dN[3];
@@ -64,11 +34,8 @@ E+=dN[0]-dN[1];  //update the number of E
 I+=dN[1]-dN[2];  //update the number of I
 R+=dN[2];        //update the number of R
 "
-```
 
-The pomp will ensure that the undeclared state variables and parameters are defined in the context within which the snippet is executed. And the $\textbf{rate}$ and $\textbf{dN}$ arrays hold the rates and numbers of transition events, respectively. Then we could construct the pomp objects below:
-
-```{r,echo=T,eval=T,warning=F}
+## ----echo=T,eval=T,warning=F---------------------------------------------
 seir <- pomp(
   data = data.frame(cases = data, time = seq(1, 729, by = 7)), #"cases" is the dataset, "time" is the observation time
   times = "time",
@@ -96,11 +63,8 @@ seir <- pomp(
     theta3 = log(7)
   )
 )
-```
 
-To carry out Bayesian inference we need to specify a prior distribution on unknown parame- ters. The pomp constructor function provides the rprior and dprior arguments, which can be filled with functions that simulate from and evaluate the prior density, respectively. Methods based on random walk Metropolis-Hastings require evaluation of the prior density (dprior), so we specify dprior for the SEIR model as follows.
-
-```{r,echo=T,eval=T}
+## ----echo=T,eval=T-------------------------------------------------------
 trans<-function(a,b,c){
   a_t<-exp(a)
   b_t<-exp(b)
@@ -127,11 +91,8 @@ seir.dprior <- function(params, ..., log) {
                     exp(f)
           }
 }
-```
 
-And starting value of the PMMH is specified below:
-
-```{r,echo=T,eval=T}
+## ----echo=T,eval=T-------------------------------------------------------
 param.initial<- c(
   beta = log(abs(rnorm(1, 0.00005, 1e-6))),
   gamma = log(abs(rnorm(1, 0.15, 0.01))),
@@ -141,11 +102,8 @@ param.initial<- c(
   theta2 = 1,
   theta3 = 1
 )
-```
 
-And the following runs 1 PMMH chain for 5000 tunning steps (using 200 particles) to get a suitable multivariate normal random walk proposal diagonal variance-covariance matrix value.
-
-```{r,echo=T,eval=T,warning=F}
+## ----echo=T,eval=T,warning=F---------------------------------------------
 pmcmc1 <- pmcmc(
           pomp(seir, dprior = seir.dprior),
           #given the prior function
@@ -175,11 +133,8 @@ pmcmc1 <- pmcmc(
                     shape.start = 100
           )
 )
-```
 
-And the following runs 1 PMMH chain for 100000 steps (using 200 particles) with suitable multivariate normal random walk proposal diagonal variance-covariance matrix value we get above to get the posterior distribution of the interested parameters.
-
-```{r,echo=T,eval=T,warning=F}
+## ----echo=T,eval=T,warning=F---------------------------------------------
 start_time <- Sys.time();  #calculation of time
 pmcmc1 <- pmcmc(
           pmcmc1,
@@ -195,26 +150,16 @@ end_time <- Sys.time(); #calculation of time
 run_time <- difftime(end_time, start_time, units = "hours") #calculation of time
 
 pomp_results <- list(time = run_time, results = pmcmc1) 
-```
 
-#Using Exact Gillespie Algorithm:
-
-We use the SEIR model to model the dataset. The hosts are divided into four classes, according to their status. The susceptible class (S); the exposed class (E); the infected class (I); and the removed class (R). Individuals in R are assumed to be immune against reinfection. It is natural to formulate this model as a continuous-time Markov process. To start with, we need to specify the measurement model.
-
-```{r,echo=T,eval=T}
+## ----echo=T,eval=T-------------------------------------------------------
 rmeas<-"
 cases=rbinom(I,exp(rho)/(1+exp(rho)));//represent the data
 "
 dmeas<-"
 lik=dbinom(cases,I,exp(rho)/(1+exp(rho)),give_log); //return the loglikelihood
 "
-```
 
-Here, we are using the $\textbf{cases}$ to refer to the data (number of reported cases) and $\textbf{I}$ to refer to the true incidence over the reporting interval. The binomial simulator rbinom and density function dbinom are provided by R. Notice that, in these snippets, we never declare the variables; pomp will ensure tht the state variable ($\textbf{I}$), observables ($\textbf{cases}$), parameters ($\textbf{rho}$, $\textbf{phi}$) and likelihood ($\textbf{lik}$) are defined in the contexts within which these snippets are executed.
-
-And for the transition of the SEIR model, we use an exact gillespie algorithm, one version of which is implemented in the pomp package via the $\bf{gillespie.sim}$ plug-in. We give the trantition of the SIR model code below: 
-
-```{r,echo=T,eval=T}
+## ----echo=T,eval=T-------------------------------------------------------
 # define the rate function, stoichiometry matrix, and rate-event dependency matrix
 SEIR_stoich <- cbind(exposure  = c(-1, 1, 0, 0), # exposures yield S-1, E+1
                      infection = c(0, -1, 1, 0), # infections yield E-1, I+1
@@ -241,11 +186,8 @@ SEIR_rates <- function(j, x, t, params, ...) {
 SEIR_sim <- gillespie.sim(rate.fun = SEIR_rates,
                           v = SEIR_stoich,
                           d = SEIR_depmat)
-```
 
-The pomp will ensure that the undeclared state variables and parameters are defined in the context within which the snippet is executed. And the $\textbf{rate}$ and $\textbf{dN}$ arrays hold the rates and numbers of transition events, respectively. Then we could construct the pomp objects below:
-
-```{r,echo=T,eval=T,warning=F}
+## ----echo=T,eval=T,warning=F---------------------------------------------
 seir <- pomp(
           data = data.frame(time = seq(1, 729, by = 7), cases = data),  #"cases" is the dataset, "time" is the observation time
           times = "time",
@@ -273,11 +215,8 @@ seir <- pomp(
                     theta3 = log(7)
           )
 )
-```
 
-To carry out Bayesian inference we need to specify a prior distribution on unknown parame- ters. The pomp constructor function provides the rprior and dprior arguments, which can be filled with functions that simulate from and evaluate the prior density, respectively. Methods based on random walk Metropolis-Hastings require evaluation of the prior density (dprior), so we specify dprior for the SEIR model as follows.
-
-```{r,echo=T,eval=T}
+## ----echo=T,eval=T-------------------------------------------------------
 trans<-function(a,b,c){
           a_t<-exp(a)
           b_t<-exp(b)
@@ -303,11 +242,8 @@ seir.dprior <- function(params, ..., log) {
                     exp(f)
           }
 }
-```
 
-And starting value of the PMMH is specified below:
-
-```{r,echo=T,eval=T}
+## ----echo=T,eval=T-------------------------------------------------------
 param.initial<- c(
           beta = log(abs(rnorm(1, 0.00005, 1e-6))),
           gamma = log(abs(rnorm(1, 0.15, 0.01))),
@@ -317,11 +253,8 @@ param.initial<- c(
           theta2 = 1,
           theta3 = 1
 )
-```
 
-And the following runs 1 PMMH chain for 5000 tunning steps (using 200 particles) to get a suitable multivariate normal random walk proposal diagonal variance-covariance matrix value.
-
-```{r,echo=T,eval=T,warning=F}
+## ----echo=T,eval=T,warning=F---------------------------------------------
 pmcmc1 <- pmcmc(
           pomp(seir, dprior = seir.dprior),
           #given the prior function
@@ -349,11 +282,8 @@ pmcmc1 <- pmcmc(
           scale.start = 100, 
           shape.start = 100)
 )
-```
 
-And the following runs 1 PMMH chain for 100000 steps (using 200 particles) with suitable multivariate normal random walk proposal diagonal variance-covariance matrix value we get above to get the posterior distribution of the interested parameters.
-
-```{r,echo=T,eval=T,warning=F}
+## ----echo=T,eval=T,warning=F---------------------------------------------
 start_time <- Sys.time();  #calculation of time
 pmcmc1 <- pmcmc(
           pmcmc1,
@@ -369,5 +299,4 @@ end_time <- Sys.time(); #calculation of time
 run_time <- difftime(end_time, start_time, units = "hours") #calculation of time
 
 pomp_results <- list(time = run_time, results = pmcmc1) 
-```
 
