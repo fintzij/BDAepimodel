@@ -40,5 +40,6 @@ paper. These are accessible as follows:
 We also provide vignettes that demonstrate how to fit the models in the
 first and second simulations, along with the boarding school examples,
 using the pomp package. These are not built when the package is
-installed, but are accessible in the vignettes directory of the github
-repo: .
+installed, but are accessible in the
+[inst/pomp\_vignettes](https://github.com/fintzij/BDAepimodel/tree/master/inst/pomp_vignettes)
+directory of the github repo.
