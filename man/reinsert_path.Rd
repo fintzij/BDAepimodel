@@ -6,9 +6,6 @@
 \usage{
 reinsert_path(epimodel, subject)
 }
-\arguments{
-\item{epimodel}{list of bookkeeping and model objects.}
-}
 \value{
 updated configuration matrix
 }

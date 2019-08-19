@@ -7,9 +7,6 @@ time t0.}
 \usage{
 build_initdist(epimodel)
 }
-\arguments{
-\item{epimodel}{list of bookkeeping and model objects.}
-}
 \value{
 vector of initial state probabilities for a single subject
 }

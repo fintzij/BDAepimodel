@@ -9,16 +9,6 @@ sim_one_event(config_list, epimodel, lump)
 \arguments{
 \item{config_list}{list with three named elements - config_mat, pop_mat,
 rate_mat, and dt_mat.}
-
-\item{epimodel}{list of bookkeeping and model objects.}
-
-\item{lump}{option specifying whether to simulate the next event directly on
-the extended state space of individuals, or to simulate on the lumped state
-space of compartment counts, and then choose a subject uniformly at random
-for each event from the set of subjects in the risk pool for that event. A
-value of TRUE, corresponding to the lumped state space, is appropriate when
-there is no subject level heterogeneity and is significantly faster in even
-moderate sized populations.}
 }
 \value{
 updated config_list

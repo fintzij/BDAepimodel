@@ -8,8 +8,6 @@ of a subject-level trajectory.}
 update_tpms(epimodel, subject, direction)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects.}
-
 \item{direction}{"removal" or "insertion"}
 }
 \value{

@@ -7,8 +7,6 @@
 generate_keys(epimodel, inds = NULL, lookup = TRUE)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects.}
-
 \item{inds}{optional vector with row numbers for which keys are desired.}
 
 \item{lookup}{logical indicating whether to look up the keys in the

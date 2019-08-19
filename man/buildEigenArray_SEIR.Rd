@@ -5,8 +5,8 @@
 \title{Update eigen values, vectors, and inverse matrices analytically for the SEIR 
 model}
 \usage{
-buildEigenArray_SEIR(real_eigenvals, imag_eigenvals, eigenvecs, inversevecs,
-  irm_array, n_real_eigs, initial_calc)
+buildEigenArray_SEIR(real_eigenvals, imag_eigenvals, eigenvecs,
+  inversevecs, irm_array, n_real_eigs, initial_calc)
 }
 \arguments{
 \item{eigenvecs}{array of eigenvectors with third dimension corresponding to

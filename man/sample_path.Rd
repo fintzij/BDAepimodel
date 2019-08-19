@@ -7,8 +7,6 @@
 sample_path(epimodel)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects.}
-
 \item{subject}{character string for subject ID code}
 }
 \value{

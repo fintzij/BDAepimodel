@@ -7,9 +7,6 @@ corresponding eigen decompositions.}
 \usage{
 build_irm(epimodel)
 }
-\arguments{
-\item{epimodel}{list of bookkeeping and model objects.}
-}
 \value{
 environment with rate matrices
 }

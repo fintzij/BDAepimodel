@@ -8,8 +8,6 @@
 remove_trajectory(epimodel, subject, save_path)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects.}
-
 \item{subject}{ID for subject to be removed}
 
 \item{save_path}{TRUE/FALSE for whether to save the current path in epimodel}

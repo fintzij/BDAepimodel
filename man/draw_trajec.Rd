@@ -7,8 +7,6 @@
 draw_trajec(epimodel, subject, iter)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects.}
-
 \item{iter}{iteration number}
 }
 \value{

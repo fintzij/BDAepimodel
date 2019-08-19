@@ -6,9 +6,6 @@
 \usage{
 update_obs_mat(epimodel)
 }
-\arguments{
-\item{epimodel}{list of bookkeeping and model objects.}
-}
 \value{
 updated observation matrix and obs_time_inds vector in the epimodel
   environment

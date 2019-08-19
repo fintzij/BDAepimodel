@@ -7,9 +7,6 @@ by checking keys against the irm object list.}
 \usage{
 check_irm(epimodel)
 }
-\arguments{
-\item{epimodel}{list of bookkeeping and model objects.}
-}
 \value{
 Instatiated rate matrix in the .irm environment and its eigen
   decomposition in the .eigen environment

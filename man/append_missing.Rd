@@ -7,9 +7,6 @@ Update irm_key_lookup matrix.}
 \usage{
 append_missing(epimodel)
 }
-\arguments{
-\item{epimodel}{list of bookkeeping and model objects.}
-}
 \value{
 epimodel with complete irm and eigen decomposition arrays.
 }

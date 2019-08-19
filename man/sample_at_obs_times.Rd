@@ -8,8 +8,6 @@ sample_at_obs_times(path, epimodel)
 }
 \arguments{
 \item{path}{vector giving a subject path.}
-
-\item{epimodel}{list of bookkeeping and model objects.}
 }
 \value{
 updated path vector

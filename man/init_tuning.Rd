@@ -5,8 +5,9 @@
 \title{Initialize tuning for M-H kernels.}
 \usage{
 init_tuning(epimodel, tune_params, cov_mtx = NULL,
-  cov_scale = (2.38^2/length(tune_params)), mintune = 2, maxtune = 24,
-  ntu = 500, tunewt = 0, target_accept = c(0.15, 0.5))
+  cov_scale = (2.38^2/length(tune_params)), mintune = 2,
+  maxtune = 24, ntu = 500, tunewt = 0, target_accept = c(0.15,
+  0.5))
 }
 \arguments{
 \item{tune_params}{character vector of parameters for which proposal is to be

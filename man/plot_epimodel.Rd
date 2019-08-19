@@ -8,8 +8,6 @@ plot_epimodel(epimodel, obs = TRUE, config = TRUE,
   which_compartments = NULL)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects.}
-
 \item{obs}{TRUE/FALSE for whether to plot the observed data}
 
 \item{config}{TRUE/FALSE for whether to plot the population level trajectory}

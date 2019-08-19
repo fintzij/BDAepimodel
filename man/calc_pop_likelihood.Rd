@@ -7,8 +7,6 @@
 calc_pop_likelihood(epimodel, log = TRUE)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects.}
-
 \item{log}{TRUE/FALSE for whether to return the log-likelihood or likelihood.}
 
 \item{params}{optional vector of parameters if values other than the current

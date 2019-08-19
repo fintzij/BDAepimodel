@@ -5,8 +5,8 @@
 \title{Insert subject transitions into the population-level and subject level 
 bookkeeping matrices.}
 \usage{
-retrieveSubjPath(subj_path, subject, pop_mat, init_config, ind_final_config,
-  flow_inds)
+retrieveSubjPath(subj_path, subject, pop_mat, init_config,
+  ind_final_config, flow_inds)
 }
 \arguments{
 \item{subj_path}{subject path vector}

@@ -7,8 +7,6 @@
 get_tpms_to_build(epimodel, subject = NULL)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects.}
-
 \item{subject_ID}{string ID for subject to be removed}
 }
 \value{

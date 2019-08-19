@@ -7,8 +7,6 @@
 init_results(epimodel)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects.}
-
 \item{sim_settings}{bookkeeping list of simulation settings}
 }
 \value{

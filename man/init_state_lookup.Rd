@@ -6,9 +6,6 @@
 \usage{
 init_state_lookup(epimodel)
 }
-\arguments{
-\item{epimodel}{list of bookkeeping and model objects.}
-}
 \value{
 character vector for mapping state codes to compartment names.
 }

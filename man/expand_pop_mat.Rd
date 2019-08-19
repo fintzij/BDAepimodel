@@ -8,8 +8,6 @@ configurations.}
 expand_pop_mat(epimodel, buffer_size = NULL)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects.}
-
 \item{buffer_size}{number of buffer rows to insert, defaulting to 30 percent 
 of the number of rows in the current configuration matrix unless otherwise 
 specified.}

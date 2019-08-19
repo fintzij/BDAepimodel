@@ -8,8 +8,6 @@ appropriate objects in the epimodel environment}
 MH_accept_reject(epimodel, subject, iter)
 }
 \arguments{
-\item{epimodel}{list of bookkeeping and model objects.}
-
 \item{iter}{iteration number}
 }
 \value{

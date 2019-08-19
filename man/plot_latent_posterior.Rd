@@ -5,7 +5,8 @@
 \title{Plot the posterior distribution of the latent paths for measured states.}
 \usage{
 plot_latent_posterior(epimodel, states, times, cm = "med",
-  proportion = FALSE, truth = NULL, true_popsize = NULL, dat = NULL)
+  proportion = FALSE, truth = NULL, true_popsize = NULL,
+  dat = NULL)
 }
 \arguments{
 \item{epimodel}{fitted epimodel object}

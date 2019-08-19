@@ -4,13 +4,14 @@
 \alias{init_settings}
 \title{Initialize a bookkeeping list of MCMC settings.}
 \usage{
-init_settings(epimodel, niter, configs_to_redraw, config_replacement = FALSE,
-  preferential_sampling = NULL, init_popsize = NULL,
-  compartment_dist = NULL, save_params_every = 1,
-  save_configs_every = niter\%/\%100, kernel, post_init_params = NULL,
-  cov_mtx = NULL, to_estimation_scale = NULL,
-  from_estimation_scale = NULL, analytic_eigen = NULL,
-  ecctmc_method = "mr", seed = NULL, time_limit = NULL)
+init_settings(epimodel, niter, configs_to_redraw,
+  config_replacement = FALSE, preferential_sampling = NULL,
+  init_popsize = NULL, compartment_dist = NULL,
+  save_params_every = 1, save_configs_every = niter\%/\%100, kernel,
+  post_init_params = NULL, cov_mtx = NULL,
+  to_estimation_scale = NULL, from_estimation_scale = NULL,
+  analytic_eigen = NULL, ecctmc_method = "mr", seed = NULL,
+  time_limit = NULL)
 }
 \arguments{
 \item{epimodel}{epimodel object}

@@ -4,7 +4,8 @@
 \alias{simulate_SIR}
 \title{Simulate an epidemic with SIR dynamics and draw binomial samples.}
 \usage{
-simulate_SIR(obstimes, params, popsize, init_config = NULL, trim = TRUE)
+simulate_SIR(obstimes, params, popsize, init_config = NULL,
+  trim = TRUE)
 }
 \arguments{
 \item{obstimes}{vector of observation times}
