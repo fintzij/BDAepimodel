@@ -38,13 +38,4 @@ vignette("prior_effect")
 vignette("bbs_influenza")
 ```
 
-We also provide vignettes that demonstrate how to fit the models in the first and second simulations, along with the boarding school examples, using the pomp package. These are accessible as follows:
-
-```
-vignette("SIR_pomp_simulation")
-vignette("SEIR_pomp_simulation")
-vignette("SIRS_pomp_simulation")
-vignette("model_misspecification_pomp")
-vignette("bbs_pomp_binom_vignette")
-vignette("bbs_pomp_negbinom_vignette")
-```
+We also provide vignettes that demonstrate how to fit the models in the first and second simulations, along with the boarding school examples, using the pomp package. These are not built when the package is installed, but are accessible in the vignettes directory of the github repo: \url{https://github.com/fintzij/BDAepimodel/tree/master/vignettes}. 

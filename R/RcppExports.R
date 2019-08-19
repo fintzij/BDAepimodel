@@ -17,7 +17,7 @@
 #' @export
 #' 
 buildEigenArray_SIR <- function(real_eigenvals, imag_eigenvals, eigenvecs, inversevecs, irm_array, n_real_eigs, initial_calc) {
-    invisible(.Call('BDAepimodel_buildEigenArray_SIR', PACKAGE = 'BDAepimodel', real_eigenvals, imag_eigenvals, eigenvecs, inversevecs, irm_array, n_real_eigs, initial_calc))
+    invisible(.Call('_BDAepimodel_buildEigenArray_SIR', PACKAGE = 'BDAepimodel', real_eigenvals, imag_eigenvals, eigenvecs, inversevecs, irm_array, n_real_eigs, initial_calc))
 }
 
 #' Update eigen values, vectors, and inverse matrices analytically for the SEIR 
@@ -36,7 +36,7 @@ buildEigenArray_SIR <- function(real_eigenvals, imag_eigenvals, eigenvecs, inver
 #' @export
 #' 
 buildEigenArray_SEIR <- function(real_eigenvals, imag_eigenvals, eigenvecs, inversevecs, irm_array, n_real_eigs, initial_calc) {
-    invisible(.Call('BDAepimodel_buildEigenArray_SEIR', PACKAGE = 'BDAepimodel', real_eigenvals, imag_eigenvals, eigenvecs, inversevecs, irm_array, n_real_eigs, initial_calc))
+    invisible(.Call('_BDAepimodel_buildEigenArray_SEIR', PACKAGE = 'BDAepimodel', real_eigenvals, imag_eigenvals, eigenvecs, inversevecs, irm_array, n_real_eigs, initial_calc))
 }
 
 #' Update eigen values, vectors, and inverse matrices for irms
@@ -52,7 +52,7 @@ buildEigenArray_SEIR <- function(real_eigenvals, imag_eigenvals, eigenvecs, inve
 #' @export
 #' 
 buildEigenArray <- function(real_eigenvals, imag_eigenvals, eigenvecs, inversevecs, irm_array, n_real_eigs) {
-    invisible(.Call('BDAepimodel_buildEigenArray', PACKAGE = 'BDAepimodel', real_eigenvals, imag_eigenvals, eigenvecs, inversevecs, irm_array, n_real_eigs))
+    invisible(.Call('_BDAepimodel_buildEigenArray', PACKAGE = 'BDAepimodel', real_eigenvals, imag_eigenvals, eigenvecs, inversevecs, irm_array, n_real_eigs))
 }
 
 #' Construct forward-backward matrices
@@ -65,7 +65,7 @@ buildEigenArray <- function(real_eigenvals, imag_eigenvals, eigenvecs, inverseve
 #'
 #' @return Updated array of FB matrices
 buildFBMats <- function(fb_mats, tpm_prods, emit_mat, initdist, obs_time_inds) {
-    invisible(.Call('BDAepimodel_buildFBMats', PACKAGE = 'BDAepimodel', fb_mats, tpm_prods, emit_mat, initdist, obs_time_inds))
+    invisible(.Call('_BDAepimodel_buildFBMats', PACKAGE = 'BDAepimodel', fb_mats, tpm_prods, emit_mat, initdist, obs_time_inds))
 }
 
 #' Update an array of rate matrices with the current rates
@@ -76,7 +76,7 @@ buildFBMats <- function(fb_mats, tpm_prods, emit_mat, initdist, obs_time_inds) {
 #'
 #' @return updated array of rate matrices
 buildRateArray <- function(irm_array, rates, flow_inds) {
-    invisible(.Call('BDAepimodel_buildRateArray', PACKAGE = 'BDAepimodel', irm_array, rates, flow_inds))
+    invisible(.Call('_BDAepimodel_buildRateArray', PACKAGE = 'BDAepimodel', irm_array, rates, flow_inds))
 }
 
 #' Get the indices of observation times in the population level bookkeeping mtx.
@@ -86,7 +86,7 @@ buildRateArray <- function(irm_array, rates, flow_inds) {
 #'
 #' @return indices of observation times
 getObsTimeInds <- function(pop_mat, obstimes) {
-    .Call('BDAepimodel_getObsTimeInds', PACKAGE = 'BDAepimodel', pop_mat, obstimes)
+    .Call('_BDAepimodel_getObsTimeInds', PACKAGE = 'BDAepimodel', pop_mat, obstimes)
 }
 
 #' Insert subject transitions into the population-level and subject level 
@@ -100,7 +100,7 @@ getObsTimeInds <- function(pop_mat, obstimes) {
 #'
 #' @return updated bookeeping objects
 insertPath <- function(path, subject, pop_mat, subj_path, ind) {
-    invisible(.Call('BDAepimodel_insertPath', PACKAGE = 'BDAepimodel', path, subject, pop_mat, subj_path, ind))
+    invisible(.Call('_BDAepimodel_insertPath', PACKAGE = 'BDAepimodel', path, subject, pop_mat, subj_path, ind))
 }
 
 #' Join two armadillo cubes
@@ -110,7 +110,7 @@ insertPath <- function(path, subject, pop_mat, subj_path, ind) {
 #'
 #' @return new array joining cubes
 joinCubes <- function(firstcube, secondcube) {
-    .Call('BDAepimodel_joinCubes', PACKAGE = 'BDAepimodel', firstcube, secondcube)
+    .Call('_BDAepimodel_joinCubes', PACKAGE = 'BDAepimodel', firstcube, secondcube)
 }
 
 #' Get the irm keys for the compartment counts in a population level
@@ -128,7 +128,7 @@ joinCubes <- function(firstcube, secondcube) {
 #'
 #' @return population level likelihood or log-likelihood
 populationLikelihood <- function(pop_mat, irm, initdist, initdist_param_inds, flow_inds, keys, inds, loglik) {
-    .Call('BDAepimodel_populationLikelihood', PACKAGE = 'BDAepimodel', pop_mat, irm, initdist, initdist_param_inds, flow_inds, keys, inds, loglik)
+    .Call('_BDAepimodel_populationLikelihood', PACKAGE = 'BDAepimodel', pop_mat, irm, initdist, initdist_param_inds, flow_inds, keys, inds, loglik)
 }
 
 #' Reorder the rows of a matrix
@@ -138,7 +138,7 @@ populationLikelihood <- function(pop_mat, irm, initdist, initdist_param_inds, fl
 #'
 #' @return matrix with rows permuted according to ord
 reorderMat <- function(oldmtx, ord) {
-    .Call('BDAepimodel_reorderMat', PACKAGE = 'BDAepimodel', oldmtx, ord)
+    .Call('_BDAepimodel_reorderMat', PACKAGE = 'BDAepimodel', oldmtx, ord)
 }
 
 #' Add or remove the subject contribution from the compartment counts
@@ -151,7 +151,7 @@ reorderMat <- function(oldmtx, ord) {
 #'
 #' @return updated compartment counts
 resolveSubjContrib <- function(pop_mat, ind_final_config, subj_path, insertion) {
-    invisible(.Call('BDAepimodel_resolveSubjContrib', PACKAGE = 'BDAepimodel', pop_mat, ind_final_config, subj_path, insertion))
+    invisible(.Call('_BDAepimodel_resolveSubjContrib', PACKAGE = 'BDAepimodel', pop_mat, ind_final_config, subj_path, insertion))
 }
 
 #' Get the irm keys for the compartment counts in a population level
@@ -167,7 +167,7 @@ resolveSubjContrib <- function(pop_mat, ind_final_config, subj_path, insertion) 
 #'
 #' @return Vector of keys to index into an IRM array.
 retrieveKeys <- function(inds, irm_lookup, pop_mat, index_state_num) {
-    .Call('BDAepimodel_retrieveKeys', PACKAGE = 'BDAepimodel', inds, irm_lookup, pop_mat, index_state_num)
+    .Call('_BDAepimodel_retrieveKeys', PACKAGE = 'BDAepimodel', inds, irm_lookup, pop_mat, index_state_num)
 }
 
 #' Insert subject transitions into the population-level and subject level 
@@ -182,7 +182,7 @@ retrieveKeys <- function(inds, irm_lookup, pop_mat, index_state_num) {
 #'
 #' @return extended path vector
 retrieveSubjPath <- function(subj_path, subject, pop_mat, init_config, ind_final_config, flow_inds) {
-    invisible(.Call('BDAepimodel_retrieveSubjPath', PACKAGE = 'BDAepimodel', subj_path, subject, pop_mat, init_config, ind_final_config, flow_inds))
+    invisible(.Call('_BDAepimodel_retrieveSubjPath', PACKAGE = 'BDAepimodel', subj_path, subject, pop_mat, init_config, ind_final_config, flow_inds))
 }
 
 #' Update eigen values, vectors, and inverse matrices for irms
@@ -196,7 +196,7 @@ retrieveSubjPath <- function(subj_path, subject, pop_mat, init_config, ind_final
 #'
 #' @return Updated eigenvalues, eigenvectors, and inverse matrices
 sampleEventSubseq <- function(path, tpms, tpm_prods, init_ind, final_ind) {
-    .Call('BDAepimodel_sampleEventSubseq', PACKAGE = 'BDAepimodel', path, tpms, tpm_prods, init_ind, final_ind)
+    .Call('_BDAepimodel_sampleEventSubseq', PACKAGE = 'BDAepimodel', path, tpms, tpm_prods, init_ind, final_ind)
 }
 
 #' simulateSIR function, included in this file because of difficulty including sample.h in two separate files.
@@ -209,7 +209,7 @@ sampleEventSubseq <- function(path, tpms, tpm_prods, init_ind, final_ind) {
 #'
 #' @return updated bookeeping objects
 simulateSIR <- function(obstimes, params, init_config) {
-    .Call('BDAepimodel_simulateSIR', PACKAGE = 'BDAepimodel', obstimes, params, init_config)
+    .Call('_BDAepimodel_simulateSIR', PACKAGE = 'BDAepimodel', obstimes, params, init_config)
 }
 
 #' Get the irm keys for the compartment counts in a population level
@@ -225,7 +225,7 @@ simulateSIR <- function(obstimes, params, init_config) {
 #'
 #' @return subject level likelihood or log-likelihood
 subjectLikelihood <- function(subject, pop_mat, subj_path, irm_array, initdist, keys, loglik) {
-    .Call('BDAepimodel_subjectLikelihood', PACKAGE = 'BDAepimodel', subject, pop_mat, subj_path, irm_array, initdist, keys, loglik)
+    .Call('_BDAepimodel_subjectLikelihood', PACKAGE = 'BDAepimodel', subject, pop_mat, subj_path, irm_array, initdist, keys, loglik)
 }
 
 #' Update eigen values, vectors, and inverse matrices for irms
@@ -237,7 +237,7 @@ subjectLikelihood <- function(subject, pop_mat, subj_path, irm_array, initdist, 
 #'
 #' @return Updated eigenvalues, eigenvectors, and inverse matrices
 tpmProdSeqs <- function(tpm_prods, tpms, obs_time_inds) {
-    invisible(.Call('BDAepimodel_tpmProdSeqs', PACKAGE = 'BDAepimodel', tpm_prods, tpms, obs_time_inds))
+    invisible(.Call('_BDAepimodel_tpmProdSeqs', PACKAGE = 'BDAepimodel', tpm_prods, tpms, obs_time_inds))
 }
 
 #' Construct a transition probability matrix for a rate matrix with complex 
@@ -250,7 +250,7 @@ tpmProdSeqs <- function(tpm_prods, tpms, obs_time_inds) {
 #'
 #' @return Updated eigenvalues, eigenvectors, and inverse matrices
 complexTPM <- function(real_vals, imag_vals, vecs, inv_vecs, dt, n_real) {
-    .Call('BDAepimodel_complexTPM', PACKAGE = 'BDAepimodel', real_vals, imag_vals, vecs, inv_vecs, dt, n_real)
+    .Call('_BDAepimodel_complexTPM', PACKAGE = 'BDAepimodel', real_vals, imag_vals, vecs, inv_vecs, dt, n_real)
 }
 
 #' Update eigen values, vectors, and inverse matrices for irms
@@ -266,6 +266,6 @@ complexTPM <- function(real_vals, imag_vals, vecs, inv_vecs, dt, n_real) {
 #'
 #' @return Updated eigenvalues, eigenvectors, and inverse matrices
 tpmSeqs <- function(tpms, pop_mat, real_eigen_vals, imag_eigen_vals, eigen_vecs, inverse_vecs, irm_keys, n_real_eigs, irms) {
-    invisible(.Call('BDAepimodel_tpmSeqs', PACKAGE = 'BDAepimodel', tpms, pop_mat, real_eigen_vals, imag_eigen_vals, eigen_vecs, inverse_vecs, irm_keys, n_real_eigs, irms))
+    invisible(.Call('_BDAepimodel_tpmSeqs', PACKAGE = 'BDAepimodel', tpms, pop_mat, real_eigen_vals, imag_eigen_vals, eigen_vecs, inverse_vecs, irm_keys, n_real_eigs, irms))
 }
 
