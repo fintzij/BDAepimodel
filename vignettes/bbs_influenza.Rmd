@@ -1,10 +1,10 @@
 ---
-title: "Fitting misspecified SIR and SEIR stochastic epidemic models"
+title: "Fitting SIR and SEIR stochastic epidemic models to influenza outbreak data from a British boarding school"
 author: "Jon Fintzi, Xiang Cui, Jon Wakefield, Vladimir Minin"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Additional simulations included Fintzi, Wakefield, and Minin (2016)}
+  %\VignetteIndexEntry{Fitting SIR and SEIR stochastic epidemic models to influenza outbreak data from a British boarding school}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

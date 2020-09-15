@@ -1,10 +1,11 @@
 ---
 title: "Implementing the SEIR, SIIR, and SIRS stochastic epidemic models in the BDAepimodel package"
+subtitle: "Additional simulations included Fintzi, Wakefield, and Minin (2016)"
 author: "Jon Fintzi, Xiang Cui, Jon Wakefield, Vladimir Minin"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Additional simulations included Fintzi, Wakefield, and Minin (2016)}
+  %\VignetteIndexEntry{Implementing the SEIR, SIIR, and SIRS stochastic epidemic models in the BDAepimodel package}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

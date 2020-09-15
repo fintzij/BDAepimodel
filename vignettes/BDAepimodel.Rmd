@@ -1,10 +1,10 @@
 ---
-title: "The BDAepimodel package for fitting stochastic epidemic models to disease prevalence data via Bayesian data augmentaiton"
+title: "The BDAepimodel package for fitting stochastic epidemic models to disease prevalence data via Bayesian data augmentation"
 author: "Jon Fintzi, Xiang Cui, Jon Wakefield, Vladimir Minin"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{The BDAepimodel package for fitting stochastic epidemic models to disease prevalence data via Bayesian data augmentaiton}
+  %\VignetteIndexEntry{The BDAepimodel package for fitting stochastic epidemic models to disease prevalence data via Bayesian data augmentation}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
